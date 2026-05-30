@@ -191,6 +191,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # Security headers (enforced in production only)
 
 if not DEBUG and not os.environ.get("CI"):
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
     SECURE_SSL_REDIRECT = True
     SECURE_HSTS_SECONDS = 31536000
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
