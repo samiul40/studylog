@@ -213,5 +213,5 @@ EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
 EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS", "False") == "True"
 EMAIL_USE_SSL = os.environ.get("EMAIL_USE_SSL", "False") == "True"
 DEFAULT_FROM_EMAIL = os.environ.get(
-    "DEFAULT_FROM_EMAIL", "StudyFlow <noreply@studyflow.app>"
+    "DEFAULT_FROM_EMAIL", "StudyLog <noreply@mail.studylog.co.uk>"
 )
