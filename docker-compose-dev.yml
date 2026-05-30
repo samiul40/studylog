@@ -1,6 +1,8 @@
+name: studylog
+
 services:
   db:
-    container_name: studyflow_db_dev
+    container_name: studylog_db_dev
     image: postgres:16-alpine
     restart: unless-stopped
     volumes:
@@ -18,7 +20,7 @@ services:
       retries: 5
 
   web:
-    container_name: studyflow_web_dev
+    container_name: studylog_web_dev
     build:
       context: .
       dockerfile: dockerfiles/backend/Dockerfile.dev
@@ -38,7 +40,7 @@ services:
         condition: service_healthy
 
   mailhog:
-    container_name: studyflow_mailhog
+    container_name: studylog_mailhog
     image: mailhog/mailhog:latest
     restart: unless-stopped
     ports:

@@ -1,6 +1,8 @@
+name: studylog
+
 services:
   db:
-    container_name: studyflow_db
+    container_name: studylog_db
     image: postgres:16-alpine
     restart: unless-stopped
     volumes:
@@ -16,7 +18,7 @@ services:
       retries: 5
 
   web:
-    container_name: studyflow_web
+    container_name: studylog_web
     build:
       context: .
       dockerfile: dockerfiles/backend/Dockerfile
@@ -32,7 +34,7 @@ services:
         condition: service_healthy
 
   nginx:
-    container_name: studyflow_nginx
+    container_name: studylog_nginx
     image: nginx:alpine
     restart: unless-stopped
     ports:
@@ -46,7 +48,7 @@ services:
       - web
 
   certbot:
-    container_name: studyflow_certbot
+    container_name: studylog_certbot
     image: certbot/certbot:latest
     volumes:
       - certbot_webroot:/var/www/certbot
