@@ -66,7 +66,7 @@ ACCOUNT_SIGNUP_REDIRECT_URL = "learning:dashboard"
 SOCIALACCOUNT_PROVIDERS = {
     "google": {
         "SCOPE": ["profile", "email"],
-        "AUTH_PARAMS": {"access_type": "online"},
+        "AUTH_PARAMS": {"access_type": "online", "prompt": "select_account"},
         "OAUTH_PKCE_ENABLED": True,
     }
 }
@@ -95,15 +95,16 @@ CSP_STYLE_SRC = (
     "'self'",
     "cdnjs.cloudflare.com",
     "cdn.jsdelivr.net",
+    "fonts.googleapis.com",
     "'unsafe-inline'",
 )
-CSP_FONT_SRC = ("'self'", "cdnjs.cloudflare.com")
-CSP_IMG_SRC = ("'self'", "data:")
-CSP_CONNECT_SRC = ("'self'",)
+CSP_FONT_SRC = ("'self'", "cdnjs.cloudflare.com", "fonts.gstatic.com")
+CSP_IMG_SRC = ("'self'", "data:", "https://www.google.com", "https://www.gstatic.com")
+CSP_CONNECT_SRC = ("'self'", "cdn.jsdelivr.net")
 CSP_FRAME_SRC = ("'none'",)
 CSP_OBJECT_SRC = ("'none'",)
 CSP_BASE_URI = ("'self'",)
-CSP_FORM_ACTION = ("'self'",)
+CSP_FORM_ACTION = ("'self'", "accounts.google.com")
 CSP_INCLUDE_NONCE_IN = ["script-src"]
 
 # Session cookie hardening
