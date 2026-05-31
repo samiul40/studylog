@@ -17,6 +17,9 @@ DEBUG = os.environ.get("DEBUG", "False") == "True"
 
 ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
 
+# Obscure the admin URL — set ADMIN_URL in .env to a random path (e.g. "xk9p2m8q3r/")
+ADMIN_URL = os.environ.get("ADMIN_URL", "admin/")
+
 
 # Application definition
 
@@ -73,6 +76,14 @@ AXES_FAILURE_LIMIT = 5  # lock out after 5 failed attempts
 AXES_COOLOFF_TIME = 1  # unlock after 1 hour
 AXES_RESET_ON_SUCCESS = True  # reset failure count on successful login
 AXES_LOCKOUT_PARAMETERS = ["ip_address"]  # lock by IP
+# When behind Cloudflare, REMOTE_ADDR is Cloudflare's IP, not the visitor's.
+# CF-Connecting-IP is set by Cloudflare to the real client IP and cannot be spoofed.
+# Without this, 5 failed logins from one person would lock out all users.
+AXES_IPWARE_META_PRECEDENCE_ORDER = [
+    "HTTP_CF_CONNECTING_IP",
+    "HTTP_X_FORWARDED_FOR",
+    "REMOTE_ADDR",
+]
 
 # Session cookie hardening
 SESSION_COOKIE_HTTPONLY = True
