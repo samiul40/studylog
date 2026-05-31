@@ -16,7 +16,7 @@
 {% endfor %}
 {% endif %}
 
-<script>
+<script nonce="{{ request.csp_nonce }}">
   setTimeout(function () {
     const alerts = document.querySelectorAll('.alert');
     alerts.forEach(alert => {
