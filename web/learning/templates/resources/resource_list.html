@@ -36,7 +36,7 @@
       <input type="text" name="search" id="searchInput" class="resource-search__input"
         placeholder="Search resources..." value="{{ search_query }}">
     </div>
-    <div style="min-width: 180px;">
+    <div class="resource-type-filter">
       <select name="type" id="typeFilter" class="form-select">
         <option value="">All types</option>
         {% for rt in resource_types %}
@@ -53,7 +53,7 @@
 <div class="row g-3">
   {% for resource in resources %}
 
-  <div class="col-md-4">
+  <div class="col-6 col-sm-6 col-md-4">
     <div class="resource-card">
 
       <div class="resource-card__header">

@@ -623,8 +623,16 @@ select.form-select {
 // ---------------------------------------------------------------------------
 // Bulk table
 // ---------------------------------------------------------------------------
+.bulk-table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin: 0 -1.5rem;
+  padding: 0 1.5rem;
+}
+
 .bulk-table {
   font-size: 0.875rem;
+  min-width: 480px;
 
   th {
     font-size: 0.75rem;
@@ -679,6 +687,7 @@ select.form-select {
   .detail-card__actions {
     width: 100%;
     justify-content: flex-start;
+    flex-wrap: wrap;
   }
 
   .stats-card__grid {
@@ -690,13 +699,29 @@ select.form-select {
 
   .unit-item {
     padding: 0.875rem 1rem;
-    flex-wrap: wrap;
     gap: 0.5rem;
+  }
+
+  .unit-item__body {
+    min-width: 0;
+  }
+
+  .unit-item__actions {
+    flex-shrink: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .unit-item {
+    flex-wrap: wrap;
   }
 
   .unit-item__actions {
     width: 100%;
     justify-content: flex-end;
+    padding-top: 0.25rem;
+    border-top: 1px solid #f3f4f6;
+    margin-top: 0.125rem;
   }
 }
 

@@ -8,6 +8,7 @@
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
+          <div class="bulk-table-wrap">
           <table class="table bulk-table" id="units-table">
             <thead>
               <tr>
@@ -20,6 +21,7 @@
             </thead>
             <tbody></tbody>
           </table>
+          </div>
           <button type="button" class="btn btn-outline-secondary btn-sm"
             onclick="addRow('', '', '{{ resource.resource_type.content_kind }}')">
             <i class="fas fa-plus me-1"></i> Add Row

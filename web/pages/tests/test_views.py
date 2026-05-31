@@ -6,14 +6,15 @@ pytestmark = pytest.mark.django_db
 INDEX_URL = reverse("index")
 
 
-def test_index_redirects_unauthenticated(client):
+def test_index_redirects_to_dashboard(client):
     response = client.get(INDEX_URL)
 
     assert response.status_code == 302
-    assert "/login/" in response.url
+    assert response.url == reverse("learning:dashboard")
 
 
-def test_index_returns_200_for_authenticated_user(client_logged_in):
+def test_index_redirects_authenticated_user_to_dashboard(client_logged_in):
     response = client_logged_in.get(INDEX_URL)
 
-    assert response.status_code == 200
+    assert response.status_code == 302
+    assert response.url == reverse("learning:dashboard")

@@ -144,6 +144,8 @@
     color: #64748b;
     &:hover { color: #cbd5e1; }
   }
+  .login-divider { color: #475569; &::before, &::after { background: #334155; } }
+  .login-footer-links a, .login-footer-link-center a { color: #64748b; &:hover { color: $emerald-400; } }
 
   // ── Settings sidebar ─────────────────────────────────────────────────────────
   .settings-sidebar { background: #1e293b; border-color: #334155; }
