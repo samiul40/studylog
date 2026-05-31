@@ -323,6 +323,47 @@
 }
 
 // ---------------------------------------------------------------------------
+// Dashboard responsive
+// ---------------------------------------------------------------------------
+@media (max-width: 768px) {
+  .week-stats {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  .week-stat {
+    flex: 1 1 140px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+
+    &__icon {
+      width: 2rem;
+      height: 2rem;
+      font-size: 0.875rem;
+    }
+
+    &__value {
+      font-size: 1.25rem;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .week-stat {
+    flex: 1 1 100%;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.75rem;
+
+    &__value {
+      font-size: 1.125rem;
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Tip banner
 // ---------------------------------------------------------------------------
 .tip-banner {

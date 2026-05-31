@@ -108,13 +108,27 @@
     margin-top: 0.75rem;
 
     .nav-link {
-      padding: 0.5rem 0.75rem;
+      padding: 0.625rem 0.75rem;
       border-radius: $radius-md;
+      font-size: 0.9375rem;
 
       &.active {
         background: $emerald-50;
         color: $emerald-700;
       }
+
+      i {
+        width: 1.125rem;
+        text-align: center;
+      }
     }
+
+    .navbar-nav {
+      gap: 0.125rem;
+    }
+  }
+
+  .navbar-toggler:focus {
+    box-shadow: none;
   }
 }

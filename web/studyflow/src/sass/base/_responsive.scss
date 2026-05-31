@@ -20,6 +20,12 @@
     gap: 0.75rem;
 
     h2 { font-size: 1.25rem; }
+
+    > div {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
   }
 
   // Dashboard
@@ -56,8 +62,39 @@
     max-width: 100%;
   }
 
+  .resource-type-filter {
+    min-width: 150px;
+  }
+
   .resource-card {
     padding: 1rem;
+  }
+
+  // Detail card
+  .detail-card__title {
+    font-size: 1.125rem;
+  }
+
+  .detail-card__desc {
+    font-size: 0.875rem;
+  }
+
+  // Unit touch targets
+  .unit-action-btn {
+    width: 2.75rem;
+    height: 2.75rem;
+    font-size: 0.875rem;
+  }
+
+  .unit-status-select {
+    padding-top: 0.375rem;
+    padding-bottom: 0.375rem;
+  }
+
+  // Bulk table horizontal scroll
+  .bulk-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   // Form card
@@ -97,6 +134,13 @@
     border-radius: $radius-lg;
   }
 
+  // Prevent iOS input auto-zoom (inputs < 16px trigger zoom)
+  .form-control,
+  .form-select,
+  .ts-control input {
+    font-size: 1rem;
+  }
+
   // Insight banner
   .insight-banner {
     padding: 0.75rem 1rem;
@@ -106,6 +150,19 @@
   // Recently added
   .recent-list .recent-item {
     padding: 0.625rem 0.875rem;
+  }
+
+  // Breadcrumb overflow protection
+  .breadcrumb {
+    flex-wrap: nowrap;
+    overflow: hidden;
+
+    .breadcrumb-item.active {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      min-width: 0;
+    }
   }
 }
 
@@ -141,5 +198,43 @@
 
   .chart-card--donut .chart-canvas-wrap {
     height: 180px;
+  }
+
+  // Login: edge-to-edge card on small phones
+  .login-section {
+    padding: 0;
+    align-items: flex-start;
+  }
+
+  .login-card {
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    max-width: 100%;
+    padding: 2rem 1.25rem;
+  }
+
+  // Stats grid: reduce label/value sizes on tiny screens
+  .stats-card__grid {
+    gap: 0.625rem;
+  }
+
+  .stats-item__value {
+    font-size: 1.125rem;
+  }
+
+  .stats-item__label {
+    font-size: 0.6875rem;
+  }
+
+  // Type filter full width on tiny phones
+  .resource-type-filter {
+    width: 100%;
+    min-width: unset;
+  }
+
+  // Section title smaller
+  .section-title {
+    font-size: 0.75rem;
   }
 }
