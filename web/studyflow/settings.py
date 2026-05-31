@@ -75,7 +75,7 @@ SOCIALACCOUNT_PROVIDERS = {
 AXES_FAILURE_LIMIT = 5  # lock out after 5 failed attempts
 AXES_COOLOFF_TIME = 1  # unlock after 1 hour
 AXES_RESET_ON_SUCCESS = True  # reset failure count on successful login
-AXES_LOCKOUT_PARAMETERS = ["ip_address"]  # lock by IP
+AXES_LOCKOUT_PARAMETERS = ["ip_address", "username"]  # lock by IP and username
 # When behind Cloudflare, REMOTE_ADDR is Cloudflare's IP, not the visitor's.
 # CF-Connecting-IP is set by Cloudflare to the real client IP and cannot be spoofed.
 # Without this, 5 failed logins from one person would lock out all users.
@@ -84,6 +84,27 @@ AXES_IPWARE_META_PRECEDENCE_ORDER = [
     "HTTP_X_FORWARDED_FOR",
     "REMOTE_ADDR",
 ]
+
+# Content Security Policy
+# Nonces are generated per-request for inline scripts; admin is excluded as it
+# ships its own inline JS that would require nonces on every Django admin template.
+CSP_EXCLUDE_URL_PREFIXES = ("/" + ADMIN_URL,)
+CSP_DEFAULT_SRC = ("'self'",)
+CSP_SCRIPT_SRC = ("'self'", "cdn.jsdelivr.net")
+CSP_STYLE_SRC = (
+    "'self'",
+    "cdnjs.cloudflare.com",
+    "cdn.jsdelivr.net",
+    "'unsafe-inline'",
+)
+CSP_FONT_SRC = ("'self'", "cdnjs.cloudflare.com")
+CSP_IMG_SRC = ("'self'", "data:")
+CSP_CONNECT_SRC = ("'self'",)
+CSP_FRAME_SRC = ("'none'",)
+CSP_OBJECT_SRC = ("'none'",)
+CSP_BASE_URI = ("'self'",)
+CSP_FORM_ACTION = ("'self'",)
+CSP_INCLUDE_NONCE_IN = ["script-src"]
 
 # Session cookie hardening
 SESSION_COOKIE_HTTPONLY = True
@@ -98,6 +119,7 @@ SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "csp.middleware.CSPMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
