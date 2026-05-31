@@ -132,17 +132,19 @@ pytest learning/tests/test_learning_resource_views.py  # single file
 
 ## Environment Variables
 
-| Variable                 | Description                                      |
-|--------------------------|--------------------------------------------------|
-| `SECRET_KEY`             | Django secret key                                |
-| `DEBUG`                  | `True` for dev, `False` for production           |
-| `ALLOWED_HOSTS`          | Comma-separated list of allowed hostnames        |
-| `POSTGRES_HOST`          | Postgres host                                    |
-| `POSTGRES_PORT`          | Postgres port (default 5432)                     |
-| `POSTGRES_DB`            | Database name                                    |
-| `POSTGRES_USER`          | Database user                                    |
-| `POSTGRES_PASSWORD`      | Database password                                |
-| `DJANGO_SETTINGS_MODULE` | e.g. `studyflow.settings.local`                  |
-| `EMAIL_HOST`             | SMTP host (use `localhost` with MailHog in Docker) |
-| `EMAIL_PORT`             | SMTP port (use `1025` with MailHog)              |
-| `DEFAULT_FROM_EMAIL`     | From address for outgoing emails                 |
+| Variable                     | Required   | Description                                                                 |
+|------------------------------|------------|-----------------------------------------------------------------------------|
+| `SECRET_KEY`                 | Yes        | Django secret key — keep this secret in production                          |
+| `DEBUG`                      | Yes        | `True` for dev, `False` for production                                      |
+| `ALLOWED_HOSTS`              | Yes        | Comma-separated list of allowed hostnames                                   |
+| `POSTGRES_HOST`              | Yes        | Postgres host                                                               |
+| `POSTGRES_PORT`              | Yes        | Postgres port (default `5432`)                                              |
+| `POSTGRES_DB`                | Yes        | Database name                                                               |
+| `POSTGRES_USER`              | Yes        | Database user                                                               |
+| `POSTGRES_PASSWORD`          | Yes        | Database password                                                           |
+| `DJANGO_SETTINGS_MODULE`     | Docker only| e.g. `studyflow.settings`                                                   |
+| `EMAIL_HOST`                 | No         | SMTP host (use `localhost` with MailHog in Docker)                          |
+| `EMAIL_PORT`                 | No         | SMTP port (use `1025` with MailHog)                                         |
+| `DEFAULT_FROM_EMAIL`         | No         | From address for outgoing emails                                            |
+| `ACCOUNT_EMAIL_VERIFICATION` | No         | `mandatory` (production default) or `none` to skip verification in dev      |
+| `ADMIN_URL`                  | No         | Path for the Django admin panel (default `admin/`). Set to a random string in production, e.g. `xk9p2m8q3r/` (include trailing slash) |
