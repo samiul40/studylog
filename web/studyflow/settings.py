@@ -29,6 +29,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django.contrib.sites",
     # External Packages
+    "axes",
     "adminsortable2",
     "allauth",
     "allauth.account",
@@ -43,6 +44,8 @@ INSTALLED_APPS = [
 SITE_ID = 1
 
 AUTHENTICATION_BACKENDS = [
+    # axes must be first to intercept blocked IPs before Django's own auth
+    "axes.backends.AxesStandaloneBackend",
     "django.contrib.auth.backends.ModelBackend",
     "allauth.account.auth_backends.AuthenticationBackend",
 ]
@@ -65,6 +68,23 @@ SOCIALACCOUNT_PROVIDERS = {
     }
 }
 
+# django-axes: brute-force login protection
+AXES_FAILURE_LIMIT = 5  # lock out after 5 failed attempts
+AXES_COOLOFF_TIME = 1  # unlock after 1 hour
+AXES_RESET_ON_SUCCESS = True  # reset failure count on successful login
+AXES_LOCKOUT_PARAMETERS = ["ip_address"]  # lock by IP
+
+# Session cookie hardening
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = "Lax"
+
+# CSRF cookie hardening
+CSRF_COOKIE_HTTPONLY = True
+CSRF_COOKIE_SAMESITE = "Lax"
+
+# Referrer policy (don't leak full URL to third parties)
+SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
+
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
@@ -72,6 +92,8 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    # axes must come after AuthenticationMiddleware
+    "axes.middleware.AxesMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "allauth.account.middleware.AccountMiddleware",
