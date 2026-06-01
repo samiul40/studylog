@@ -72,7 +72,7 @@
          {% endif %}" class="btn btn-cancel">
             Cancel
           </a>
-          <button type="submit" class="btn btn-primary" onclick="handleSubmit(this)">
+          <button type="submit" class="btn btn-primary js-submit-btn">
             <span class="btn-text">
               {% if form.instance.pk %}Update Resource{% else %}Create Resource{% endif %}
             </span>
@@ -88,7 +88,7 @@
 {% endblock %}
 
 {% block scripts %}
-<script>
+<script nonce="{{ request.csp_nonce }}">
   const resourceTypeData = {
     {% for rt in form.resource_type.field.queryset %}"{{ rt.pk }}": { "unit_label": "{{ rt.unit_label }}", "content_kind": "{{ rt.content_kind }}" },
     {% endfor %}

@@ -91,6 +91,10 @@ function initBulkModal() {
       addRow("", "", contentKind);
     }
   });
+
+  modal.querySelector(".js-add-row-btn")?.addEventListener("click", () => {
+    addRow("", "", contentKind);
+  });
 }
 
 // Mark as Complete button — copies duration picker values into progress picker
@@ -137,4 +141,15 @@ document.addEventListener("DOMContentLoaded", function () {
   togglePassword();
   initDurationPickers(document);
   initMarkComplete(document);
+
+  document.addEventListener("click", function (e) {
+    const btn = e.target.closest(".js-submit-btn");
+    if (btn) handleSubmit(btn);
+  });
+
+  document.addEventListener("change", function (e) {
+    if (e.target.classList.contains("js-auto-submit")) {
+      e.target.form.submit();
+    }
+  });
 });
