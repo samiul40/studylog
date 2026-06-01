@@ -201,7 +201,7 @@
 {% endblock %}
 
 {% block scripts %}
-<script>
+<script nonce="{{ request.csp_nonce }}">
   // ── Settings nav ────────────────────────────────────────────────────────────
   const navItems = document.querySelectorAll('.settings-nav__item');
   const panels = document.querySelectorAll('.settings-panel');

@@ -135,7 +135,7 @@
 {% endblock %}
 
 {% block scripts %}
-<script>
+<script nonce="{{ request.csp_nonce }}">
   const searchInput = document.getElementById("searchInput");
   const searchForm = document.getElementById("searchForm");
   let debounceTimer;

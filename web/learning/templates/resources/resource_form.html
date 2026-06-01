@@ -88,7 +88,7 @@
 {% endblock %}
 
 {% block scripts %}
-<script>
+<script nonce="{{ request.csp_nonce }}">
   const resourceTypeData = {
     {% for rt in form.resource_type.field.queryset %}"{{ rt.pk }}": { "unit_label": "{{ rt.unit_label }}", "content_kind": "{{ rt.content_kind }}" },
     {% endfor %}
