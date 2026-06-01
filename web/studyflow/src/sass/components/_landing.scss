@@ -1,0 +1,77 @@
+// =============================================================================
+// _landing.scss — Public landing page
+// =============================================================================
+@use '../abstracts/variables' as *;
+
+// ── Brand ─────────────────────────────────────────────────────────────────────
+.landing-brand {
+  font-weight: 800;
+  font-size: 1.125rem;
+  letter-spacing: -0.03em;
+  color: $grey-900;
+  text-decoration: none;
+
+  .dot { color: $emerald-500; }
+
+  &:hover { color: $grey-900; }
+}
+
+// ── Hero gradient ─────────────────────────────────────────────────────────────
+@keyframes gradientShift {
+  0%, 100% { background-position: 0% 50%; }
+  50%       { background-position: 100% 50%; }
+}
+
+.landing-hero {
+  background: linear-gradient(-45deg, $emerald-50, $grey-50, $emerald-100, #f0fdfa);
+  background-size: 400% 400%;
+  animation: gradientShift 9s ease infinite;
+}
+
+// ── Badge pill ────────────────────────────────────────────────────────────────
+.landing-badge {
+  display: inline-block;
+  background: $emerald-100;
+  color: $emerald-800;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.35em 1.1em;
+  border-radius: $radius-pill;
+  letter-spacing: 0.01em;
+}
+
+// ── Mobile ────────────────────────────────────────────────────────────────────
+@media (max-width: 767px) {
+  .landing-hero {
+    border-radius: $radius-lg;
+    padding-left: 1.25rem;
+    padding-right: 1.25rem;
+    padding-top: 2.5rem;
+    padding-bottom: 2.5rem;
+
+    h1 {
+      font-size: 1.875rem;
+      line-height: 1.25;
+    }
+
+    .lead { font-size: 1rem; }
+  }
+}
+
+// ── Dark mode ─────────────────────────────────────────────────────────────────
+[data-theme="dark"] {
+  .landing-brand {
+    color: #f1f5f9;
+    &:hover { color: #f1f5f9; }
+  }
+
+  .landing-hero {
+    background: linear-gradient(-45deg, $emerald-900, $grey-800, $emerald-800, #134e4a);
+    background-size: 400% 400%;
+  }
+
+  .landing-badge {
+    background: rgba($emerald-400, 0.15);
+    color: $emerald-400;
+  }
+}
