@@ -91,7 +91,7 @@ AXES_IPWARE_META_PRECEDENCE_ORDER = [
 # ships its own inline JS that would require nonces on every Django admin template.
 CSP_EXCLUDE_URL_PREFIXES = ("/" + ADMIN_URL,)
 CSP_DEFAULT_SRC = ("'self'",)
-CSP_SCRIPT_SRC = ("'self'", "cdn.jsdelivr.net")
+CSP_SCRIPT_SRC = ("'self'", "cdn.jsdelivr.net", "static.cloudflareinsights.com")
 CSP_STYLE_SRC = (
     "'self'",
     "cdnjs.cloudflare.com",
@@ -101,7 +101,7 @@ CSP_STYLE_SRC = (
 )
 CSP_FONT_SRC = ("'self'", "cdnjs.cloudflare.com", "fonts.gstatic.com")
 CSP_IMG_SRC = ("'self'", "data:", "https://www.google.com", "https://www.gstatic.com")
-CSP_CONNECT_SRC = ("'self'", "cdn.jsdelivr.net")
+CSP_CONNECT_SRC = ("'self'", "cdn.jsdelivr.net", "cloudflareinsights.com")
 CSP_FRAME_SRC = ("'none'",)
 CSP_OBJECT_SRC = ("'none'",)
 CSP_BASE_URI = ("'self'",)
