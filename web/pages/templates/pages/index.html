@@ -1,5 +1,80 @@
 {% extends 'base.html' %}
+{% load static %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css">
+{% endblock %}
 
 {% block content %}
-<h1>Home</h1>
+
+<!-- Landing nav -->
+<div class="d-flex justify-content-between align-items-center pb-4 mb-2">
+  <a href="{% url 'index' %}" class="landing-brand">StudyLog<span class="dot">.</span></a>
+  <div class="d-flex gap-2">
+    <a href="{% url 'account_login' %}" class="btn btn-outline-secondary btn-sm">Sign in</a>
+    <a href="{% url 'account_signup' %}" class="btn btn-primary btn-sm px-3">Get started</a>
+  </div>
+</div>
+
+<!-- Hero -->
+<section class="landing-hero text-center rounded-4 py-5 px-4 mb-5" data-aos="fade-up" data-aos-duration="700">
+  <span class="landing-badge mb-4 d-inline-block">Free to use</span>
+  <h1 class="display-5 fw-bold mb-3">
+    Track your learning.<br class="d-none d-sm-inline">Actually finish things.
+  </h1>
+  <p class="lead text-muted mb-4 mx-auto" style="max-width: 500px;">
+    StudyLog helps you organise videos, books, and courses — and keeps you honest about your progress.
+  </p>
+  <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
+    <a href="{% url 'account_signup' %}" class="btn btn-primary btn-lg px-5">Get started free</a>
+    <a href="{% url 'account_login' %}" class="btn btn-outline-secondary btn-lg px-4">Sign in</a>
+  </div>
+</section>
+
+<!-- Feature cards -->
+<section class="row g-4 mb-4 justify-content-center">
+  <div class="col-sm-6 col-md-4" data-aos="fade-up" data-aos-delay="0" data-aos-duration="600">
+    <div class="card h-100 border-0 shadow-sm p-4 text-center">
+      <i class="fas fa-folder-open fs-2 text-primary mb-3"></i>
+      <h5 class="fw-semibold mb-2">Organise resources</h5>
+      <p class="small text-muted mb-0">
+        Group videos, books, and courses into resources. Break big topics into units so nothing feels overwhelming.
+      </p>
+    </div>
+  </div>
+  <div class="col-sm-6 col-md-4" data-aos="fade-up" data-aos-delay="120" data-aos-duration="600">
+    <div class="card h-100 border-0 shadow-sm p-4 text-center">
+      <i class="fas fa-chart-line fs-2 text-primary mb-3"></i>
+      <h5 class="fw-semibold mb-2">Track progress</h5>
+      <p class="small text-muted mb-0">
+        Mark units complete, log video minutes, and watch your progress fill up as you work through material.
+      </p>
+    </div>
+  </div>
+  <div class="col-sm-6 col-md-4" data-aos="fade-up" data-aos-delay="240" data-aos-duration="600">
+    <div class="card h-100 border-0 shadow-sm p-4 text-center">
+      <i class="fas fa-house fs-2 text-primary mb-3"></i>
+      <h5 class="fw-semibold mb-2">Dashboard at a glance</h5>
+      <p class="small text-muted mb-0">
+        See everything in one place — what you're working on, how far you've come, and what to pick up next.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- Bottom CTA -->
+<section class="text-center py-5" data-aos="fade-up" data-aos-duration="600">
+  <p class="text-muted mb-3">Ready to get started?</p>
+  <div class="d-grid d-sm-block">
+    <a href="{% url 'account_signup' %}" class="btn btn-primary btn-lg px-5">Create a free account</a>
+  </div>
+</section>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
+<script nonce="{{ request.csp_nonce }}">
+  AOS.init({ once: true, offset: 60, disable: window.innerWidth < 768 });
+</script>
 {% endblock %}
