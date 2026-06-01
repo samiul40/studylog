@@ -54,7 +54,7 @@
         <form method="post" action="{% url 'learning:unit_update_status' unit.id %}">
           {% csrf_token %}
           <select name="status" {% if unit.is_status_locked %}disabled{% endif %}
-            class="unit-status-select unit-status-select--{{ unit.status }}" onchange="this.form.submit()">
+            class="unit-status-select unit-status-select--{{ unit.status }}">
             <option value="not_started" {% if unit.status == "not_started" %}selected{% endif %}>Not Started</option>
             <option value="in_progress" {% if unit.status == "in_progress" %}selected{% endif %}>In Progress</option>
             <option value="completed" {% if unit.status == "completed" %}selected{% endif %}>Completed</option>

@@ -91,6 +91,10 @@ function initBulkModal() {
       addRow("", "", contentKind);
     }
   });
+
+  modal.querySelector("[data-action='add-row']")?.addEventListener("click", function () {
+    addRow("", "", contentKind);
+  });
 }
 
 // Mark as Complete button — copies duration picker values into progress picker
@@ -137,4 +141,12 @@ document.addEventListener("DOMContentLoaded", function () {
   togglePassword();
   initDurationPickers(document);
   initMarkComplete(document);
+
+  // CSP-safe replacement for onclick="handleSubmit(this)" on spinner submit buttons
+  document.addEventListener("click", function (e) {
+    const btn = e.target.closest('button[type="submit"]');
+    if (!btn || !btn.querySelector(".spinner-border")) return;
+    e.preventDefault();
+    handleSubmit(btn);
+  });
 });

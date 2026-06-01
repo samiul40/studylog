@@ -186,7 +186,7 @@
         <button type="button" class="btn btn-cancel" data-bs-dismiss="modal">Cancel</button>
         <form method="post" action="{% url 'learning:resource_delete' resource.pk %}">
           {% csrf_token %}
-          <button type="submit" class="btn btn-danger" onclick="handleSubmit(this)">
+          <button type="submit" class="btn btn-danger">
             <span class="btn-text">Delete Resource</span>
             <span class="spinner-border spinner-border-sm d-none"></span>
           </button>
@@ -204,6 +204,12 @@
 {% block scripts %}
 <script nonce="{{ request.csp_nonce }}">
   document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll(".unit-status-select").forEach(function (select) {
+      select.addEventListener("change", function () {
+        this.closest("form").submit();
+      });
+    });
+
     const unitList = document.getElementById("unit-list");
     if (!unitList) return;
 
