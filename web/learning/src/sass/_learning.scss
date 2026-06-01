@@ -343,10 +343,21 @@ select.form-select {
   &__header {
     padding: 1.5rem;
     display: flex;
+    flex-direction: column;
+    gap: 0.625rem;
+  }
+
+  &__top {
+    display: flex;
     align-items: flex-start;
     justify-content: space-between;
     gap: 1rem;
     flex-wrap: wrap;
+  }
+
+  &__title-row {
+    flex: 1;
+    min-width: 0;
   }
 
   &__title {
@@ -362,7 +373,6 @@ select.form-select {
     color: $grey-500;
     margin: 0.5rem 0 0;
     line-height: 1.6;
-    max-width: 520px;
   }
 
   &__actions {
@@ -680,7 +690,7 @@ select.form-select {
 // Detail page responsive
 // ---------------------------------------------------------------------------
 @media (max-width: 768px) {
-  .detail-card__header {
+  .detail-card__top {
     flex-direction: column;
   }
 

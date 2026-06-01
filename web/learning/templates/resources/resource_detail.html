@@ -27,8 +27,8 @@
     <div class="detail-card mb-4">
 
       <div class="detail-card__header">
-        <div class="detail-card__title-row">
-          <div>
+        <div class="detail-card__top">
+          <div class="detail-card__title-row">
             <div class="d-flex align-items-center gap-2 mb-2">
               <span class="resource-badge resource-badge--{{ resource.resource_type.slug }}">
                 {{ resource.resource_type.name }}
@@ -43,11 +43,7 @@
               </span>
             </div>
             <h2 class="detail-card__title">{{ resource.title }}</h2>
-            {% if resource.description %}
-            <p class="detail-card__desc">{{ resource.description }}</p>
-            {% endif %}
           </div>
-        </div>
 
         <div class="detail-card__actions">
           {% if resource.url %}
@@ -78,6 +74,10 @@
           </button>
           {% endif %}
         </div>
+        </div><!-- /.detail-card__top -->
+        {% if resource.description %}
+        <p class="detail-card__desc">{{ resource.description }}</p>
+        {% endif %}
       </div>
 
       <div class="detail-card__footer">
