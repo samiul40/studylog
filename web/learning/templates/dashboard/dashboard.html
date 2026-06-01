@@ -243,7 +243,7 @@
 
 {% endblock %}
 {% block scripts %}
-<script>
+<script nonce="{{ request.csp_nonce }}">
   const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
   const gridColor   = isDark ? '#334155' : '#f3f4f6';
   const tickColor   = isDark ? '#94a3b8' : '#6b7280';
