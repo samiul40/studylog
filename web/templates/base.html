@@ -7,7 +7,22 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>StudyLog</title>
+  <title>{% block title %}StudyLog — Track your learning, actually finish things{% endblock %}</title>
+  <meta name="description" content="{% block meta_description %}StudyLog helps you organise videos, books, and courses — and keeps you honest about your progress. Free to use.{% endblock %}">
+
+  <!-- Open Graph (WhatsApp, Slack, iMessage, Facebook) -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="StudyLog">
+  <meta property="og:title" content="{% block og_title %}StudyLog — Track your learning, actually finish things{% endblock %}">
+  <meta property="og:description" content="{% block og_description %}StudyLog helps you organise videos, books, and courses — and keeps you honest about your progress. Free to use.{% endblock %}">
+  <meta property="og:url" content="https://studylog.co.uk{{ request.path }}">
+  {% block og_image %}<meta property="og:image" content="https://studylog.co.uk{% static 'img/og-image.png' %}">{% endblock %}
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{% block twitter_title %}StudyLog — Track your learning, actually finish things{% endblock %}">
+  <meta name="twitter:description" content="{% block twitter_description %}StudyLog helps you organise videos, books, and courses — and keeps you honest about your progress. Free to use.{% endblock %}">
+  <meta name="twitter:image" content="https://studylog.co.uk{% static 'img/og-image.png' %}">
   <link rel="icon" type="image/svg+xml" href="{% static 'img/favicon.svg' %}">
   <link rel="alternate icon" type="image/png" href="{% static 'img/favicon.png' %}">
   <link rel="shortcut icon" href="{% static 'img/favicon.ico' %}">
