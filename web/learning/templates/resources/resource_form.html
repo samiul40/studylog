@@ -45,6 +45,7 @@
 
       <form method="post">
         {% csrf_token %}
+        {{ form.youtube_units }}
 
         {% include "partials/_form_field.html" with field=form.title %}
         {% include "partials/_form_field.html" with field=form.resource_type %}
@@ -55,14 +56,42 @@
           {% include "partials/_form_field.html" with field=form.new_content_kind %}
         </div>
 
+        {% include "partials/_form_field.html" with field=form.url %}
+
         {% if not form.instance.pk %}
+        <div id="yt-import-bar" class="mb-3" style="display:none;">
+          <button type="button" id="yt-fetch-btn" class="btn btn-sm btn-outline-danger w-100">
+            <i class="fab fa-youtube me-1"></i> Import from YouTube
+          </button>
+        </div>
+
+        <div id="yt-preview" class="mb-3" style="display:none;">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <small class="text-muted fw-semibold" id="yt-preview-label"></small>
+            <button type="button" id="yt-clear-btn" class="btn btn-link btn-sm text-muted p-0">
+              <i class="fas fa-times me-1"></i>Clear
+            </button>
+          </div>
+          <div class="table-responsive" style="max-height:260px;overflow-y:auto;">
+            <table class="table table-sm mb-0">
+              <thead class="table-light sticky-top">
+                <tr>
+                  <th style="width:2.5rem">#</th>
+                  <th>Title</th>
+                  <th style="width:5rem">Duration</th>
+                </tr>
+              </thead>
+              <tbody id="yt-units-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
         <div id="unit-count-wrapper">
           {% include "partials/_form_field.html" with field=form.unit_count %}
         </div>
         {% endif %}
 
         {% include "partials/_form_field.html" with field=form.description %}
-        {% include "partials/_form_field.html" with field=form.url %}
 
         <div class="form-card__actions">
           <a href="{% if form.instance.pk %}
@@ -116,5 +145,137 @@
   });
 
   onTypeChange(ts.getValue());
+
+  // YouTube import (create form only)
+  (function () {
+    const urlField = document.getElementById("id_url");
+    const titleField = document.getElementById("id_title");
+    const importBar = document.getElementById("yt-import-bar");
+    const fetchBtn = document.getElementById("yt-fetch-btn");
+    const preview = document.getElementById("yt-preview");
+    const previewLabel = document.getElementById("yt-preview-label");
+    const tbody = document.getElementById("yt-units-tbody");
+    const clearBtn = document.getElementById("yt-clear-btn");
+    const hiddenUnits = document.getElementById("id_youtube_units");
+
+    if (!urlField || !importBar) return;
+
+    const YT_RE = /youtube\.com|youtu\.be/;
+
+    function updateBar() {
+      importBar.style.display = YT_RE.test(urlField.value.trim()) ? "block" : "none";
+    }
+
+    urlField.addEventListener("input", updateBar);
+    urlField.addEventListener("paste", () => setTimeout(updateBar, 0));
+    updateBar();
+
+    function formatDuration(mins) {
+      if (!mins) return "—";
+      const h = Math.floor(mins / 60);
+      const m = mins % 60;
+      return h > 0 ? `${h}h ${m}m` : `${m}m`;
+    }
+
+    function syncHidden() {
+      if (!hiddenUnits || !tbody) return;
+      const units = Array.from(tbody.querySelectorAll("tr")).map(row => ({
+        title: (row.querySelector("input[type='text']") || {}).value || "",
+        duration_minutes: parseInt(row.dataset.durationMinutes) || null,
+      }));
+      hiddenUnits.value = JSON.stringify(units);
+    }
+
+    function resetImport() {
+      if (hiddenUnits) hiddenUnits.value = "";
+      if (tbody) tbody.innerHTML = "";
+      if (preview) preview.style.display = "none";
+      if (unitCountWrapper) unitCountWrapper.style.display = "block";
+    }
+
+    clearBtn && clearBtn.addEventListener("click", resetImport);
+
+    fetchBtn && fetchBtn.addEventListener("click", async () => {
+      const url = urlField.value.trim();
+      if (!YT_RE.test(url)) return;
+
+      fetchBtn.disabled = true;
+      fetchBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Fetching…';
+
+      try {
+        const csrf = document.querySelector("[name=csrfmiddlewaretoken]").value;
+        const resp = await fetch("{% url 'learning:youtube_preview' %}", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "X-CSRFToken": csrf },
+          body: JSON.stringify({ url }),
+        });
+        const data = await resp.json();
+
+        if (!resp.ok || data.error) throw new Error(data.error || "Fetch failed.");
+
+        if (titleField && !titleField.value.trim() && data.title) {
+          titleField.value = data.title;
+        }
+
+        if (!ts.getValue()) {
+          const videoPk = Object.keys(resourceTypeData).find(
+            pk => resourceTypeData[pk].content_kind === "video"
+          );
+          if (videoPk) {
+            ts.setValue(videoPk);
+          } else {
+            const nameInput = document.getElementById("id_new_resource_type");
+            const kindSelect = document.getElementById("id_new_content_kind");
+            if (nameInput) nameInput.value = "YouTube";
+            if (kindSelect) kindSelect.value = "video";
+            onTypeChange(null);
+          }
+        }
+
+        tbody.innerHTML = "";
+        data.units.forEach((unit, i) => {
+          const tr = document.createElement("tr");
+          tr.dataset.durationMinutes = unit.duration_minutes || "";
+
+          const td1 = document.createElement("td");
+          td1.className = "text-muted";
+          td1.textContent = i + 1;
+
+          const td2 = document.createElement("td");
+          const input = document.createElement("input");
+          input.type = "text";
+          input.className = "form-control form-control-sm";
+          input.value = unit.title;
+          input.addEventListener("input", syncHidden);
+          td2.appendChild(input);
+
+          const td3 = document.createElement("td");
+          td3.className = "text-muted small";
+          td3.textContent = formatDuration(unit.duration_minutes);
+
+          tr.appendChild(td1);
+          tr.appendChild(td2);
+          tr.appendChild(td3);
+          tbody.appendChild(tr);
+        });
+
+        const count = data.units.length;
+        previewLabel.textContent = data.is_playlist
+          ? `${count} video${count !== 1 ? "s" : ""} found in playlist`
+          : "1 video found";
+
+        preview.style.display = "block";
+        if (unitCountWrapper) unitCountWrapper.style.display = "none";
+
+        syncHidden();
+
+      } catch (err) {
+        alert("Could not fetch YouTube data: " + err.message);
+      } finally {
+        fetchBtn.disabled = false;
+        fetchBtn.innerHTML = '<i class="fab fa-youtube me-1"></i> Import from YouTube';
+      }
+    });
+  })();
 </script>
 {% endblock %}

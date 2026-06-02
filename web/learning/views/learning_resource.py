@@ -1,3 +1,5 @@
+import json
+
 from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
@@ -108,8 +110,25 @@ class ResourceCreateView(UserPermissionMixin, CreateView):
         form.instance.user = self.request.user
         response = super().form_valid(form)
 
+        youtube_units_json = form.cleaned_data.get("youtube_units", "")
         unit_count = form.cleaned_data.get("unit_count")
-        if unit_count:
+
+        if youtube_units_json:
+            try:
+                units_data = json.loads(youtube_units_json)
+            except (json.JSONDecodeError, ValueError):
+                units_data = []
+            units = []
+            for i, u in enumerate(units_data):
+                unit = LearningUnit(
+                    resource=self.object,
+                    title=u.get("title") or f"Unit {i + 1}",
+                    duration_minutes=u.get("duration_minutes") or None,
+                    order=i + 1,
+                )
+                units.append(unit)
+            LearningUnit.objects.bulk_create(units)
+        elif unit_count:
             unit_label = self.object.resource_type.unit_label
             units = [
                 LearningUnit(
