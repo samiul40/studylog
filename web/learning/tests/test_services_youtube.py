@@ -1,34 +1,70 @@
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 from learning.services.youtube import (
     MAX_PLAYLIST_UNITS,
+    _parse_iso_duration,
     fetch_youtube_metadata,
 )
 
 
-def make_ydl(info):
-    instance = MagicMock()
-    instance.extract_info.return_value = info
+def mock_get(*responses):
+    """Returns a side_effect list of mock responses for requests.get."""
+    mocks = []
+    for data in responses:
+        m = MagicMock()
+        m.json.return_value = data
+        m.raise_for_status = MagicMock()
+        mocks.append(m)
+    return mocks
 
-    ctx = MagicMock()
-    ctx.__enter__ = MagicMock(return_value=instance)
-    ctx.__exit__ = MagicMock(return_value=False)
-    return ctx
+
+SINGLE_VIDEO_RESP = {
+    "items": [
+        {
+            "id": "abc",
+            "snippet": {"title": "My Video"},
+            "contentDetails": {"duration": "PT6M0S"},
+        }
+    ]
+}
+
+PLAYLIST_RESP = {"items": [{"snippet": {"title": "My Playlist"}}]}
+
+PLAYLIST_ITEMS_RESP = {
+    "items": [
+        {"snippet": {"title": "Video 1", "resourceId": {"videoId": "v1"}}},
+        {"snippet": {"title": "Video 2", "resourceId": {"videoId": "v2"}}},
+        {"snippet": {"title": "Video 3", "resourceId": {"videoId": "v3"}}},
+    ]
+}
+
+DURATIONS_RESP = {
+    "items": [
+        {"id": "v1", "contentDetails": {"duration": "PT2M0S"}},
+        {"id": "v2", "contentDetails": {"duration": "PT3M0S"}},
+        {"id": "v3", "contentDetails": {"duration": "PT1M0S"}},
+    ]
+}
 
 
+@pytest.mark.django_db
 class TestFetchYoutubeMetadataSingleVideo:
-    @patch("learning.services.youtube.yt_dlp.YoutubeDL")
-    def test_returns_one_unit(self, mock_class):
-        mock_class.return_value = make_ydl({"title": "My Video", "duration": 360})
+    @patch("learning.services.youtube.requests.get")
+    def test_returns_one_unit(self, mock_get_fn, settings):
+        settings.YOUTUBE_API_KEY = "test-key"
+        mock_get_fn.side_effect = mock_get(SINGLE_VIDEO_RESP)
 
         result = fetch_youtube_metadata("https://youtube.com/watch?v=abc")
 
         assert result["is_playlist"] is False
         assert len(result["units"]) == 1
 
-    @patch("learning.services.youtube.yt_dlp.YoutubeDL")
-    def test_title_and_duration_are_correct(self, mock_class):
-        mock_class.return_value = make_ydl({"title": "My Video", "duration": 360})
+    @patch("learning.services.youtube.requests.get")
+    def test_title_and_duration_are_correct(self, mock_get_fn, settings):
+        settings.YOUTUBE_API_KEY = "test-key"
+        mock_get_fn.side_effect = mock_get(SINGLE_VIDEO_RESP)
 
         result = fetch_youtube_metadata("https://youtube.com/watch?v=abc")
 
@@ -36,112 +72,107 @@ class TestFetchYoutubeMetadataSingleVideo:
         assert result["units"][0]["title"] == "My Video"
         assert result["units"][0]["duration_minutes"] == 6
 
-    @patch("learning.services.youtube.yt_dlp.YoutubeDL")
-    def test_duration_rounds_to_nearest_minute(self, mock_class):
-        mock_class.return_value = make_ydl({"title": "Video", "duration": 95})
+    @patch("learning.services.youtube.requests.get")
+    def test_missing_api_key_raises(self, mock_get_fn, settings):
+        settings.YOUTUBE_API_KEY = ""
 
-        result = fetch_youtube_metadata("https://youtube.com/watch?v=abc")
+        with pytest.raises(ValueError, match="not configured"):
+            fetch_youtube_metadata("https://youtube.com/watch?v=abc")
 
-        assert result["units"][0]["duration_minutes"] == 2
+    @patch("learning.services.youtube.requests.get")
+    def test_video_not_found_raises(self, mock_get_fn, settings):
+        settings.YOUTUBE_API_KEY = "test-key"
+        mock_get_fn.side_effect = mock_get({"items": []})
 
-    @patch("learning.services.youtube.yt_dlp.YoutubeDL")
-    def test_duration_floors_at_one_minute(self, mock_class):
-        mock_class.return_value = make_ydl({"title": "Short", "duration": 10})
+        with pytest.raises(ValueError, match="not found"):
+            fetch_youtube_metadata("https://youtube.com/watch?v=abc")
 
-        result = fetch_youtube_metadata("https://youtube.com/watch?v=abc")
+    def test_unrecognised_url_raises(self, settings):
+        settings.YOUTUBE_API_KEY = "test-key"
 
-        assert result["units"][0]["duration_minutes"] == 1
-
-    @patch("learning.services.youtube.yt_dlp.YoutubeDL")
-    def test_missing_duration_returns_none(self, mock_class):
-        mock_class.return_value = make_ydl({"title": "Video", "duration": None})
-
-        result = fetch_youtube_metadata("https://youtube.com/watch?v=abc")
-
-        assert result["units"][0]["duration_minutes"] is None
+        with pytest.raises(ValueError, match="Could not find"):
+            fetch_youtube_metadata("https://example.com/not-youtube")
 
 
+@pytest.mark.django_db
 class TestFetchYoutubeMetadataPlaylist:
-    @patch("learning.services.youtube.yt_dlp.YoutubeDL")
-    def test_returns_all_entries(self, mock_class):
-        mock_class.return_value = make_ydl(
-            {
-                "_type": "playlist",
-                "title": "My Playlist",
-                "entries": [
-                    {"title": "Video 1", "duration": 120},
-                    {"title": "Video 2", "duration": 180},
-                    {"title": "Video 3", "duration": 60},
-                ],
-            }
+    @patch("learning.services.youtube.requests.get")
+    def test_returns_all_entries(self, mock_get_fn, settings):
+        settings.YOUTUBE_API_KEY = "test-key"
+        mock_get_fn.side_effect = mock_get(
+            PLAYLIST_RESP, PLAYLIST_ITEMS_RESP, DURATIONS_RESP
         )
 
-        result = fetch_youtube_metadata("https://youtube.com/playlist?list=abc")
+        result = fetch_youtube_metadata("https://youtube.com/playlist?list=PLabc")
 
         assert result["is_playlist"] is True
         assert result["title"] == "My Playlist"
         assert len(result["units"]) == 3
 
-    @patch("learning.services.youtube.yt_dlp.YoutubeDL")
-    def test_capped_at_max_playlist_units(self, mock_class):
-        entries = [
-            {"title": f"Video {i}", "duration": 60}
-            for i in range(MAX_PLAYLIST_UNITS + 10)
-        ]
-        mock_class.return_value = make_ydl(
-            {
-                "_type": "playlist",
-                "title": "Big Playlist",
-                "entries": entries,
-            }
+    @patch("learning.services.youtube.requests.get")
+    def test_titles_and_durations_are_correct(self, mock_get_fn, settings):
+        settings.YOUTUBE_API_KEY = "test-key"
+        mock_get_fn.side_effect = mock_get(
+            PLAYLIST_RESP, PLAYLIST_ITEMS_RESP, DURATIONS_RESP
         )
 
-        result = fetch_youtube_metadata("https://youtube.com/playlist?list=abc")
+        result = fetch_youtube_metadata("https://youtube.com/playlist?list=PLabc")
+
+        assert result["units"][0]["title"] == "Video 1"
+        assert result["units"][0]["duration_minutes"] == 2
+        assert result["units"][1]["duration_minutes"] == 3
+
+    @patch("learning.services.youtube.requests.get")
+    def test_playlist_not_found_raises(self, mock_get_fn, settings):
+        settings.YOUTUBE_API_KEY = "test-key"
+        mock_get_fn.side_effect = mock_get({"items": []})
+
+        with pytest.raises(ValueError, match="not found"):
+            fetch_youtube_metadata("https://youtube.com/playlist?list=PLabc")
+
+    @patch("learning.services.youtube.requests.get")
+    def test_capped_at_max_playlist_units(self, mock_get_fn, settings):
+        settings.YOUTUBE_API_KEY = "test-key"
+        items = [
+            {
+                "snippet": {
+                    "title": f"Video {i}",
+                    "resourceId": {"videoId": f"v{i}"},
+                }
+            }
+            for i in range(MAX_PLAYLIST_UNITS)
+        ]
+        durations = {
+            "items": [
+                {"id": f"v{i}", "contentDetails": {"duration": "PT1M0S"}}
+                for i in range(MAX_PLAYLIST_UNITS)
+            ]
+        }
+        mock_get_fn.side_effect = mock_get(PLAYLIST_RESP, {"items": items}, durations)
+
+        result = fetch_youtube_metadata("https://youtube.com/playlist?list=PLabc")
 
         assert len(result["units"]) == MAX_PLAYLIST_UNITS
 
-    @patch("learning.services.youtube.yt_dlp.YoutubeDL")
-    def test_none_entries_are_skipped(self, mock_class):
-        mock_class.return_value = make_ydl(
-            {
-                "_type": "playlist",
-                "title": "Playlist",
-                "entries": [
-                    {"title": "Video 1", "duration": 120},
-                    None,
-                    {"title": "Video 3", "duration": 60},
-                ],
-            }
-        )
 
-        result = fetch_youtube_metadata("https://youtube.com/playlist?list=abc")
+class TestParseIsoDuration:
+    def test_minutes_only(self):
+        assert _parse_iso_duration("PT4M") == 4
 
-        assert len(result["units"]) == 2
+    def test_hours_and_minutes(self):
+        assert _parse_iso_duration("PT1H30M") == 90
 
-    @patch("learning.services.youtube.yt_dlp.YoutubeDL")
-    def test_missing_title_falls_back_to_video_number(self, mock_class):
-        mock_class.return_value = make_ydl(
-            {
-                "_type": "playlist",
-                "title": "Playlist",
-                "entries": [{"title": None, "duration": 60}],
-            }
-        )
+    def test_seconds_round_up(self):
+        assert _parse_iso_duration("PT1M35S") == 2
 
-        result = fetch_youtube_metadata("https://youtube.com/playlist?list=abc")
+    def test_seconds_only_floors_at_one(self):
+        assert _parse_iso_duration("PT30S") == 1
 
-        assert result["units"][0]["title"] == "Video 1"
+    def test_zero_duration_returns_none(self):
+        assert _parse_iso_duration("PT0S") is None
 
-    @patch("learning.services.youtube.yt_dlp.YoutubeDL")
-    def test_missing_duration_returns_none(self, mock_class):
-        mock_class.return_value = make_ydl(
-            {
-                "_type": "playlist",
-                "title": "Playlist",
-                "entries": [{"title": "Video 1", "duration": None}],
-            }
-        )
+    def test_empty_string_returns_none(self):
+        assert _parse_iso_duration("") is None
 
-        result = fetch_youtube_metadata("https://youtube.com/playlist?list=abc")
-
-        assert result["units"][0]["duration_minutes"] is None
+    def test_full_format(self):
+        assert _parse_iso_duration("PT1H2M3S") == 62
