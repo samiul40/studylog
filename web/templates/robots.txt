@@ -1,0 +1,6 @@
+User-agent: *
+Disallow: /accounts/
+Disallow: /learning/
+Disallow: /admin/
+
+Sitemap: https://studylog.co.uk/sitemap.xml
