@@ -54,7 +54,7 @@
   {% for resource in resources %}
 
   <div class="col-6 col-sm-6 col-md-4">
-    <div class="resource-card">
+    <div class="resource-card resource-card--{{ resource.resource_type.slug }}">
 
       <div class="resource-card__header">
         <div class="resource-card__badges">

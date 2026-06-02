@@ -160,6 +160,13 @@ function initCountUp() {
 
 // Init All
 document.addEventListener("DOMContentLoaded", function () {
+  // Move all modals to <body> so Bootstrap's backdrop (also appended to body)
+  // doesn't paint over them — the pageFadeIn animation on <main> creates a
+  // stacking context that otherwise traps the modal below the backdrop.
+  document.querySelectorAll("main .modal").forEach(function (modal) {
+    document.body.appendChild(modal);
+  });
+
   initBulkModal();
   togglePassword();
   initDurationPickers(document);

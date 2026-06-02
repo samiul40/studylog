@@ -1,5 +1,5 @@
 <div class="modal fade" id="addUnitModal" tabindex="-1">
-  <div class="modal-dialog">
+  <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <form method="post" action="{% url 'learning:unit_create' resource.pk %}">
         {% csrf_token %}

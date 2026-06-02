@@ -1,6 +1,6 @@
 {% load learning_filters %}
 <div class="modal fade" id="editUnitModal{{ unit.id }}" tabindex="-1">
-  <div class="modal-dialog">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
     <div class="modal-content">
 
       <form method="post" action="{% url 'learning:unit_update' resource.pk unit.pk %}">
