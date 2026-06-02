@@ -79,6 +79,11 @@
   {% include 'partials/_footer.html' %}
   {% endif %}
 
+  <!-- Mobile bottom nav -->
+  {% if user.is_authenticated %}
+  {% include 'partials/_mobile_bottom_nav.html' %}
+  {% endif %}
+
   <script src="{% static 'js/bootstrap.bundle.min.js' %}" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.7/Sortable.min.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>

@@ -1,17 +1,17 @@
 {% load static %}
+{% with initials=request.user.first_name|slice:":1"|add:request.user.last_name|slice:":1" %}
 <nav class="navbar navbar-expand-lg">
   <div class="container-fluid">
 
     <!-- Brand -->
     <a class="navbar-brand" href="{% url 'learning:dashboard' %}">StudyLog</a>
 
-    <!-- Mobile right: avatar + toggler -->
-    <div class="d-flex align-items-center d-lg-none ms-auto gap-2">
-
+    <!-- Mobile right: avatar only (hamburger replaced by bottom nav) -->
+    <div class="d-flex align-items-center d-lg-none ms-auto">
       <div class="dropdown">
-        <a href="#" class="navbar-user-trigger dropdown-toggle" id="navbarUserDropdownMobile" data-bs-toggle="dropdown"
-          aria-expanded="false">
-          <img src="{% static 'img/icons/user.svg' %}" alt="Profile" width="28" height="28" class="rounded-circle" />
+        <a href="#" class="navbar-user-trigger dropdown-toggle" id="navbarUserDropdownMobile"
+          data-bs-toggle="dropdown" aria-expanded="false">
+          <div class="nav-avatar">{% if initials %}{{ initials|upper }}{% else %}{{ request.user.username|slice:":1"|upper }}{% endif %}</div>
         </a>
         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarUserDropdownMobile">
           <li>
@@ -20,14 +20,7 @@
               <strong>{{ request.user.email }}</strong>
             </div>
           </li>
-          <li>
-            <a class="dropdown-item" href="{% url 'settings' %}">
-              <i class="fas fa-user-cog me-2"></i> Settings
-            </a>
-          </li>
-          <li>
-            <hr class="dropdown-divider">
-          </li>
+          <li><hr class="dropdown-divider"></li>
           <li>
             <form method="post" action="{% url 'account_logout' %}">
               {% csrf_token %}
@@ -38,18 +31,12 @@
           </li>
         </ul>
       </div>
-
-      <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
-        aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-
     </div>
 
-    <!-- Collapsible nav links -->
+    <!-- Collapsible nav links (desktop only) -->
     <div class="collapse navbar-collapse" id="navbarNav">
       <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-      {% if not user.is_authenticated %}
+        {% if not user.is_authenticated %}
         <li class="nav-item">
           <a class="nav-link {% if request.resolver_match.url_name == 'index' %}active{% endif %}"
             href="{% url 'index' %}">
@@ -87,9 +74,9 @@
     <!-- Desktop right: avatar + name -->
     <div class="d-none d-lg-flex align-items-center">
       <div class="dropdown">
-        <a href="#" class="navbar-user-trigger dropdown-toggle" id="navbarUserDropdown" data-bs-toggle="dropdown"
-          aria-expanded="false">
-          <img src="{% static 'img/icons/user.svg' %}" alt="Profile" width="28" height="28" class="rounded-circle" />
+        <a href="#" class="navbar-user-trigger dropdown-toggle" id="navbarUserDropdown"
+          data-bs-toggle="dropdown" aria-expanded="false">
+          <div class="nav-avatar">{% if initials %}{{ initials|upper }}{% else %}{{ request.user.username|slice:":1"|upper }}{% endif %}</div>
           <span class="d-none d-lg-inline">{{ request.user.first_name }}</span>
         </a>
         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarUserDropdown">
@@ -104,9 +91,7 @@
               <i class="fas fa-user-cog me-2"></i> Settings
             </a>
           </li>
-          <li>
-            <hr class="dropdown-divider">
-          </li>
+          <li><hr class="dropdown-divider"></li>
           <li>
             <form method="post" action="{% url 'account_logout' %}">
               {% csrf_token %}
@@ -121,3 +106,4 @@
 
   </div>
 </nav>
+{% endwith %}

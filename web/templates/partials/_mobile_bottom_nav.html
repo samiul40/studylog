@@ -1,0 +1,29 @@
+{% with view=request.resolver_match.view_name %}
+<nav class="mobile-bottom-nav">
+
+  <a href="{% url 'learning:dashboard' %}"
+     class="mobile-bottom-nav__item {% if view == 'learning:dashboard' %}active{% endif %}">
+    <div class="mobile-bottom-nav__icon">
+      <i class="fas fa-house"></i>
+    </div>
+    <span>Dashboard</span>
+  </a>
+
+  <a href="{% url 'learning:resource_list' %}"
+     class="mobile-bottom-nav__item {% if 'learning:' in view and view != 'learning:dashboard' %}active{% endif %}">
+    <div class="mobile-bottom-nav__icon">
+      <i class="fas fa-folder-open"></i>
+    </div>
+    <span>Resources</span>
+  </a>
+
+  <a href="{% url 'settings' %}"
+     class="mobile-bottom-nav__item {% if view == 'settings' %}active{% endif %}">
+    <div class="mobile-bottom-nav__icon">
+      <i class="fas fa-cog"></i>
+    </div>
+    <span>Settings</span>
+  </a>
+
+</nav>
+{% endwith %}
