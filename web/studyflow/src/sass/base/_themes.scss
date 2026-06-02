@@ -124,6 +124,13 @@
     color: #e2e8f0;
   }
 
+  // ── Landing feature icon badges ───────────────────────────────────────────────
+  .landing-feature-icon {
+    &--emerald { background: rgba(52, 211, 153, 0.12); color: $emerald-400; }
+    &--blue    { background: rgba(37, 99, 235, 0.12);  color: #93c5fd; }
+    &--violet  { background: rgba(124, 58, 237, 0.12); color: #c4b5fd; }
+  }
+
   // ── Cards & surfaces ─────────────────────────────────────────────────────────
   .form-card {
     background: #1e293b;

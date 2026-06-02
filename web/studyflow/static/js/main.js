@@ -135,12 +135,36 @@ function togglePassword() {
   });
 }
 
+// KPI count-up — animates .kpi-value integers from 0 on page load
+function initCountUp() {
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+  document.querySelectorAll(".kpi-value").forEach(el => {
+    const target = parseInt(el.textContent.trim(), 10);
+    if (isNaN(target) || target <= 1) return;
+
+    el.textContent = "0";
+    const duration = Math.min(600 + target * 12, 1000);
+    const startTime = performance.now();
+
+    function tick(now) {
+      const t = Math.min((now - startTime) / duration, 1);
+      const eased = 1 - Math.pow(1 - t, 3); // ease-out cubic
+      el.textContent = Math.round(eased * target);
+      if (t < 1) requestAnimationFrame(tick);
+    }
+
+    requestAnimationFrame(tick);
+  });
+}
+
 // Init All
 document.addEventListener("DOMContentLoaded", function () {
   initBulkModal();
   togglePassword();
   initDurationPickers(document);
   initMarkComplete(document);
+  initCountUp();
 
   // CSP-safe replacement for onclick="handleSubmit(this)" on spinner submit buttons
   document.addEventListener("click", function (e) {

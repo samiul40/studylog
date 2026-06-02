@@ -57,6 +57,22 @@ img {
   max-width: 420px;
 }
 
+.login-back {
+  margin-bottom: 1.25rem;
+
+  a {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: $grey-400;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    transition: color $transition-fast;
+
+    &:hover { color: $emerald-600; }
+  }
+}
+
 .login-header {
   text-align: center;
   margin-bottom: 2rem;

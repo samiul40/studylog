@@ -1,0 +1,62 @@
+// =============================================================================
+// _animations.scss — Micro-interactions & entrance animations
+// =============================================================================
+@use '../abstracts/variables' as *;
+
+// ── Page entrance ─────────────────────────────────────────────────────────────
+// Every page fades in with a subtle upward drift. Keeps navigation feeling
+// responsive without being distracting.
+@keyframes pageFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+main.flex-grow-1 {
+  animation: pageFadeIn 0.22s ease-out both;
+}
+
+// ── Progress bar fill ─────────────────────────────────────────────────────────
+// Scales from 0 → full width on load. Works with any inline width value
+// because scaleX animates the visual render, not the CSS width property.
+@keyframes progressFill {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+
+.progress-bar {
+  transform-origin: left center;
+  animation: progressFill 0.75s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: 0.1s;
+}
+
+// ── Landing feature card hover ────────────────────────────────────────────────
+.landing-features .card {
+  transition: box-shadow $transition-fast, transform $transition-fast;
+
+  &:hover {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
+    transform: translateY(-3px);
+  }
+}
+
+// ── Reduced motion ────────────────────────────────────────────────────────────
+@media (prefers-reduced-motion: reduce) {
+  main.flex-grow-1 {
+    animation: none;
+  }
+
+  .progress-bar {
+    animation: none;
+  }
+
+  .landing-features .card {
+    transition: none;
+    &:hover { transform: none; }
+  }
+}
