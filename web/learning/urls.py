@@ -14,6 +14,7 @@ from .views import (
     ResourceDetailView,
     ResourceListView,
     ResourceUpdateView,
+    YouTubePreviewView,
     dashboard_view,
 )
 
@@ -63,6 +64,7 @@ urlpatterns = [
         LearningUnitUpdateStatusView.as_view(),
         name="unit_update_status",
     ),
+    path("youtube-preview/", YouTubePreviewView.as_view(), name="youtube_preview"),
     path("dashboard/", dashboard_view, name="dashboard"),
     path(
         "<int:pk>/archive/",

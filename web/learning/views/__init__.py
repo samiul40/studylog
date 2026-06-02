@@ -16,6 +16,7 @@ from .learning_unit import (
     LearningUnitUpdateStatusView,
     LearningUnitUpdateView,
 )
+from .youtube import YouTubePreviewView
 
 __all__ = [
     "ResourceArchiveListView",
@@ -31,5 +32,6 @@ __all__ = [
     "LearningUnitReorderView",
     "LearningUnitUpdateStatusView",
     "LearningUnitBulkCreateView",
+    "YouTubePreviewView",
     "dashboard_view",
 ]

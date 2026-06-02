@@ -39,6 +39,10 @@ class LearningResourceForm(forms.ModelForm):
             attrs={"class": "form-control", "placeholder": "e.g. 10"}
         ),
     )
+    youtube_units = forms.CharField(
+        required=False,
+        widget=forms.HiddenInput(),
+    )
 
     class Meta:
         model = LearningResource
