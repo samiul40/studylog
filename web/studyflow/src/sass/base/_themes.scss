@@ -291,7 +291,9 @@
   // ── Resource list ─────────────────────────────────────────────────────────────
   .resource-card {
     background: #1e293b;
-    border-color: #334155;
+    border-top-color: #334155;
+    border-right-color: #334155;
+    border-bottom-color: #334155;
     &__title { color: #f1f5f9; }
     &__desc { color: #94a3b8; }
   }
@@ -306,7 +308,9 @@
   // ── Resource detail ───────────────────────────────────────────────────────────
   .detail-card {
     background: #1e293b;
-    border-color: #334155;
+    border-top-color: #334155;
+    border-right-color: #334155;
+    border-bottom-color: #334155;
     &__title { color: #f1f5f9; }
     &__desc { color: #94a3b8; }
     &__footer { background: #253047; border-top-color: #334155; }

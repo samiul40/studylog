@@ -42,12 +42,18 @@
   }
 }
 
+.resource-type-filter {
+  width: 180px;
+  flex-shrink: 0;
+}
+
 // ---------------------------------------------------------------------------
 // Resource card
 // ---------------------------------------------------------------------------
 .resource-card {
   background: #fff;
   border: 1px solid $grey-200;
+  border-left: 4px solid $grey-200;
   border-radius: $radius-lg;
   padding: 1.25rem;
   height: 100%;
@@ -55,6 +61,12 @@
   flex-direction: column;
   gap: 0.75rem;
   @include hover-lift;
+
+  &--udemy            { border-left-color: #f97316; }
+  &--youtube          { border-left-color: #ef4444; }
+  &--book             { border-left-color: #10b981; }
+  &--other            { border-left-color: #94a3b8; }
+  &--linkedin-learning { border-left-color: #0a66c2; }
 
   &__header {
     display: flex;
@@ -337,8 +349,15 @@ select.form-select {
 .detail-card {
   background: #fff;
   border: 1px solid $grey-200;
+  border-left: 4px solid $grey-200;
   border-radius: $radius-lg;
   overflow: hidden;
+
+  &--udemy            { border-left-color: #f97316; }
+  &--youtube          { border-left-color: #ef4444; }
+  &--book             { border-left-color: #10b981; }
+  &--other            { border-left-color: #94a3b8; }
+  &--linkedin-learning { border-left-color: #0a66c2; }
 
   &__header {
     padding: 1.5rem;
@@ -690,14 +709,42 @@ select.form-select {
 // Detail page responsive
 // ---------------------------------------------------------------------------
 @media (max-width: 768px) {
+  // Stack search + type filter vertically, each full width
+  .resource-type-filter {
+    width: 100%;
+    flex-shrink: 1;
+  }
+
   .detail-card__top {
     flex-direction: column;
   }
 
+  .unit-card__header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+
+    > div {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+  }
+
   .detail-card__actions {
     width: 100%;
-    justify-content: flex-start;
+    display: flex;
     flex-wrap: wrap;
+    gap: 0.5rem;
+
+    // Primary action (Open Resource) takes its own full row
+    .btn-primary { width: 100%; justify-content: center; }
+
+    // Archive form: transparent to flex so its button is a direct flex item
+    form { display: contents; }
+
+    // Secondary/danger actions share the remaining row equally
+    .btn:not(.btn-primary) { flex: 1; justify-content: center; }
   }
 
   .stats-card__grid {

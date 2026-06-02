@@ -53,7 +53,7 @@
 <div class="row g-3 mb-4">
 
   <div class="col-6 col-md-3">
-    <div class="kpi-card">
+    <div class="kpi-card h-100">
       <div class="kpi-icon kpi-icon--emerald">
         <i class="fas fa-folder-open"></i>
       </div>
@@ -65,7 +65,7 @@
   </div>
 
   <div class="col-6 col-md-3">
-    <div class="kpi-card">
+    <div class="kpi-card h-100">
       <div class="kpi-icon kpi-icon--blue">
         <i class="fas fa-list-check"></i>
       </div>
@@ -77,7 +77,7 @@
   </div>
 
   <div class="col-6 col-md-3">
-    <div class="kpi-card">
+    <div class="kpi-card h-100">
       <div class="kpi-icon kpi-icon--violet">
         <i class="fas fa-circle-check"></i>
       </div>
@@ -89,7 +89,7 @@
   </div>
 
   <div class="col-6 col-md-3">
-    <div class="kpi-card">
+    <div class="kpi-card h-100">
       <div class="kpi-icon kpi-icon--amber">
         <i class="fas fa-hourglass-half"></i>
       </div>
@@ -101,6 +101,13 @@
   </div>
 
 </div>
+
+{% if total_resources > 0 and total_units == 0 %}
+<div class="tip-banner mb-4">
+  <i class="fas fa-lightbulb me-2"></i>
+  You have resources but no units yet — <a href="{% url 'learning:resource_list' %}">open a resource</a> and add units to start tracking your progress.
+</div>
+{% endif %}
 
 <!-- This Week summary -->
 <div class="row g-3 mb-4">

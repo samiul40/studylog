@@ -1,5 +1,5 @@
 <div class="modal fade" id="bulkUnitModal" tabindex="-1" data-content-kind="{{ resource.resource_type.content_kind }}">
-  <div class="modal-dialog modal-lg">
+  <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
     <div class="modal-content">
       <form method="post" action="{% url 'learning:unit_bulk_create' resource.pk %}">
         {% csrf_token %}
