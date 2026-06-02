@@ -1,0 +1,92 @@
+// =============================================================================
+// _mobile_nav.scss — Mobile bottom navigation bar + avatar
+// =============================================================================
+@use '../abstracts/variables' as *;
+
+// ---------------------------------------------------------------------------
+// Avatar circle (initials)
+// ---------------------------------------------------------------------------
+.nav-avatar {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background: $emerald-500;
+  color: #fff;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  letter-spacing: 0.03em;
+  flex-shrink: 0;
+}
+
+// ---------------------------------------------------------------------------
+// Bottom nav bar (mobile only)
+// ---------------------------------------------------------------------------
+.mobile-bottom-nav {
+  display: none;
+}
+
+@media (max-width: 991px) {
+  .mobile-bottom-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    padding-bottom: env(safe-area-inset-bottom, 0);
+    background: #fff;
+    border-top: 1px solid $grey-200;
+    z-index: 1029;
+    align-items: stretch;
+  }
+
+  .mobile-bottom-nav__item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.2rem;
+    text-decoration: none;
+    color: $grey-400;
+    font-size: 0.625rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    transition: color $transition-fast;
+
+    &:hover {
+      color: $emerald-600;
+
+      .mobile-bottom-nav__icon { background: $emerald-100; }
+    }
+
+    &.active {
+      color: $emerald-600;
+
+      .mobile-bottom-nav__icon { background: $emerald-100; }
+    }
+  }
+
+  .mobile-bottom-nav__icon {
+    width: 3.5rem;
+    height: 1.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: $radius-pill;
+    font-size: 1.125rem;
+    transition: background $transition-fast;
+  }
+
+  // Push main content up so it's not hidden behind the nav bar
+  main.flex-grow-1 {
+    padding-bottom: calc(60px + 1.5rem) !important;
+  }
+
+  // Hide footer on mobile since bottom nav replaces it
+  .footer { display: none; }
+}

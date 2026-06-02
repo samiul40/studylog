@@ -415,4 +415,22 @@
     border-color: #334155;
     &:hover { background-color: #253047; color: #e2e8f0; border-color: #475569; }
   }
+
+  // ── Mobile bottom nav ─────────────────────────────────────────────────────────
+  .mobile-bottom-nav {
+    background: #1e293b;
+    border-top-color: #334155;
+  }
+
+  .mobile-bottom-nav__item {
+    color: #475569;
+
+    &:hover, &.active {
+      color: #34d399;
+      .mobile-bottom-nav__icon { background: rgba(52, 211, 153, 0.1); }
+    }
+  }
+
+  // ── Nav avatar ────────────────────────────────────────────────────────────────
+  .nav-avatar { background: #059669; }
 }
