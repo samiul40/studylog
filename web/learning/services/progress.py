@@ -26,7 +26,16 @@ def get_resource_progress(resource: LearningResource) -> dict[str, int]:
         or 0
     )
 
-    remaining_duration = total_duration - completed_duration
+    # Also count video_progress_minutes for in-progress units towards time done
+    in_progress_duration = (
+        units.filter(status="in_progress").aggregate(
+            total=Sum("video_progress_minutes")
+        )["total"]
+        or 0
+    )
+
+    time_done = completed_duration + in_progress_duration
+    remaining_duration = total_duration - time_done
 
     return {
         "units": units,
@@ -35,6 +44,6 @@ def get_resource_progress(resource: LearningResource) -> dict[str, int]:
         "remaining_units": remaining_units,
         "completion_percentage": completion_percentage,
         "total_duration": total_duration,
-        "completed_duration": completed_duration,
+        "completed_duration": time_done,
         "remaining_duration": remaining_duration,
     }

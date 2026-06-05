@@ -92,3 +92,20 @@ class TestGetResourceProgress:
 
         assert result["total_duration"] == 0
         assert result["completed_duration"] == 0
+
+    def test_in_progress_video_minutes_counted_in_time_done(self, resource):
+        baker.make(
+            LearningUnit, resource=resource, status="completed", duration_minutes=10
+        )
+        baker.make(
+            LearningUnit,
+            resource=resource,
+            duration_minutes=5,
+            video_progress_minutes=2,
+        )
+
+        result = get_resource_progress(resource)
+
+        assert result["total_duration"] == 15
+        assert result["completed_duration"] == 12  # 10 (completed) + 2 (in-progress)
+        assert result["remaining_duration"] == 3
