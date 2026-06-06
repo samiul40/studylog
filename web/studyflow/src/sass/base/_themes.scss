@@ -4,6 +4,9 @@
 // =============================================================================
 @use '../abstracts/variables' as *;
 
+// Default: hide dark lockup (shown only in [data-theme="dark"])
+.navbar-brand .brand-lockup--dark { display: none; }
+
 [data-theme="dark"] {
 
   // ── Body ────────────────────────────────────────────────────────────────────
@@ -417,20 +420,14 @@
   }
 
   // ── Mobile bottom nav ─────────────────────────────────────────────────────────
-  .mobile-bottom-nav {
-    background: #1e293b;
-    border-top-color: #334155;
-  }
-
-  .mobile-bottom-nav__item {
-    color: #475569;
-
-    &:hover, &.active {
-      color: #34d399;
-      .mobile-bottom-nav__icon { background: rgba(52, 211, 153, 0.1); }
-    }
-  }
+  // Detailed dark-mode overrides live in _mobile_nav.scss to keep them co-located.
 
   // ── Nav avatar ────────────────────────────────────────────────────────────────
   .nav-avatar { background: #059669; }
+
+  // ── In-app navbar brand lockup (image swap) ───────────────────────────────────
+  .navbar-brand {
+    .brand-lockup--light { display: none; }
+    .brand-lockup--dark  { display: inline; }
+  }
 }

@@ -9,85 +9,416 @@
 {% block twitter_description %}StudyLog helps you organise videos, books, and courses — and keeps you honest about your progress. Free to use.{% endblock %}
 
 {% block extra_head %}
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css">
+<meta name="color-scheme" content="light dark">
+{# Strip app theme; landing uses prefers-color-scheme, not the manual toggle #}
+<script nonce="{{ request.csp_nonce }}">document.documentElement.removeAttribute('data-theme');</script>
 {% endblock %}
+{% block navbar %}{% endblock %}
+{% block footer %}{% endblock %}
+{% block mobile_nav %}{% endblock %}
+{% block main_class %}{% endblock %}
+{% block alerts %}{% endblock %}
 
 {% block content %}
+<div class="landing-page">
 
-<!-- Landing nav -->
-<div class="d-flex justify-content-between align-items-center pb-4 mb-2">
-  <a href="{% url 'index' %}" class="landing-brand">StudyLog<span class="dot">.</span></a>
-  <div class="d-flex gap-2">
-    <a href="{% url 'account_login' %}" class="btn btn-outline-secondary btn-sm px-3">Sign in</a>
-    <a href="{% url 'account_signup' %}" class="btn btn-primary btn-sm px-3">Get started</a>
-  </div>
-</div>
+  <!-- ============ NAV ============ -->
+  <header class="lnav" id="lnav">
+    <div class="l-wrap lnav__inner">
+      <a href="{% url 'index' %}" class="l-brand">
+        <picture>
+          <source srcset="{% static 'img/studylog-lockup-dark.webp' %}" media="(prefers-color-scheme: dark)">
+          <img src="{% static 'img/studylog-lockup-light.webp' %}" alt="StudyLog" height="30" class="l-brand__lockup">
+        </picture>
+      </a>
+      <nav class="lnav__actions">
+        <a href="#features" class="lnav__link hide-sm">Features</a>
+        <a href="#app" class="lnav__link hide-sm">Mobile app</a>
+        <a href="{% url 'account_login' %}" class="lnav__link">Sign in</a>
+        <a href="{% url 'account_signup' %}" class="l-btn l-btn--primary l-btn--sm">Get started</a>
+      </nav>
+    </div>
+  </header>
 
-<!-- Hero -->
-<section class="landing-hero text-center rounded-4 py-5 px-4 mb-5" data-aos="fade-up" data-aos-duration="700">
-  <span class="landing-badge mb-4 d-inline-block">Free to use</span>
-  <h1 class="display-5 fw-bold mb-3">
-    Track your learning.<br>Actually finish things.
-  </h1>
-  <p class="lead text-muted mb-4 mx-auto" style="max-width: 500px;">
-    StudyLog helps you organise videos, books, and courses — and keeps you honest about your progress.
-  </p>
-  <div class="d-grid gap-3 d-sm-flex justify-content-sm-center">
-    <a href="{% url 'account_signup' %}" class="btn btn-primary btn-lg px-5">Get started free</a>
-    <a href="{% url 'account_login' %}" class="btn btn-outline-secondary btn-lg px-4">Sign in</a>
-  </div>
-</section>
-
-<!-- Feature cards -->
-<section class="landing-features row g-4 mb-4 justify-content-center">
-  <div class="col-sm-6 col-md-4" data-aos="fade-up" data-aos-delay="0" data-aos-duration="600">
-    <div class="card h-100 border-0 shadow-sm p-4 text-center">
-      <div class="landing-feature-icon landing-feature-icon--emerald mx-auto mb-3">
-        <i class="fas fa-folder-open"></i>
+  <!-- ============ HERO ============ -->
+  <section class="l-hero" id="hero">
+    <div class="l-hero__bg">
+      <div class="l-hero__grid"></div>
+      <div class="l-hero__glow"></div>
+    </div>
+    <div class="l-wrap l-hero__inner">
+      <div class="l-hero__copy">
+        <span class="l-hero__eyebrow reveal">
+          <span class="blip"></span>
+          <span class="l-mono">Free forever · No card needed</span>
+        </span>
+        <h1 class="reveal d1">
+          Track your learning.<br>
+          Actually <span class="hl">finish<svg viewBox="0 0 200 20" preserveAspectRatio="none" aria-hidden="true"><path d="M3 14 Q 50 4, 100 11 T 197 8"></path></svg></span> things.
+        </h1>
+        <p class="l-hero__sub reveal d2">
+          StudyLog turns scattered videos, books and courses into one organised plan — then keeps you honest about what you actually complete.
+        </p>
+        <div class="l-hero__cta reveal d2">
+          <a href="{% url 'account_signup' %}" class="l-btn l-btn--primary l-btn--lg">
+            Get started free
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>
+          </a>
+          <a href="{% url 'account_login' %}" class="l-btn l-btn--ghost-dark l-btn--lg">Sign in</a>
+        </div>
+        <div class="l-hero__note reveal d3">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg>
+          Works in your browser. Add it to your home screen and it runs like an app.
+        </div>
       </div>
-      <h5 class="fw-semibold mb-2">Organise resources</h5>
-      <p class="small text-muted mb-0">
-        Group videos, books, and courses into resources. Break big topics into units so nothing feels overwhelming.
-      </p>
+
+      <div class="l-hero__visual reveal d2">
+        <div class="pcard">
+          <div class="pcard__top">
+            <div>
+              <div class="pcard__label">Resource · Course</div>
+              <div class="pcard__title">The Complete React Developer Course</div>
+            </div>
+            <span class="pcard__pill">In progress</span>
+          </div>
+
+          <div class="pcard__ringrow">
+            <div class="l-ring" style="--val:68;">
+              <div class="l-ring__txt">
+                <div class="l-ring__num">68%</div>
+                <div class="l-ring__cap">Done</div>
+              </div>
+            </div>
+            <div class="ringstats">
+              <div class="ringstat"><span class="ringstat__k">Units complete</span><span class="ringstat__v">17 / 25</span></div>
+              <div class="ringstat"><span class="ringstat__k">This week</span><span class="ringstat__v"><span class="accent">+6</span> units</span></div>
+              <div class="ringstat"><span class="ringstat__k">Time logged</span><span class="ringstat__v">9h 40m</span></div>
+            </div>
+          </div>
+
+          <div class="pcard__units">
+            <div class="l-unit done">
+              <span class="l-unit__check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg></span>
+              <span class="l-unit__name">Hooks deep dive</span>
+              <span class="l-unit__dur">42m</span>
+            </div>
+            <div class="l-unit done">
+              <span class="l-unit__check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg></span>
+              <span class="l-unit__name">Context &amp; state</span>
+              <span class="l-unit__dur">31m</span>
+            </div>
+            <div class="l-unit">
+              <span class="l-unit__check"></span>
+              <span class="l-unit__name">React Router basics</span>
+              <span class="l-unit__dur">28m</span>
+            </div>
+          </div>
+
+          <div class="pcard__week">
+            <div class="bar" style="height:34%"></div>
+            <div class="bar" style="height:58%"></div>
+            <div class="bar" style="height:42%"></div>
+            <div class="bar hot" style="height:88%"></div>
+            <div class="bar" style="height:66%"></div>
+            <div class="bar" style="height:24%"></div>
+            <div class="bar" style="height:50%"></div>
+          </div>
+          <div class="pcard__weekcap"><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ MARQUEE ============ -->
+  <div class="l-strip">
+    <div class="l-strip__inner">
+      <div class="l-marquee">
+        <div class="l-marquee__track" id="lmq"></div>
+      </div>
     </div>
   </div>
-  <div class="col-sm-6 col-md-4" data-aos="fade-up" data-aos-delay="120" data-aos-duration="600">
-    <div class="card h-100 border-0 shadow-sm p-4 text-center">
-      <div class="landing-feature-icon landing-feature-icon--blue mx-auto mb-3">
-        <i class="fas fa-chart-line"></i>
-      </div>
-      <h5 class="fw-semibold mb-2">Track progress</h5>
-      <p class="small text-muted mb-0">
-        Mark units complete, log video minutes, and watch your progress fill up as you work through material.
-      </p>
-    </div>
-  </div>
-  <div class="col-sm-6 col-md-4" data-aos="fade-up" data-aos-delay="240" data-aos-duration="600">
-    <div class="card h-100 border-0 shadow-sm p-4 text-center">
-      <div class="landing-feature-icon landing-feature-icon--violet mx-auto mb-3">
-        <i class="fas fa-house"></i>
-      </div>
-      <h5 class="fw-semibold mb-2">Dashboard at a glance</h5>
-      <p class="small text-muted mb-0">
-        See everything in one place — what you're working on, how far you've come, and what to pick up next.
-      </p>
-    </div>
-  </div>
-</section>
 
-<!-- Bottom CTA -->
-<section class="text-center py-5" data-aos="fade-up" data-aos-duration="600">
-  <p class="text-muted mb-3">Ready to get started?</p>
-  <div class="d-grid d-sm-block">
-    <a href="{% url 'account_signup' %}" class="btn btn-primary btn-lg px-5">Create a free account</a>
-  </div>
-</section>
+  <!-- ============ FEATURES ============ -->
+  <section class="l-sec-pad" id="features">
+    <div class="l-wrap">
+      <div class="l-sec-head reveal">
+        <span class="l-kicker">Why StudyLog</span>
+        <h2>Everything you start,<br>in one honest place.</h2>
+        <p>No more half-watched playlists and abandoned PDFs scattered across ten tabs. Organise it, track it, and watch the progress bars do the motivating.</p>
+      </div>
 
+      <div class="l-features">
+        <article class="l-feature reveal" style="--w:74%;">
+          <div class="l-feature__no">01</div>
+          <div class="l-feature__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
+          </div>
+          <h3>Organise resources</h3>
+          <p>Group videos, books and courses into resources, then break big topics into bite-size units so nothing feels overwhelming.</p>
+          <div class="l-feature__bar"><span></span></div>
+          <div class="l-feature__barcap"><span>Units mapped</span><span>74%</span></div>
+        </article>
+
+        <article class="l-feature reveal d1" style="--w:62%;">
+          <div class="l-feature__no">02</div>
+          <div class="l-feature__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"></path><path d="M7 14l4-4 3 3 5-6"></path></svg>
+          </div>
+          <h3>Track progress</h3>
+          <p>Mark units complete, log your minutes, and watch each resource fill up. Real momentum you can actually see.</p>
+          <div class="l-feature__bar"><span></span></div>
+          <div class="l-feature__barcap"><span>Course progress</span><span>62%</span></div>
+        </article>
+
+        <article class="l-feature reveal d2" style="--w:90%;">
+          <div class="l-feature__no">03</div>
+          <div class="l-feature__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="8" rx="1.5"></rect><rect x="13" y="3" width="8" height="5" rx="1.5"></rect><rect x="13" y="11" width="8" height="10" rx="1.5"></rect><rect x="3" y="14" width="8" height="7" rx="1.5"></rect></svg>
+          </div>
+          <h3>Dashboard at a glance</h3>
+          <p>One screen for everything — what you're working on, how far you've come this week, and exactly what to pick up next.</p>
+          <div class="l-feature__bar"><span></span></div>
+          <div class="l-feature__barcap"><span>Weekly streak</span><span>90%</span></div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ FLOW ============ -->
+  <section class="l-flow l-sec-pad">
+    <div class="l-wrap">
+      <div class="l-sec-head reveal">
+        <span class="l-kicker">How it works</span>
+        <h2>Three steps to a finished course.</h2>
+      </div>
+      <div class="l-flow__grid">
+        <div class="l-flowstep reveal">
+          <div class="l-flowstep__n">STEP 01</div>
+          <h3>Add a resource</h3>
+          <p>Drop in a YouTube playlist, a Udemy course, or a book. StudyLog holds them all side by side.</p>
+        </div>
+        <div class="l-flowstep reveal d1">
+          <div class="l-flowstep__n">STEP 02</div>
+          <h3>Break it into units</h3>
+          <p>Split each resource into units — lectures, chapters, sessions — so the finish line feels reachable.</p>
+        </div>
+        <div class="l-flowstep reveal d2">
+          <div class="l-flowstep__n">STEP 03</div>
+          <h3>Tick &amp; track</h3>
+          <p>Check off units as you go. Your dashboard tallies the minutes, streaks and completion for you.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ APP / PWA ============ -->
+  <section class="l-sec-pad" id="app" style="padding-bottom: clamp(40px, 6vw, 80px);">
+    <div class="l-wrap">
+      <div class="l-app">
+        <div class="l-app__bg"></div>
+        <div class="l-app__inner">
+          <div class="l-app__copy">
+            <span class="l-kicker reveal">On your phone</span>
+            <h2 class="reveal d1">Use it like a<br>real app.</h2>
+            <p class="l-app__sub reveal d1">No download, no app store. Save StudyLog to your home screen and it opens full-screen — just like a native iOS or Android app.</p>
+            <div class="l-steps reveal d2">
+              <div class="l-step">
+                <div class="l-step__no">1</div>
+                <div class="l-step__txt">
+                  Tap
+                  <span class="l-step__ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4"></path><path d="M8 8l4-4 4 4"></path><path d="M4 14v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"></path></svg></span>
+                  or
+                  <span class="l-step__ic"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="5" r="1.6"></circle><circle cx="12" cy="12" r="1.6"></circle><circle cx="12" cy="19" r="1.6"></circle></svg></span>
+                  in your browser bar
+                </div>
+              </div>
+              <div class="l-step">
+                <div class="l-step__no">2</div>
+                <div class="l-step__txt">Choose <strong>&ldquo;Add to Home Screen&rdquo;</strong></div>
+              </div>
+              <div class="l-step">
+                <div class="l-step__no">3</div>
+                <div class="l-step__txt">Open StudyLog from your home screen — full-screen, every time</div>
+              </div>
+            </div>
+            <div class="l-app__foot reveal d2">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="3"></rect><path d="M12 18h.01"></path></svg>
+              Optimised for iOS &amp; Android
+            </div>
+          </div>
+
+          <div class="phone-wrap reveal d1">
+            <div class="phone-duo">
+              <!-- FRONT · Light theme · navbar A (light pill) -->
+              <div class="l-phone l-phone--front">
+                <div class="l-phone__notch"></div>
+                <div class="l-phone__screen">
+                  <div class="ph-top">
+                    <div class="ph-brand">StudyLog<span class="dot">.</span></div>
+                    <div class="ph-av">SR</div>
+                  </div>
+                  <div class="ph-body">
+                    <div class="ph-h">Dashboard</div>
+                    <div class="ph-kpis">
+                      <div class="ph-kpi"><div class="ph-kpi__v">12</div><div class="ph-kpi__l">Resources</div></div>
+                      <div class="ph-kpi"><div class="ph-kpi__v">148</div><div class="ph-kpi__l">Units</div></div>
+                      <div class="ph-kpi"><div class="ph-kpi__v">91</div><div class="ph-kpi__l">Completed</div></div>
+                      <div class="ph-kpi"><div class="ph-kpi__v">9h</div><div class="ph-kpi__l">This week</div></div>
+                    </div>
+                    <div class="ph-h">Course progress</div>
+                    <div class="ph-row"><div class="ph-row__t">React Course <span>68%</span></div><div class="ph-bar"><span style="width:68%"></span></div></div>
+                    <div class="ph-row"><div class="ph-row__t">Atomic Habits <span>40%</span></div><div class="ph-bar"><span style="width:40%"></span></div></div>
+                    <div class="ph-row"><div class="ph-row__t">SQL Bootcamp <span>85%</span></div><div class="ph-bar"><span style="width:85%"></span></div></div>
+                  </div>
+                  <div class="ph-nav">
+                    <div class="ph-nav__i on"><span class="ph-nav__ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"></path><path d="M5 10v10h14V10"></path></svg></span>Dashboard</div>
+                    <div class="ph-nav__i"><span class="ph-nav__ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg></span>Resources</div>
+                    <div class="ph-nav__i"><span class="ph-nav__ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></span>Settings</div>
+                  </div>
+                </div>
+                <span class="l-phone__chip l-phone__chip--light">Light</span>
+              </div>
+
+              <!-- BACK · Dark theme · navbar B (dark bar) -->
+              <div class="l-phone l-phone--back">
+                <div class="l-phone__notch"></div>
+                <div class="l-phone__screen l-phone__screen--dark">
+                  <div class="ph-top">
+                    <div class="ph-brand">StudyLog<span class="dot">.</span></div>
+                    <div class="ph-av">SR</div>
+                  </div>
+                  <div class="ph-body">
+                    <div class="ph-h">Dashboard</div>
+                    <div class="ph-kpis">
+                      <div class="ph-kpi"><div class="ph-kpi__v">12</div><div class="ph-kpi__l">Resources</div></div>
+                      <div class="ph-kpi"><div class="ph-kpi__v">148</div><div class="ph-kpi__l">Units</div></div>
+                      <div class="ph-kpi"><div class="ph-kpi__v">91</div><div class="ph-kpi__l">Completed</div></div>
+                      <div class="ph-kpi"><div class="ph-kpi__v">9h</div><div class="ph-kpi__l">This week</div></div>
+                    </div>
+                    <div class="ph-h">Course progress</div>
+                    <div class="ph-row"><div class="ph-row__t">React Course <span>68%</span></div><div class="ph-bar"><span style="width:68%"></span></div></div>
+                    <div class="ph-row"><div class="ph-row__t">Atomic Habits <span>40%</span></div><div class="ph-bar"><span style="width:40%"></span></div></div>
+                    <div class="ph-row"><div class="ph-row__t">SQL Bootcamp <span>85%</span></div><div class="ph-bar"><span style="width:85%"></span></div></div>
+                  </div>
+                  <div class="ph-nav">
+                    <div class="ph-nav__i on"><span class="ph-nav__ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"></path><path d="M5 10v10h14V10"></path></svg></span>Dashboard</div>
+                    <div class="ph-nav__i"><span class="ph-nav__ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg></span>Resources</div>
+                    <div class="ph-nav__i"><span class="ph-nav__ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></span>Settings</div>
+                  </div>
+                </div>
+                <span class="l-phone__chip l-phone__chip--dark">Dark</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ FINAL CTA ============ -->
+  <section class="l-sec-pad l-final" style="padding-top: clamp(56px, 8vw, 100px);">
+    <div class="l-wrap">
+      <div class="reveal">
+        <span class="l-kicker" style="justify-content:center;">Ready when you are</span>
+        <h2>Start finishing<br>what you start.</h2>
+        <p>Free forever. Set up your first resource in under two minutes.</p>
+        <div class="l-final__cta">
+          <a href="{% url 'account_signup' %}" class="l-btn l-btn--primary l-btn--lg">
+            Create a free account
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>
+          </a>
+          <a href="{% url 'account_login' %}" class="l-btn l-btn--ghost-light l-btn--lg">Sign in</a>
+        </div>
+        <div class="l-final__free">No credit card · No app store · Cancel nothing</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ FOOTER ============ -->
+  <footer class="l-foot">
+    <div class="l-wrap">
+      <div class="l-foot__top">
+        <div>
+          <div class="l-foot__brand">
+            <img src="{% static 'img/studylog-lockup-dark.webp' %}" alt="StudyLog" height="28" class="l-foot__lockup">
+          </div>
+          <p class="l-foot__tag">Track your learning, and actually finish the things you start.</p>
+        </div>
+        <div class="l-foot__links">
+          <div class="l-foot__col">
+            <h4>Product</h4>
+            <a href="#features">Features</a>
+            <a href="#app">Mobile app</a>
+          </div>
+          <div class="l-foot__col">
+            <h4>Account</h4>
+            <a href="{% url 'account_login' %}">Sign in</a>
+            <a href="{% url 'account_signup' %}">Get started</a>
+          </div>
+          <div class="l-foot__col">
+            <h4>Company</h4>
+            <a href="#">Privacy</a>
+            <a href="#">Terms</a>
+          </div>
+        </div>
+      </div>
+      <div class="l-foot__bot">
+        <span>© 2025 StudyLog</span>
+        <span>Made for people who start a lot of courses</span>
+      </div>
+    </div>
+  </footer>
+
+</div><!-- /.landing-page -->
 {% endblock %}
 
 {% block scripts %}
-<script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
 <script nonce="{{ request.csp_nonce }}">
-  AOS.init({ once: true, offset: 60, disable: window.innerWidth < 768 });
+  // sticky nav border
+  const lnav = document.getElementById('lnav');
+  const onScroll = () => lnav.classList.toggle('scrolled', window.scrollY > 8);
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+
+  // hero draw-in
+  requestAnimationFrame(() => document.getElementById('hero').classList.add('in'));
+
+  // reveal on scroll
+  const revealEls = Array.from(document.querySelectorAll('.reveal, .l-feature'));
+  let revTicking = false;
+  function checkReveal() {
+    revTicking = false;
+    const vh = window.innerHeight || document.documentElement.clientHeight;
+    for (const el of revealEls) {
+      if (el.classList.contains('in')) continue;
+      const r = el.getBoundingClientRect();
+      if (r.top < vh * 0.9 && r.bottom > 0) el.classList.add('in');
+    }
+  }
+  function onReveal() { if (!revTicking) { revTicking = true; requestAnimationFrame(checkReveal); } }
+  window.addEventListener('scroll', onReveal, { passive: true });
+  window.addEventListener('resize', onReveal);
+  checkReveal();
+  setTimeout(checkReveal, 250);
+
+  // marquee
+  const items = [
+    'Videos', 'Books', 'Udemy courses', 'YouTube playlists',
+    'PDFs', 'Lecture notes', 'Progress tracking', 'Weekly streaks', 'Completion stats'
+  ];
+  const mq = document.getElementById('lmq');
+  const buildSet = () => items.map(t =>
+    `<span class="l-marquee__item"><span class="star">✦</span>${t}</span>`).join('');
+  mq.innerHTML = buildSet() + buildSet();
+
+  // password toggles (shared between landing and any inline forms)
+  document.querySelectorAll('[data-pw-toggle]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const inp = document.getElementById(btn.dataset.pwToggle);
+      if (!inp) return;
+      const isText = inp.type === 'text';
+      inp.type = isText ? 'password' : 'text';
+    });
+  });
 </script>
 {% endblock %}

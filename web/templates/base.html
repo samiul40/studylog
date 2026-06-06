@@ -23,9 +23,13 @@
   <meta name="twitter:title" content="{% block twitter_title %}StudyLog — Track your learning, actually finish things{% endblock %}">
   <meta name="twitter:description" content="{% block twitter_description %}StudyLog helps you organise videos, books, and courses — and keeps you honest about your progress. Free to use.{% endblock %}">
   <meta name="twitter:image" content="https://studylog.co.uk{% static 'img/og-image.png' %}">
-  <link rel="icon" type="image/svg+xml" href="{% static 'img/favicon.svg' %}">
-  <link rel="alternate icon" type="image/png" href="{% static 'img/favicon.png' %}">
-  <link rel="shortcut icon" href="{% static 'img/favicon.ico' %}">
+
+  <!-- Favicons -->
+  <link rel="icon" type="image/svg+xml" href="{% static 'img/studylog-icon-tile.svg' %}">
+  <link rel="icon" type="image/png" sizes="32x32" href="{% static 'img/favicon-32.png' %}">
+  <link rel="icon" type="image/png" sizes="16x16" href="{% static 'img/favicon-16.png' %}">
+  <link rel="apple-touch-icon" sizes="180x180" href="{% static 'img/favicon-180.png' %}">
+  <link rel="shortcut icon" href="{% static 'img/favicon-32.png' %}">
 
   <!-- Theme init: apply before CSS to avoid flash -->
   <script nonce="{{ request.csp_nonce }}">
@@ -38,6 +42,11 @@
       } catch (e) {}
     })();
   </script>
+
+  <!-- Google Fonts: Bricolage Grotesque (new) + DM Sans + JetBrains Mono (existing) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700;12..96,800&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 
   <!-- Bootstrap CSS -->
   <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet">
@@ -57,32 +66,40 @@
 
 <body class="d-flex flex-column min-vh-100">
   <!-- Navbar -->
+  {% block navbar %}
   {% if user.is_authenticated %}
   {% include 'partials/_navbar.html' %}
   {% endif %}
+  {% endblock %}
 
   <!-- Main content area -->
-  <main class="flex-grow-1 container py-4">
+  <main class="flex-grow-1 {% block main_class %}container py-4{% endblock %}">
     {% block breadcrumbs %}
     {% endblock %}
 
     <!-- Alerts -->
+    {% block alerts %}
     <div class="my-4">
       {% include 'partials/_alerts.html' %}
     </div>
-    
+    {% endblock %}
+
     {% block content %}{% endblock %}
   </main>
 
   <!-- Footer -->
+  {% block footer %}
   {% if user.is_authenticated %}
   {% include 'partials/_footer.html' %}
   {% endif %}
+  {% endblock %}
 
   <!-- Mobile bottom nav -->
+  {% block mobile_nav %}
   {% if user.is_authenticated %}
   {% include 'partials/_mobile_bottom_nav.html' %}
   {% endif %}
+  {% endblock %}
 
   <script src="{% static 'js/bootstrap.bundle.min.js' %}" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.7/Sortable.min.js" crossorigin="anonymous"></script>

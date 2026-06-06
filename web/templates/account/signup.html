@@ -1,78 +1,161 @@
 {% extends 'base.html' %}
 {% load socialaccount static %}
 
+{% block title %}Create account · StudyLog{% endblock %}
+
+{% block extra_head %}
+<meta name="color-scheme" content="light dark">
+<script nonce="{{ request.csp_nonce }}">document.documentElement.removeAttribute('data-theme');</script>
+{% endblock %}
+{% block navbar %}{% endblock %}
+{% block footer %}{% endblock %}
+{% block mobile_nav %}{% endblock %}
+{% block main_class %}{% endblock %}
+{% block alerts %}{% endblock %}
+
 {% block content %}
-<section class="login-section">
-  <div class="login-card">
+<div class="auth-layout">
 
-    <div class="login-header">
-      <div class="login-brand">StudyLog<span>.</span></div>
-      <p class="login-subtitle">Create your account</p>
+  <!-- ── Left brand panel ── -->
+  <aside class="auth-brand">
+    <div class="auth-brand__grid"></div>
+    <div class="auth-brand__glow"></div>
+
+    <div class="auth-brand__head">
+      <a href="{% url 'index' %}" class="auth-logo">
+        <img src="{% static 'img/studylog-lockup-dark.webp' %}" alt="StudyLog" height="30">
+      </a>
+      <a href="{% url 'index' %}" class="auth-back">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"></path></svg>
+        Back to home
+      </a>
     </div>
 
-    {% if form.non_field_errors %}
-    <div class="alert alert-danger py-2" role="alert">
-      {% for error in form.non_field_errors %}{{ error }}{% endfor %}
-    </div>
-    {% endif %}
+    <div class="auth-brand__mid">
+      <span class="auth-brand__eyebrow">
+        <span class="blip"></span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:0.68rem;letter-spacing:0.06em;text-transform:uppercase;">Free forever</span>
+      </span>
+      <h1>Start finishing what you start.</h1>
+      <p class="auth-brand__sub">Set up your first resource in under two minutes. No card needed.</p>
 
-    <form action="{% url 'account_signup' %}" method="POST">
-      {% csrf_token %}
-
-      <div class="mb-3">
-        <label class="form-label" for="id_username">Username</label>
-        <input type="text" name="username" id="id_username"
-          class="form-control{% if form.username.errors %} is-invalid{% endif %}"
-          placeholder="Choose a username" value="{{ form.username.value|default:'' }}" required autofocus>
-        {% for error in form.username.errors %}
-          <div class="invalid-feedback">{{ error }}</div>
-        {% endfor %}
+      <div class="auth-proof">
+        <div class="auth-proof__ring" style="--val:68;"><span>68%</span></div>
+        <div class="auth-proof__body">
+          <div class="auth-proof__name">The Complete React Developer Course</div>
+          <div class="auth-proof__meta"><span>17 / 25 units</span>·<span class="accent">+6 this week</span></div>
+        </div>
       </div>
-
-      <div class="mb-3">
-        <label class="form-label" for="id_email">Email address</label>
-        <input type="email" name="email" id="id_email"
-          class="form-control{% if form.email.errors %} is-invalid{% endif %}"
-          placeholder="Enter your email" value="{{ form.email.value|default:'' }}" required>
-        {% for error in form.email.errors %}
-          <div class="invalid-feedback">{{ error }}</div>
-        {% endfor %}
-      </div>
-
-      <div class="mb-3">
-        <label class="form-label" for="id_password1">Password</label>
-        <input type="password" name="password1" id="id_password1"
-          class="form-control{% if form.password1.errors %} is-invalid{% endif %}"
-          placeholder="Choose a password" required>
-        {% for error in form.password1.errors %}
-          <div class="invalid-feedback">{{ error }}</div>
-        {% endfor %}
-      </div>
-
-      <div class="mb-4">
-        <label class="form-label" for="id_password2">Confirm password</label>
-        <input type="password" name="password2" id="id_password2"
-          class="form-control{% if form.password2.errors %} is-invalid{% endif %}"
-          placeholder="Repeat your password" required>
-        {% for error in form.password2.errors %}
-          <div class="invalid-feedback">{{ error }}</div>
-        {% endfor %}
-      </div>
-
-      <button type="submit" class="btn btn-primary w-100">Create account</button>
-    </form>
-
-    <div class="login-divider">or</div>
-
-    <a href="{% provider_login_url 'google' %}" class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center gap-2">
-      <img src="{% static 'img/google-logo.svg' %}" alt="Google" width="18" height="18">
-      Continue with Google
-    </a>
-
-    <div class="login-footer-link-center">
-      <a href="{% url 'account_login' %}">Already have an account? Sign in</a>
     </div>
 
+    <div class="auth-brand__foot">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+      Encrypted &amp; secure · Free forever
+    </div>
+  </aside>
+
+  <!-- ── Right form side ── -->
+  <div class="auth-main">
+    <div class="auth-card">
+      <div class="auth-card__head">
+        <h1 class="auth-card__title">Create your account</h1>
+        <p class="auth-card__sub">Already have one? <a href="{% url 'account_login' %}">Sign in</a></p>
+      </div>
+
+      {% if form.non_field_errors %}
+      <div class="auth-alert" role="alert">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 8v4M12 16h.01"></path></svg>
+        <span>{% for error in form.non_field_errors %}{{ error }}{% endfor %}</span>
+      </div>
+      {% endif %}
+
+      <form action="{% url 'account_signup' %}" method="POST">
+        {% csrf_token %}
+
+        <div class="auth-field">
+          <label class="auth-field__label" for="id_username">Username</label>
+          <input class="auth-input{% if form.username.errors %} is-invalid{% endif %}"
+                 type="text" name="username" id="id_username"
+                 placeholder="Choose a username"
+                 value="{{ form.username.value|default:'' }}"
+                 autocomplete="username" required autofocus>
+          {% for error in form.username.errors %}
+            <div class="invalid-feedback">{{ error }}</div>
+          {% endfor %}
+        </div>
+
+        <div class="auth-field">
+          <label class="auth-field__label" for="id_email">Email address</label>
+          <input class="auth-input{% if form.email.errors %} is-invalid{% endif %}"
+                 type="email" name="email" id="id_email"
+                 placeholder="you@example.com"
+                 value="{{ form.email.value|default:'' }}"
+                 autocomplete="email" required>
+          {% for error in form.email.errors %}
+            <div class="invalid-feedback">{{ error }}</div>
+          {% endfor %}
+        </div>
+
+        <div class="auth-field">
+          <label class="auth-field__label" for="id_password1">Password</label>
+          <div class="auth-field__wrap">
+            <input class="auth-input has-toggle{% if form.password1.errors %} is-invalid{% endif %}"
+                   type="password" name="password1" id="id_password1"
+                   placeholder="Choose a password" autocomplete="new-password" required>
+            <button type="button" class="auth-toggle" id="toggleSignupPw1" aria-label="Show password">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+            </button>
+          </div>
+          {% for error in form.password1.errors %}
+            <div class="invalid-feedback">{{ error }}</div>
+          {% endfor %}
+        </div>
+
+        <div class="auth-field">
+          <label class="auth-field__label" for="id_password2">Confirm password</label>
+          <div class="auth-field__wrap">
+            <input class="auth-input has-toggle{% if form.password2.errors %} is-invalid{% endif %}"
+                   type="password" name="password2" id="id_password2"
+                   placeholder="Repeat your password" autocomplete="new-password" required>
+            <button type="button" class="auth-toggle" id="toggleSignupPw2" aria-label="Show password">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+            </button>
+          </div>
+          {% for error in form.password2.errors %}
+            <div class="invalid-feedback">{{ error }}</div>
+          {% endfor %}
+        </div>
+
+        <button type="submit" class="auth-btn auth-btn--primary" style="margin-top:6px;">Create account</button>
+      </form>
+
+      <div class="auth-divider">or</div>
+
+      <a href="{% provider_login_url 'google' %}" class="auth-btn auth-btn--google">
+        <span class="gmark" aria-hidden="true">
+          <svg viewBox="0 0 48 48" width="18" height="18"><path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 12.955 4 4 12.955 4 24s8.955 20 20 20 20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"></path><path fill="#FF3D00" d="M6.306 14.691l6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 16.318 4 9.656 8.337 6.306 14.691z"></path><path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238C29.211 35.091 26.715 36 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z"></path><path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303c-.792 2.237-2.231 4.166-4.087 5.571.001-.001.002-.001.003-.002l6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917z"></path></svg>
+        </span>
+        Sign up with Google
+      </a>
+
+      <p class="auth-legal">By creating an account you agree to StudyLog's <a href="#">Terms</a> and <a href="#">Privacy Policy</a>.</p>
+    </div>
   </div>
-</section>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script nonce="{{ request.csp_nonce }}">
+  const eyeOpen = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"></path><circle cx="12" cy="12" r="3"></circle></svg>';
+  const eyeOff  = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.9 4.24A9.1 9.1 0 0 1 12 4c6.5 0 10 7 10 7a13.2 13.2 0 0 1-2.16 3.19M6.6 6.6A13.3 13.3 0 0 0 2 11s3.5 7 10 7a9 9 0 0 0 4.7-1.3"></path><path d="M3 3l18 18"></path></svg>';
+  [['toggleSignupPw1', 'id_password1'], ['toggleSignupPw2', 'id_password2']].forEach(([btnId, inpId]) => {
+    document.getElementById(btnId).addEventListener('click', function() {
+      const inp = document.getElementById(inpId);
+      const showing = inp.type === 'text';
+      inp.type = showing ? 'password' : 'text';
+      this.innerHTML = showing ? eyeOpen : eyeOff;
+    });
+  });
+</script>
 {% endblock %}

@@ -1,5 +1,8 @@
 // =============================================================================
 // _mobile_nav.scss — Mobile bottom navigation bar + avatar
+// Light mode → Option A (light pill)   bg: rgba(251,250,244,0.95)
+// Dark mode  → Option B (dark bar)     bg: --ink
+// Dark mode driven by existing [data-theme="dark"] on <html>.
 // =============================================================================
 @use '../abstracts/variables' as *;
 
@@ -35,10 +38,13 @@
     bottom: 0;
     left: 0;
     right: 0;
-    height: 60px;
+    height: 64px;
     padding-bottom: env(safe-area-inset-bottom, 0);
-    background: #fff;
-    border-top: 1px solid $grey-200;
+    // Light mode — Option A: paper-tinted bar
+    background: rgba(251, 250, 244, 0.95);
+    border-top: 1px solid rgba(13, 24, 18, 0.12);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     z-index: 1029;
     align-items: stretch;
   }
@@ -49,44 +55,70 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 0.2rem;
+    gap: 0.22rem;
     text-decoration: none;
-    color: $grey-400;
-    font-size: 0.625rem;
+    color: rgba(13, 24, 18, 0.45);
+    font-size: 0.5rem;
+    font-family: $font-sans;
     font-weight: 600;
-    letter-spacing: 0.03em;
-    text-transform: uppercase;
-    transition: color $transition-fast;
+    letter-spacing: 0.02em;
+    transition: color 0.18s;
 
-    &:hover {
-      color: $emerald-600;
-
-      .mobile-bottom-nav__icon { background: $emerald-100; }
-    }
-
+    &:hover,
     &.active {
-      color: $emerald-600;
+      color: #0a7d57; // emerald-deep
 
-      .mobile-bottom-nav__icon { background: $emerald-100; }
+      .mobile-bottom-nav__icon {
+        background: rgba(16, 185, 129, 0.16);
+      }
     }
   }
 
   .mobile-bottom-nav__icon {
-    width: 3.5rem;
-    height: 1.75rem;
+    width: 46px;
+    height: 26px;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: $radius-pill;
-    font-size: 1.125rem;
-    transition: background $transition-fast;
+    border-radius: 100px;
+    font-size: 1.1rem;
+    transition: background 0.18s;
+
+    svg {
+      width: 18px;
+      height: 18px;
+      stroke: currentColor;
+    }
   }
 
-  // Push main content up so it's not hidden behind the nav bar
-  main.flex-grow-1 {
-    padding-bottom: calc(60px + 1.5rem) !important;
+  // Push main content above the nav bar (only when the nav is actually in the DOM)
+  body:has(.mobile-bottom-nav) main.flex-grow-1 {
+    padding-bottom: calc(64px + 1.5rem) !important;
   }
 
   // Hide footer on mobile since bottom nav replaces it
   .footer { display: none; }
+}
+
+// Dark mode — Option B: dark bar
+[data-theme="dark"] {
+  @media (max-width: 991px) {
+    .mobile-bottom-nav {
+      background: #0d1812; // --ink
+      border-top-color: rgba(243, 241, 232, 0.12); // --line-dark
+    }
+
+    .mobile-bottom-nav__item {
+      color: #b9c4ba; // --bone-dim
+
+      &:hover,
+      &.active {
+        color: #1ed688; // --emerald-bright
+
+        .mobile-bottom-nav__icon {
+          background: rgba(16, 185, 129, 0.18);
+        }
+      }
+    }
+  }
 }
