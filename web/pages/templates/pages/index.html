@@ -383,23 +383,16 @@
   // hero draw-in
   requestAnimationFrame(() => document.getElementById('hero').classList.add('in'));
 
-  // reveal on scroll
-  const revealEls = Array.from(document.querySelectorAll('.reveal, .l-feature'));
-  let revTicking = false;
-  function checkReveal() {
-    revTicking = false;
-    const vh = window.innerHeight || document.documentElement.clientHeight;
-    for (const el of revealEls) {
-      if (el.classList.contains('in')) continue;
-      const r = el.getBoundingClientRect();
-      if (r.top < vh * 0.9 && r.bottom > 0) el.classList.add('in');
+  // reveal on scroll — IntersectionObserver is off-main-thread and avoids
+  // getBoundingClientRect layout thrash on every scroll event.
+  const revealObs = new IntersectionObserver((entries) => {
+    for (const e of entries) {
+      if (!e.isIntersecting) continue;
+      e.target.classList.add('in');
+      revealObs.unobserve(e.target);
     }
-  }
-  function onReveal() { if (!revTicking) { revTicking = true; requestAnimationFrame(checkReveal); } }
-  window.addEventListener('scroll', onReveal, { passive: true });
-  window.addEventListener('resize', onReveal);
-  checkReveal();
-  setTimeout(checkReveal, 250);
+  }, { threshold: 0.05, rootMargin: '0px 0px -10% 0px' });
+  document.querySelectorAll('.reveal, .l-feature').forEach(el => revealObs.observe(el));
 
   // marquee
   const items = [
