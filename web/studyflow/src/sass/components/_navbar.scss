@@ -99,10 +99,20 @@
 
 @media (max-width: 991px) {
   .navbar {
-    padding-top: 1.25rem;
-    padding-bottom: 1.25rem;
+    padding-top: 1.875rem;
+    padding-bottom: 1.875rem;
 
-    .navbar-brand img { height: 30px; }
+    .navbar-brand img { height: 38px; }
+
+    .nav-avatar {
+      width: 2.5rem;
+      height: 2.5rem;
+      font-size: 0.8125rem;
+    }
+
+    .navbar-user-trigger {
+      padding: 0.5rem 0.75rem;
+    }
   }
 
   .navbar-collapse {
