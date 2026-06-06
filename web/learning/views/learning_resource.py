@@ -1,6 +1,7 @@
 import json
 
 from django.contrib import messages
+from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
 from django.views import View
@@ -66,7 +67,9 @@ class ResourceListView(BaseUserResourceView, ListView):
         context = super().get_context_data(**kwargs)
         context["search_query"] = self.request.GET.get("search", "")
         context["selected_type"] = self.request.GET.get("type", "")
-        context["resource_types"] = ResourceType.objects.all()
+        context["resource_types"] = ResourceType.objects.filter(
+            Q(is_system=True) | Q(user=self.request.user)
+        )
         return context
 
 
@@ -102,6 +105,11 @@ class ResourceCreateView(UserPermissionMixin, CreateView):
     model = LearningResource
     form_class = LearningResourceForm
     template_name = "resources/resource_form.html"
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["user"] = self.request.user
+        return kwargs
 
     def get_success_url(self):
         return reverse("learning:resource_detail", kwargs={"pk": self.object.pk})
@@ -152,6 +160,11 @@ class ResourceUpdateView(BaseUserResourceView, UpdateView):
     permission_required = "learning.change_learningresource"
     form_class = LearningResourceForm
     template_name = "resources/resource_form.html"
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["user"] = self.request.user
+        return kwargs
 
     def form_valid(self, form):
         messages.success(self.request, "Resource updated successfully.")
