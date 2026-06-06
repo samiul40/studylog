@@ -10,15 +10,7 @@
   padding-bottom: 0.75rem;
 
   .navbar-brand {
-    font-weight: 800;
-    font-size: 1.125rem;
-    letter-spacing: -0.03em;
-    color: $grey-900;
-
-    &::after {
-      content: '.';
-      color: $emerald-500;
-    }
+    img { height: 26px; }
 
     &:hover { color: $grey-900; }
   }
@@ -101,7 +93,18 @@
   }
 }
 
+@media (min-width: 992px) {
+  .navbar .navbar-brand img { height: 32px; }
+}
+
 @media (max-width: 991px) {
+  .navbar {
+    padding-top: 1.25rem;
+    padding-bottom: 1.25rem;
+
+    .navbar-brand img { height: 30px; }
+  }
+
   .navbar-collapse {
     padding: 0.75rem 0;
     border-top: 1px solid $grey-100;
