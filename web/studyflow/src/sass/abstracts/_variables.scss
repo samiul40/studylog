@@ -39,8 +39,46 @@ $color-body-text: $grey-800;
 $color-border:    $grey-200;
 
 // ---------------------------------------------------------------------------
+// Redesign CSS custom properties (landing, auth, mobile nav, public footer)
+// These respond to prefers-color-scheme for public pages; the in-app theme
+// system continues to use [data-theme="dark"] + SCSS variables.
+// ---------------------------------------------------------------------------
+:root {
+  --ink:          #0d1812;
+  --ink-2:        #14241a;
+  --paper:        #f3f1e8;
+  --paper-2:      #e9e6d8;
+  --card-cv:      #fbfaf4;
+  --emerald-cv:   #10b981;
+  --emerald-bright: #1ed688;
+  --emerald-deep: #0a7d57;
+  --amber:        #f2b138;
+  --bone:         #f3f1e8;
+  --bone-dim:     #b9c4ba;
+  --ink-soft:     rgba(13, 24, 18, 0.60);
+  --line-light:   rgba(13, 24, 18, 0.12);
+  --line-dark:    rgba(243, 241, 232, 0.12);
+  --danger-cv:    #d6453d;
+  --ease-cv:      cubic-bezier(0.22, 1, 0.36, 1);
+  --maxw:         1180px;
+  --r-md:         16px;
+  --r-lg:         24px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper:     #070d0a;
+    --paper-2:   #1d2c22;
+    --card-cv:   #14241a;
+    --ink-soft:  rgba(243, 241, 232, 0.62);
+    --line-light: rgba(243, 241, 232, 0.10);
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Typography
 // ---------------------------------------------------------------------------
+$font-display: 'Bricolage Grotesque', sans-serif;
 $font-sans: 'DM Sans', system-ui, sans-serif;
 $font-mono: 'JetBrains Mono', monospace;
 

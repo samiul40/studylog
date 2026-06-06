@@ -4,7 +4,10 @@
   <div class="container-fluid">
 
     <!-- Brand -->
-    <a class="navbar-brand" href="{% url 'learning:dashboard' %}">StudyLog</a>
+    <a class="navbar-brand d-flex align-items-center" href="{% url 'learning:dashboard' %}">
+      <img class="brand-lockup brand-lockup--light" src="{% static 'img/studylog-lockup-light.webp' %}" alt="StudyLog" height="26">
+      <img class="brand-lockup brand-lockup--dark"  src="{% static 'img/studylog-lockup-dark.webp' %}"  alt="StudyLog" height="26">
+    </a>
 
     <!-- Mobile right: avatar only (hamburger replaced by bottom nav) -->
     <div class="d-flex align-items-center d-lg-none ms-auto">

@@ -1,13 +1,22 @@
 // =============================================================================
-// _footer.scss
+// _footer.scss — In-app authenticated footer (slim bar)
+// The public landing page uses .l-foot (in _landing.scss).
 // =============================================================================
 @use '../abstracts/variables' as *;
 
 .footer {
-  background-color: #fff !important;
+  background-color: #fff;
   border-top: 1px solid $grey-200;
-  color: $grey-400 !important;
+  color: $grey-400;
   font-size: 0.8125rem;
   font-weight: 500;
-  padding: 1rem 0 !important;
+  padding: 1rem 0;
+}
+
+[data-theme="dark"] {
+  .footer {
+    background-color: #1e293b;
+    border-top-color: #334155;
+    color: #475569;
+  }
 }
