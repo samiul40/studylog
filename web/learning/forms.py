@@ -1,4 +1,5 @@
 from django import forms
+from django.db.models import Q
 from django.utils.text import slugify
 
 from .models.learning_resource import LearningResource
@@ -8,7 +9,7 @@ from .models.resource_type import ResourceType
 
 class LearningResourceForm(forms.ModelForm):
     resource_type = forms.ModelChoiceField(
-        queryset=ResourceType.objects.all(),
+        queryset=ResourceType.objects.none(),
         required=False,
         widget=forms.Select(attrs={"class": "form-select"}),
         label="Resource Type",
@@ -44,6 +45,14 @@ class LearningResourceForm(forms.ModelForm):
         widget=forms.HiddenInput(),
     )
 
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.user = user
+        if user is not None:
+            self.fields["resource_type"].queryset = ResourceType.objects.filter(
+                Q(is_system=True) | Q(user=user)
+            )
+
     class Meta:
         model = LearningResource
         fields = ["title", "resource_type", "description", "url"]
@@ -74,6 +83,7 @@ class LearningResourceForm(forms.ModelForm):
             slug = slugify(new_name)
             rt, _ = ResourceType.objects.get_or_create(
                 slug=slug,
+                user=self.user,
                 defaults={
                     "name": new_name,
                     "content_kind": (new_kind or ResourceType.ContentKind.VIDEO),

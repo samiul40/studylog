@@ -21,10 +21,11 @@ class LearningUnitInline(SortableInlineAdminMixin, admin.TabularInline):
 
 @admin.register(ResourceType)
 class ResourceTypeAdmin(admin.ModelAdmin):
-    list_display = ("name", "slug", "content_kind", "is_system")
+    list_display = ("name", "slug", "content_kind", "is_system", "user")
     list_filter = ("content_kind", "is_system")
-    search_fields = ("name", "slug")
+    search_fields = ("name", "slug", "user__username")
     readonly_fields = ("slug", "created_at")
+    autocomplete_fields = ("user",)
 
     def get_readonly_fields(self, request, obj=None):
         if obj and obj.is_system:
@@ -33,6 +34,7 @@ class ResourceTypeAdmin(admin.ModelAdmin):
                 "slug",
                 "content_kind",
                 "is_system",
+                "user",
                 "created_at",
             )
         return self.readonly_fields
