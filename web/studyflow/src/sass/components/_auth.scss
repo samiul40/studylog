@@ -488,13 +488,15 @@ body:has(.auth-layout) {
 
 // The base.html <main class="flex-grow-1"> wrapper sits between body and
 // .auth-layout. Zero out any margin/padding/background it may carry so nothing
-// bleeds through at the top or bottom.
+// bleeds through at the top or bottom. Also cancel the pageFadeIn entrance
+// animation — .auth-layout fills the viewport immediately, no fade needed.
 body:has(.auth-layout) > main {
   padding: 0 !important;
   margin: 0 !important;
   background: transparent !important;
   display: flex;
   flex-direction: column;
+  animation: none;
 }
 
 .auth-layout {
