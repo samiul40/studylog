@@ -235,7 +235,7 @@
   /* ── Resource type data from Django ─────────────────────────────────────── */
   const RF_TYPES = [
     {% for rt in form.resource_type.field.queryset %}
-    { id: {{ rt.pk }}, name: "{{ rt.name|escapejs }}", kind: "{{ rt.content_kind }}" },
+    { id: {{ rt.pk }}, name: "{{ rt.name|escapejs }}", slug: "{{ rt.slug|escapejs }}", kind: "{{ rt.content_kind }}" },
     {% endfor %}
   ];
 
@@ -268,8 +268,9 @@
   const unitCountHint  = document.getElementById('rf-unit-count-hint');
 
   /* ── State ──────────────────────────────────────────────────────────────── */
-  let selectedType = null; // { id, name, kind } | { isNew:true, name, kind }
+  let selectedType = null; // { id, name, slug, kind } | { isNew:true, name, kind }
   let newKind = 'video';
+  let updateBar = null; // assigned by the YouTube import block below
 
   /* ── HTML escaping helper ───────────────────────────────────────────────── */
   function esc(s) {
@@ -353,7 +354,7 @@
 
   /* ── Select existing type ───────────────────────────────────────────────── */
   function selectExistingType(t) {
-    selectedType = { id: t.id, name: t.name, kind: t.kind };
+    selectedType = { id: t.id, name: t.name, slug: t.slug, kind: t.kind };
     comboInput.value = t.name;
     comboTag.textContent = t.kind === 'reading' ? 'Reading' : 'Video / Audio';
     comboTag.style.display = '';
@@ -364,6 +365,7 @@
     closeCombo();
     clearTypeError();
     updateUnitLabel();
+    if (updateBar) updateBar();
   }
 
   /* ── Create new type ────────────────────────────────────────────────────── */
@@ -380,6 +382,7 @@
     closeCombo();
     clearTypeError();
     updateUnitLabel();
+    if (updateBar) updateBar();
   }
 
   /* ── Event wiring ───────────────────────────────────────────────────────── */
@@ -399,6 +402,7 @@
     hiddenNewKind.value = '';
     clearTypeError();
     renderPanel();
+    if (updateBar) updateBar();
   });
 
   comboPanel.addEventListener('click', e => {
@@ -466,11 +470,12 @@
 
     const YT_RE = /youtube\.com|youtu\.be/;
 
-    function updateBar() {
-      const isYt    = YT_RE.test(urlField.value.trim());
-      const hasPreview = ytPreview.classList.contains('rf-yt-preview--visible');
-      ytBar.classList.toggle('rf-yt-bar--visible', isYt && !hasPreview);
-    }
+    updateBar = function () {
+      const isYouTubeType = selectedType && !selectedType.isNew && selectedType.slug === 'youtube';
+      const isYtUrl       = YT_RE.test(urlField.value.trim());
+      const hasPreview    = ytPreview.classList.contains('rf-yt-preview--visible');
+      ytBar.classList.toggle('rf-yt-bar--visible', isYouTubeType && isYtUrl && !hasPreview);
+    };
 
     urlField.addEventListener('input', updateBar);
     urlField.addEventListener('paste', () => setTimeout(updateBar, 0));
