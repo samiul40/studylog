@@ -1,147 +1,288 @@
 // =============================================================================
-// _navbar.scss
+// _navbar.scss — App bar (redesign)
 // =============================================================================
 @use '../abstracts/variables' as *;
 
-.navbar {
-  background-color: #fff !important;
-  border-bottom: 1px solid $grey-200;
-  padding-top: 0.75rem;
-  padding-bottom: 0.75rem;
+// ---------------------------------------------------------------------------
+// Appbar shell
+// ---------------------------------------------------------------------------
+.appbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: color-mix(in srgb, var(--paper) 82%, transparent);
+  backdrop-filter: saturate(160%) blur(14px);
+  -webkit-backdrop-filter: saturate(160%) blur(14px);
+  border-bottom: 1px solid var(--line-soft);
+  transition: background 0.4s var(--ease, cubic-bezier(0.22,1,0.36,1));
+}
 
-  .navbar-brand {
-    img { height: 26px; }
+// 3-column grid: brand | nav (centred) | user menu (right-aligned)
+.appbar__inner {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 16px;
+  max-width: 960px;
+  margin: 0 auto;
+  height: 64px;
+  padding: 0 clamp(18px, 4vw, 32px);
+}
 
-    &:hover { color: $grey-900; }
+// ---------------------------------------------------------------------------
+// Brand
+// ---------------------------------------------------------------------------
+.appbar__brand {
+  grid-column: 1;
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+}
+
+.appbar__lockup {
+  display: block;
+  height: 30px;
+  width: auto;
+
+  &--dark { display: none; }
+}
+
+[data-theme="dark"] {
+  .appbar__lockup--light { display: none; }
+  .appbar__lockup--dark  { display: block; }
+}
+
+// ---------------------------------------------------------------------------
+// Centre nav links
+// ---------------------------------------------------------------------------
+.appbar__nav {
+  grid-column: 2;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.navlink {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  font-size: 0.92rem;
+  color: var(--ink-soft);
+  padding: 8px 13px;
+  border-radius: 100px;
+  text-decoration: none;
+  transition: background 0.18s, color 0.18s;
+  white-space: nowrap;
+
+  i { font-size: 0.82rem; }
+
+  &:hover {
+    color: var(--ink);
+    background: color-mix(in srgb, var(--ink) 6%, transparent);
   }
 
-  .nav-link {
-    color: $grey-600;
-    font-weight: 500;
-    font-size: 0.9rem;
-    padding: 0.375rem 0.75rem;
-    border-radius: $radius-md;
-    transition: background $transition-fast, color $transition-fast;
+  &--on {
+    color: var(--emerald-deep);
+    background: color-mix(in srgb, var(--emerald) 13%, transparent);
 
     &:hover {
-      color: $grey-900;
-      background-color: $grey-100;
+      color: var(--emerald-deep);
+      background: color-mix(in srgb, var(--emerald) 18%, transparent);
     }
-
-    &.active {
-      color: $emerald-700;
-      background-color: $emerald-50;
-      font-weight: 600;
-    }
-  }
-
-  .navbar-user-trigger {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.375rem 0.625rem;
-    border-radius: $radius-md;
-    border: 1px solid $grey-200;
-    background: #fff;
-    text-decoration: none;
-    transition: background $transition-fast, border-color $transition-fast;
-    cursor: pointer;
-
-    &:hover {
-      background: $grey-50;
-      border-color: $grey-300;
-    }
-
-    span {
-      font-weight: 500;
-      font-size: 0.875rem;
-      color: $grey-700;
-    }
-  }
-
-  .dropdown-menu {
-    border: 1px solid $grey-200;
-    border-radius: $radius-lg;
-    box-shadow: $shadow-lg;
-    padding: 0.375rem;
-    min-width: 220px;
-
-    .dropdown-header-info {
-      padding: 0.625rem 0.75rem 0.75rem;
-      border-bottom: 1px solid $grey-100;
-      margin-bottom: 0.375rem;
-
-      small { color: $grey-400; font-size: 0.75rem; }
-      strong { color: $grey-800; font-size: 0.875rem; }
-    }
-
-    .dropdown-item {
-      border-radius: 0.375rem;
-      font-size: 0.875rem;
-      font-weight: 500;
-      color: $grey-700;
-      padding: 0.5rem 0.75rem;
-      transition: background $transition-fast;
-
-      &:hover { background-color: $grey-100; color: $grey-900; }
-      &.text-danger:hover { background-color: #fef2f2; }
-
-      i { width: 1rem; text-align: center; }
-    }
-
-    .dropdown-divider { margin: 0.375rem 0; border-color: $grey-100; }
   }
 }
 
-@media (min-width: 992px) {
-  .navbar .navbar-brand img { height: 32px; }
+// ---------------------------------------------------------------------------
+// User menu (right)
+// ---------------------------------------------------------------------------
+.appbar__end {
+  grid-column: 3;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
 }
 
-@media (max-width: 991px) {
-  .navbar {
-    padding-top: 1.875rem;
-    padding-bottom: 1.875rem;
+.usermenu {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 12px 5px 5px;
+  border: 1px solid var(--line);
+  border-radius: 100px;
+  background: var(--field, #fff);
+  cursor: pointer;
+  text-decoration: none;
+  transition: border-color 0.18s;
 
-    .navbar-brand img { height: 38px; }
+  // reset button styles
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+  outline: none;
 
-    .nav-avatar {
-      width: 2.5rem;
-      height: 2.5rem;
-      font-size: 0.8125rem;
-    }
+  &:hover { border-color: color-mix(in srgb, var(--ink) 25%, transparent); }
 
-    .navbar-user-trigger {
-      padding: 0.5rem 0.75rem;
-    }
+  // Hide the Bootstrap caret arrow
+  &.dropdown-toggle::after { display: none; }
+}
+
+.nav-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  flex: 0 0 auto;
+  background: var(--ink);
+  color: var(--emerald-bright);
+  display: grid;
+  place-items: center;
+  font-family: $font-mono;
+  font-size: 0.7rem;
+  font-weight: 600;
+  line-height: 1;
+  user-select: none;
+}
+
+.usermenu__name {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--ink);
+}
+
+.usermenu__caret {
+  font-size: 0.68rem;
+  color: var(--ink-faint, rgba(13,24,18,0.42));
+  flex: 0 0 auto;
+  transition: transform 0.2s;
+
+  .usermenu[aria-expanded="true"] & { transform: rotate(180deg); }
+}
+
+// ---------------------------------------------------------------------------
+// Dropdown
+// ---------------------------------------------------------------------------
+.appbar-dropdown {
+  min-width: 230px;
+  background: var(--field, #fff);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: 0 24px 48px -20px rgba(13, 24, 18, 0.35);
+  padding: 7px;
+  margin-top: 8px !important;
+
+  // Override Bootstrap default padding/border
+  &.dropdown-menu {
+    --bs-dropdown-padding-y: 0;
+    --bs-dropdown-border-radius: 14px;
+    --bs-dropdown-border-color: var(--line);
+    --bs-dropdown-bg: var(--field, #fff);
+    --bs-dropdown-box-shadow: none;
+  }
+}
+
+.appbar-dropdown__info {
+  padding: 10px 12px 11px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.appbar-dropdown__signed-in {
+  font-family: $font-mono;
+  font-size: 0.62rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--ink-faint, rgba(13,24,18,0.42));
+}
+
+.appbar-dropdown__email {
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.appbar-dropdown__divider {
+  border: none;
+  border-top: 1px solid var(--line);
+  margin: 4px 0;
+}
+
+.appbar-dropdown__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 9px;
+  font-family: $font-sans;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--ink-soft);
+  text-decoration: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: background 0.14s, color 0.14s;
+  text-align: left;
+
+  i {
+    width: 16px;
+    font-size: 0.88rem;
+    text-align: center;
+    flex: 0 0 auto;
+    color: var(--ink-soft);
   }
 
-  .navbar-collapse {
-    padding: 0.75rem 0;
-    border-top: 1px solid $grey-100;
-    margin-top: 0.75rem;
-
-    .nav-link {
-      padding: 0.625rem 0.75rem;
-      border-radius: $radius-md;
-      font-size: 0.9375rem;
-
-      &.active {
-        background: $emerald-50;
-        color: $emerald-700;
-      }
-
-      i {
-        width: 1.125rem;
-        text-align: center;
-      }
-    }
-
-    .navbar-nav {
-      gap: 0.125rem;
-    }
+  &:hover {
+    background: color-mix(in srgb, var(--ink) 6%, transparent);
+    color: var(--ink);
+    i { color: var(--ink); }
   }
 
-  .navbar-toggler:focus {
-    box-shadow: none;
+  &--danger {
+    color: var(--rose, #e5484d);
+    i { color: var(--rose, #e5484d); }
+
+    &:hover {
+      background: color-mix(in srgb, var(--rose, #e5484d) 10%, transparent);
+      color: var(--rose, #e5484d);
+      i { color: var(--rose, #e5484d); }
+    }
   }
+}
+
+// ---------------------------------------------------------------------------
+// Dark-mode overrides — out-specificity the global [data-theme="dark"] a rule
+// ---------------------------------------------------------------------------
+[data-theme="dark"] {
+  .appbar__brand,
+  .appbar__brand:hover { color: var(--ink); }
+
+  .navlink { color: var(--ink-soft); }
+  .navlink:hover { color: var(--ink); background: color-mix(in srgb, var(--ink) 6%, transparent); }
+  .navlink.navlink--on,
+  .navlink.navlink--on:hover { color: var(--emerald-deep); }
+
+  .appbar-dropdown__item { color: var(--ink-soft); }
+  .appbar-dropdown__item:hover { color: var(--ink); }
+}
+
+// ---------------------------------------------------------------------------
+// Mobile: collapse nav links, strip usermenu border/name
+// ---------------------------------------------------------------------------
+@media (max-width: 720px) {
+  .appbar__inner { height: 58px; }
+  .appbar__nav   { display: none; }
+
+  // Avatar-only pill on mobile
+  .usermenu {
+    border: none;
+    background: transparent;
+    padding: 4px;
+    gap: 0;
+  }
+  .usermenu__name,
+  .usermenu__caret { display: none; }
+
+  .appbar-dropdown__settings-item { display: none; }
 }

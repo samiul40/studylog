@@ -1,105 +1,75 @@
 {% load static %}
-{% with initials=request.user.first_name|slice:":1"|add:request.user.last_name|slice:":1" %}
-<nav class="navbar navbar-expand-lg">
-  <div class="container-fluid">
+{% with initials=request.user.first_name|slice:":1"|add:request.user.last_name|slice:":1" view=request.resolver_match.view_name %}
+<header class="appbar">
+  <div class="appbar__inner">
 
-    <!-- Brand -->
-    <a class="navbar-brand d-flex align-items-center" href="{% url 'learning:dashboard' %}">
-      <img class="brand-lockup brand-lockup--light" src="{% static 'img/studylog-lockup-light.webp' %}" alt="StudyLog" height="26">
-      <img class="brand-lockup brand-lockup--dark"  src="{% static 'img/studylog-lockup-dark.webp' %}"  alt="StudyLog" height="26">
+    {# ── Brand ─────────────────────────────────────────────────────────────── #}
+    <a class="appbar__brand" href="{% url 'learning:dashboard' %}">
+      <img src="{% static 'img/studylog-lockup-light.webp' %}" alt="StudyLog" height="30"
+           class="appbar__lockup appbar__lockup--light">
+      <img src="{% static 'img/studylog-lockup-dark.webp' %}" alt="StudyLog" height="30"
+           class="appbar__lockup appbar__lockup--dark">
     </a>
 
-    <!-- Mobile right: avatar only (hamburger replaced by bottom nav) -->
-    <div class="d-flex align-items-center d-lg-none ms-auto">
+    {# ── Center nav (hidden on mobile — bottom nav takes over) ────────────── #}
+    <nav class="appbar__nav" aria-label="Main navigation">
+      {% if perms.learning.view_dashboard %}
+      <a class="navlink {% if view == 'learning:dashboard' %}navlink--on{% endif %}"
+         href="{% url 'learning:dashboard' %}">
+        <i class="fas fa-house" aria-hidden="true"></i>
+        Dashboard
+      </a>
+      {% endif %}
+      {% if perms.learning.view_learningresource %}
+      <a class="navlink {% if 'resource' in view and 'resource_create' not in view %}navlink--on{% endif %}"
+         href="{% url 'learning:resource_list' %}">
+        <i class="fas fa-folder" aria-hidden="true"></i>
+        Resources
+      </a>
+      {% endif %}
+      {% if perms.learning.add_learningresource %}
+      <a class="navlink {% if 'resource_create' in view %}navlink--on{% endif %}"
+         href="{% url 'learning:resource_create' %}">
+        <i class="fas fa-plus" aria-hidden="true"></i>
+        Add Resource
+      </a>
+      {% endif %}
+    </nav>
+
+    {# ── User menu ─────────────────────────────────────────────────────────── #}
+    <div class="appbar__end">
       <div class="dropdown">
-        <a href="#" class="navbar-user-trigger dropdown-toggle" id="navbarUserDropdownMobile"
-          data-bs-toggle="dropdown" aria-expanded="false">
-          <div class="nav-avatar">{% if initials %}{{ initials|upper }}{% else %}{{ request.user.username|slice:":1"|upper }}{% endif %}</div>
-        </a>
-        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarUserDropdownMobile">
+        <button class="usermenu dropdown-toggle" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-label="User menu">
+          <div class="nav-avatar" aria-hidden="true">
+            {% if initials %}{{ initials|upper }}{% else %}{{ request.user.username|slice:":1"|upper }}{% endif %}
+          </div>
+          <span class="usermenu__name">{{ request.user.first_name|default:request.user.username }}</span>
+          <i class="fas fa-chevron-down usermenu__caret" aria-hidden="true"></i>
+        </button>
+
+        <ul class="dropdown-menu dropdown-menu-end appbar-dropdown" aria-label="User options">
           <li>
-            <div class="dropdown-header-info">
-              <small>Signed in as</small><br>
-              <strong>{{ request.user.email }}</strong>
+            <div class="appbar-dropdown__info">
+              <span class="appbar-dropdown__signed-in">Signed in as</span>
+              <strong class="appbar-dropdown__email">{{ request.user.email }}</strong>
             </div>
           </li>
-          <li><hr class="dropdown-divider"></li>
-          <li>
-            <form method="post" action="{% url 'account_logout' %}">
-              {% csrf_token %}
-              <button type="submit" class="dropdown-item text-danger">
-                <i class="fas fa-sign-out-alt me-2"></i> Logout
-              </button>
-            </form>
-          </li>
-        </ul>
-      </div>
-    </div>
-
-    <!-- Collapsible nav links (desktop only) -->
-    <div class="collapse navbar-collapse" id="navbarNav">
-      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-        {% if not user.is_authenticated %}
-        <li class="nav-item">
-          <a class="nav-link {% if request.resolver_match.url_name == 'index' %}active{% endif %}"
-            href="{% url 'index' %}">
-            <i class="fas fa-home me-1"></i> Home
-          </a>
-        </li>
-        {% endif %}
-        {% if perms.learning.view_dashboard %}
-        <li class="nav-item">
-          <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"
-            href="{% url 'learning:dashboard' %}">
-            <i class="fas fa-house me-1"></i> Dashboard
-          </a>
-        </li>
-        {% endif %}
-        {% if perms.learning.view_learningresource %}
-        <li class="nav-item">
-          <a class="nav-link {% if request.resolver_match.url_name == 'resource_list' %}active{% endif %}"
-            href="{% url 'learning:resource_list' %}">
-            <i class="fas fa-folder-open me-1"></i> Resources
-          </a>
-        </li>
-        {% endif %}
-        {% if perms.learning.add_learningresource %}
-        <li class="nav-item">
-          <a class="nav-link {% if request.resolver_match.url_name == 'resource_create' %}active{% endif %}"
-            href="{% url 'learning:resource_create' %}">
-            <i class="fas fa-plus me-1"></i> Add Resource
-          </a>
-        </li>
-        {% endif %}
-      </ul>
-    </div>
-
-    <!-- Desktop right: avatar + name -->
-    <div class="d-none d-lg-flex align-items-center">
-      <div class="dropdown">
-        <a href="#" class="navbar-user-trigger dropdown-toggle" id="navbarUserDropdown"
-          data-bs-toggle="dropdown" aria-expanded="false">
-          <div class="nav-avatar">{% if initials %}{{ initials|upper }}{% else %}{{ request.user.username|slice:":1"|upper }}{% endif %}</div>
-          <span class="d-none d-lg-inline">{{ request.user.first_name }}</span>
-        </a>
-        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarUserDropdown">
-          <li>
-            <div class="dropdown-header-info">
-              <small>Signed in as</small><br>
-              <strong>{{ request.user.email }}</strong>
-            </div>
-          </li>
-          <li>
-            <a class="dropdown-item" href="{% url 'settings' %}">
-              <i class="fas fa-user-cog me-2"></i> Settings
+          <li><hr class="appbar-dropdown__divider"></li>
+          <li class="appbar-dropdown__settings-item">
+            <a class="appbar-dropdown__item" href="{% url 'settings' %}">
+              <i class="fas fa-gear" aria-hidden="true"></i>
+              Settings
             </a>
           </li>
-          <li><hr class="dropdown-divider"></li>
+          <li class="appbar-dropdown__settings-item"><hr class="appbar-dropdown__divider"></li>
           <li>
             <form method="post" action="{% url 'account_logout' %}">
               {% csrf_token %}
-              <button type="submit" class="dropdown-item text-danger">
-                <i class="fas fa-sign-out-alt me-2"></i> Logout
+              <button type="submit" class="appbar-dropdown__item appbar-dropdown__item--danger">
+                <i class="fas fa-arrow-right-from-bracket" aria-hidden="true"></i>
+                Logout
               </button>
             </form>
           </li>
@@ -108,5 +78,5 @@
     </div>
 
   </div>
-</nav>
+</header>
 {% endwith %}
