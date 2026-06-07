@@ -1,22 +1,31 @@
 // =============================================================================
-// _footer.scss — In-app authenticated footer (slim bar)
-// The public landing page uses .l-foot (in _landing.scss).
+// _footer.scss — In-app authenticated footer
 // =============================================================================
 @use '../abstracts/variables' as *;
 
-.footer {
-  background-color: #fff;
-  border-top: 1px solid $grey-200;
-  color: $grey-400;
-  font-size: 0.8125rem;
-  font-weight: 500;
-  padding: 1rem 0;
+.app-footer {
+  border-top: 1px solid var(--line, rgba(13,24,18,0.10));
+  padding: 28px 0 32px;
+  background: var(--paper);
 }
 
-[data-theme="dark"] {
-  .footer {
-    background-color: #1e293b;
-    border-top-color: #334155;
-    color: #475569;
-  }
+.app-footer__inner {
+  // Match Bootstrap .container widths so footer aligns with page content
+  width: 100%;
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 0 clamp(20px, 4vw, 48px);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  font-family: $font-mono;
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-faint, rgba(13,24,18,0.38));
+}
+
+@media (max-width: 720px) {
+  .app-footer { display: none; }
 }
