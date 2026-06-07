@@ -1,7 +1,7 @@
 {% load static %}
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en"{% if user.is_authenticated %} class="preload"{% endif %}>
 
 <head>
   <meta charset="UTF-8">
@@ -32,6 +32,7 @@
   <link rel="shortcut icon" href="{% static 'img/favicon-32.png' %}">
 
   <!-- Theme init: apply before CSS to avoid flash -->
+  <!-- Also strips the preload class after first paint to re-enable transitions -->
   <script nonce="{{ request.csp_nonce }}">
     (function () {
       try {
@@ -40,6 +41,13 @@
           document.documentElement.setAttribute('data-theme', 'dark');
         }
       } catch (e) {}
+      // Wait until the DOM is ready and CSS is applied, then allow one more
+      // frame for the browser to paint before re-enabling transitions.
+      document.addEventListener('DOMContentLoaded', function () {
+        requestAnimationFrame(function () {
+          document.documentElement.classList.remove('preload');
+        });
+      });
     })();
   </script>
 
@@ -64,7 +72,7 @@
   {% block extra_head %}{% endblock %}
 </head>
 
-<body class="d-flex flex-column min-vh-100">
+<body class="d-flex flex-column min-vh-100{% if user.is_authenticated %} is-authed{% endif %}">
   <!-- Navbar -->
   {% block navbar %}
   {% if user.is_authenticated %}

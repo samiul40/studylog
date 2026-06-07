@@ -49,6 +49,8 @@ class ResourceListView(BaseUserResourceView, ListView):
             super()
             .get_queryset()
             .with_progress()
+            .with_weekly_units()
+            .with_time_logged()
             .select_related("user", "resource_type")
         )
 
@@ -65,6 +67,25 @@ class ResourceListView(BaseUserResourceView, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+
+        # Materialise the queryset once so we can compute page-level stats
+        # without hitting the DB again for each count.
+        resources = list(context["resources"])
+        context["resources"] = resources
+
+        def is_in_progress(r):
+            return 0 < r.percentage < 100
+
+        def completed_this_week(r):
+            return r.percentage >= 100 and getattr(r, "units_this_week", 0) > 0
+
+        in_progress_count = sum(1 for r in resources if is_in_progress(r))
+        completed_this_week_count = sum(1 for r in resources if completed_this_week(r))
+        context["page_stats"] = {
+            "total": len(resources),
+            "in_progress": in_progress_count,
+            "completed_this_week": completed_this_week_count,
+        }
         context["search_query"] = self.request.GET.get("search", "")
         context["selected_type"] = self.request.GET.get("type", "")
         context["resource_types"] = ResourceType.objects.filter(
@@ -83,7 +104,7 @@ class ResourceDetailView(BaseUserResourceView, DetailView):
     context_object_name = "resource"
 
     def get_queryset(self):
-        # Include archived so the user can view and unarchive from the detail page.
+        # Include archived so the user can view and unarchive from the detail.
         return (
             LearningResource.objects.for_user(self.request.user)
             .with_progress()
