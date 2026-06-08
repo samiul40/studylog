@@ -1,82 +1,225 @@
 {% extends "base.html" %}
+{% load learning_filters %}
 
-{% block breadcrumbs %}
-<nav aria-label="breadcrumb">
-  <ol class="breadcrumb">
-    <li class="breadcrumb-item"><a href="{% url 'learning:dashboard' %}">Dashboard</a></li>
-    <li class="breadcrumb-item"><a href="{% url 'learning:resource_list' %}">Resources</a></li>
-    <li class="breadcrumb-item active">Archived</li>
-  </ol>
-</nav>
-{% endblock %}
+{% block title %}Archived Resources — StudyLog{% endblock %}
+
+{# Use the same paper background as the resource list #}
+{% block main_class %}rlist-bg{% endblock %}
+
+{# Suppress the base.html alerts block — flash messages are included inside .rl-wrap #}
+{% block alerts %}{% endblock %}
 
 {% block content %}
+<div class="rl-wrap">
 
-<div class="page-header">
-  <h2>Archived Resources</h2>
-  <a href="{% url 'learning:resource_list' %}" class="btn btn-outline-secondary">
-    <i class="fas fa-arrow-left me-1"></i> Back to Resources
-  </a>
-</div>
+  {# ── Flash messages ──────────────────────────────────────────────────────── #}
+  {% include 'partials/_alerts.html' %}
 
-{% if resources %}
-<div class="row g-3">
-  {% for resource in resources %}
+  {# ── Breadcrumbs ─────────────────────────────────────────────────────────── #}
+  <nav class="rl-crumbs" aria-label="Breadcrumb">
+    <a href="{% url 'learning:dashboard' %}">Dashboard</a>
+    <span class="rl-crumbs__sep">/</span>
+    <a href="{% url 'learning:resource_list' %}">Resources</a>
+    <span class="rl-crumbs__sep">/</span>
+    <span class="rl-crumbs__cur">Archived</span>
+  </nav>
 
-  <div class="col-md-4">
-    <div class="resource-card resource-card--archived">
+  {# ── Page header ──────────────────────────────────────────────────────────── #}
+  <div class="rl-header">
+    <div>
+      <h2 class="rl-header__title">Archived Resources</h2>
+      <p class="rl-header__sub">
+        {{ resources|length }} archived &middot; hidden from your dashboard stats
+      </p>
+    </div>
+    <div class="rl-header__actions">
+      <a href="{% url 'learning:resource_list' %}" class="rl-btn rl-btn--ghost">
+        <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+        Back to Resources
+      </a>
+    </div>
+  </div>
 
-      <div class="resource-card__header">
-        <div class="resource-card__badges">
-          <span class="resource-badge resource-badge--{{ resource.resource_type.slug }}">
-            {{ resource.resource_type.name }}
-          </span>
-          <span class="status-badge status-badge--archived">Archived</span>
+  {# ── Info banner ──────────────────────────────────────────────────────────── #}
+  <div class="arc-banner" role="note">
+    <i class="fa-solid fa-box-archive arc-banner__icon" aria-hidden="true"></i>
+    <p class="arc-banner__text">
+      Archived resources keep all their progress but are excluded from
+      dashboard totals and the active list.
+      <strong>Restore</strong> any of them to start tracking again.
+    </p>
+  </div>
+
+  {# ── Search / sort toolbar ────────────────────────────────────────────────── #}
+  <form method="get" id="archiveForm" class="rl-toolbar" role="search">
+    <div class="rl-search">
+      <svg class="rl-search__icon" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2"
+           stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="11" cy="11" r="7"></circle>
+        <path d="M21 21l-4.3-4.3"></path>
+      </svg>
+      <input type="text" name="search" id="archiveSearch"
+             class="rl-search__input"
+             placeholder="Search archived…"
+             value="{{ search_query }}"
+             autocomplete="off">
+    </div>
+
+    <div class="rl-selectwrap">
+      <select name="sort" id="archiveSort" class="rl-select" aria-label="Sort archived resources">
+        <option value="-updated_at" {% if sort == "-updated_at" %}selected{% endif %}>Recently archived</option>
+        <option value="updated_at"  {% if sort == "updated_at"  %}selected{% endif %}>Oldest first</option>
+        <option value="-percentage" {% if sort == "-percentage" %}selected{% endif %}>Most progress</option>
+        <option value="percentage"  {% if sort == "percentage"  %}selected{% endif %}>Least progress</option>
+      </select>
+      <svg class="rl-selectwrap__chevron" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2.2"
+           stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M6 9l6 6 6-6"></path>
+      </svg>
+    </div>
+  </form>
+
+  {# ── Card grid ────────────────────────────────────────────────────────────── #}
+  {% if resources %}
+  <div class="arc-grid">
+    {% for resource in resources %}
+    {% with pct=resource.percentage %}
+
+    <article class="rcard rcard--archived" aria-label="{{ resource.title }}">
+
+      {# ── Head — eyebrow + title + archived badge ───────────────────────────── #}
+      <div class="rcard__head">
+        <div class="rcard__head-left">
+          <div class="rcard__eyebrow">
+            <span class="rcard__eyebrow-prefix">{{ resource.resource_type.name }} &middot;&nbsp;</span>
+            <b>
+              {% if pct >= 100 %}Was completed
+              {% elif pct > 0 %}In progress
+              {% else %}Not started
+              {% endif %}
+            </b>
+          </div>
+          <h3 class="rcard__title">{{ resource.title }}</h3>
         </div>
-        <span class="resource-card__date">{{ resource.created_at|date:"d M Y" }}</span>
+        <span class="rcard__badge rcard__badge--archived">
+          <i class="fa-solid fa-box-archive" aria-hidden="true"></i> Archived
+        </span>
       </div>
 
-      <h5 class="resource-card__title">{{ resource.title }}</h5>
-
-      {% if resource.description %}
-      <p class="resource-card__desc">{{ resource.description|truncatewords:20 }}</p>
-      {% endif %}
-
-      <div class="resource-card__progress">
-        <div class="resource-card__progress-header">
-          <span class="resource-card__progress-label">Progress</span>
-          <span class="resource-card__progress-value">{{ resource.completed_units }}/{{ resource.total_units }} &middot; {{ resource.percentage }}%</span>
+      {# ── Ring + stats ──────────────────────────────────────────────────────── #}
+      <div class="rcard__ringrow">
+        <div class="rcard__ring" aria-hidden="true">
+          <svg viewBox="0 0 100 100">
+            <circle class="ring__track" cx="50" cy="50" r="43" stroke-width="8"></circle>
+            <circle class="ring__val"
+                    cx="50" cy="50" r="43" stroke-width="8"
+                    stroke-dasharray="270.2"
+                    style="--ring-offset: {{ pct|ring_dashoffset }}"></circle>
+          </svg>
+          <div class="ring__txt">
+            <div class="ring__num">{{ pct }}%</div>
+            <div class="ring__cap">Done</div>
+          </div>
         </div>
-        <div class="progress">
-          <div class="progress-bar" role="progressbar" style="width: {{ resource.percentage }}%;"
-            aria-valuenow="{{ resource.percentage }}" aria-valuemin="0" aria-valuemax="100">
+
+        <div class="rcard__stats">
+          <div class="rcard__stat">
+            <span class="rcard__stat-key">Units complete</span>
+            <span class="rcard__stat-val">
+              {{ resource.completed_units }} / {{ resource.total_units }}
+            </span>
           </div>
         </div>
       </div>
 
-      {% if perms.learning.view_learningresource %}
-      <a href="{{ resource.get_absolute_url }}" class="resource-card__cta">
-        View Details <i class="fas fa-arrow-right ms-1"></i>
-      </a>
+      {# ── Description ───────────────────────────────────────────────────────── #}
+      {% if resource.description %}
+      <p class="rcard__desc">{{ resource.description|truncatewords:20 }}</p>
       {% endif %}
 
-    </div>
+      {# ── Footer — date + Restore + View details ────────────────────────────── #}
+      <div class="rcard__foot">
+        <span class="rcard__date">Archived {{ resource.updated_at|date:"j M Y" }}</span>
+        <div class="rcard__actions">
+          <form method="post"
+                action="{% url 'learning:resource_archive' resource.pk %}"
+                class="rcard__restore-form">
+            {% csrf_token %}
+            <button type="submit" class="rcard__restore">
+              <i class="fa-solid fa-rotate-left" aria-hidden="true"></i> Restore
+            </button>
+          </form>
+          {% if perms.learning.view_learningresource %}
+          <a href="{{ resource.get_absolute_url }}" class="rcard__cta">
+            View details
+            <svg class="rcard__cta-arrow" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2.4"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M5 12h14M13 6l6 6-6 6"></path>
+            </svg>
+          </a>
+          {% endif %}
+        </div>
+      </div>
+
+    </article>
+    {% endwith %}
+    {% endfor %}
   </div>
 
-  {% endfor %}
+  {% else %}
+
+  {# ── Empty state ──────────────────────────────────────────────────────────── #}
+  <div class="arc-empty">
+    <div class="arc-empty__icon-tile" aria-hidden="true">
+      <i class="fa-solid fa-box-archive"></i>
+    </div>
+    <h3 class="arc-empty__title">No archived resources</h3>
+    <p class="arc-empty__text">
+      Resources you archive will appear here. Nothing is ever deleted —
+      you can restore them anytime.
+    </p>
+    <a href="{% url 'learning:resource_list' %}" class="rl-btn rl-btn--primary">
+      <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+      Back to Resources
+    </a>
+  </div>
+
+  {% endif %}
+
 </div>
+{% endblock %}
 
-{% else %}
+{% block scripts %}
+<script nonce="{{ request.csp_nonce }}">
+(function () {
+  'use strict';
 
-<div class="empty-state">
-  <span class="empty-state__icon">📦</span>
-  <div class="empty-state__title">No archived resources</div>
-  <p class="empty-state__text">Resources you archive will appear here.</p>
-  <a href="{% url 'learning:resource_list' %}" class="btn btn-primary">
-    <i class="fas fa-arrow-left me-1"></i> Back to Resources
-  </a>
-</div>
+  var form        = document.getElementById('archiveForm');
+  var searchInput = document.getElementById('archiveSearch');
+  var sortSelect  = document.getElementById('archiveSort');
+  var debounce;
 
-{% endif %}
+  if (searchInput) {
+    searchInput.addEventListener('input', function () {
+      clearTimeout(debounce);
+      debounce = setTimeout(function () {
+        form.submit();
+      }, 400);
+    });
 
+    if (searchInput.value.trim() !== '') {
+      searchInput.focus();
+      var len = searchInput.value.length;
+      searchInput.setSelectionRange(len, len);
+    }
+  }
+
+  if (sortSelect) {
+    sortSelect.addEventListener('change', function () { form.submit(); });
+  }
+})();
+</script>
 {% endblock %}

@@ -346,3 +346,94 @@
     }
   }
 }
+
+// =============================================================================
+// Archive list page chrome
+// =============================================================================
+
+// ---------------------------------------------------------------------------
+// Info banner — amber-tinted, explains what "archived" means
+// ---------------------------------------------------------------------------
+.arc-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 13px;
+  padding: 15px 18px;
+  margin-bottom: 22px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--amber) 9%, var(--card));
+  border: 1px solid color-mix(in srgb, var(--amber) 36%, var(--line));
+
+  &__icon {
+    color: var(--amber);
+    font-size: 1.18rem;
+    flex: 0 0 auto;
+    margin-top: 2px;
+  }
+
+  &__text {
+    font-size: 0.92rem;
+    color: var(--ink-soft);
+    margin: 0;
+    line-height: 1.55;
+
+    strong { color: var(--ink); font-weight: 700; }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Card grid — 2 columns desktop, 1 at ≤720px
+// ---------------------------------------------------------------------------
+.arc-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 18px;
+  align-items: stretch;
+
+  @media (max-width: 720px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Empty state — richer, icon-tile variant
+// ---------------------------------------------------------------------------
+.arc-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  max-width: 440px;
+  margin: 0 auto;
+  padding: 70px 20px 60px;
+
+  &__icon-tile {
+    width: 74px;
+    height: 74px;
+    border-radius: 20px;
+    border: 1px dashed var(--line);
+    background: var(--card);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+    font-size: 1.7rem;
+    color: var(--ink-faint);
+  }
+
+  &__title {
+    font-family: $font-display;
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    margin: 0 0 12px;
+  }
+
+  &__text {
+    font-size: 0.95rem;
+    color: var(--ink-soft);
+    margin: 0 0 24px;
+    text-wrap: pretty;
+  }
+}
