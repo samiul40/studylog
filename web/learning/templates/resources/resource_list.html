@@ -35,6 +35,7 @@
       </p>
     </div>
     <div class="rl-header__actions">
+      {% if archived_count %}
       <a href="{% url 'learning:resource_archive_list' %}" class="rl-btn rl-btn--ghost">
         {# Archive icon #}
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -44,6 +45,7 @@
         </svg>
         Archived
       </a>
+      {% endif %}
       {% if perms.learning.add_learningresource %}
       <a href="{% url 'learning:resource_create' %}" class="rl-btn rl-btn--primary">
         {# Plus icon #}

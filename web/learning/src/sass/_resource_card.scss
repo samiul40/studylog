@@ -335,3 +335,98 @@
 
   .rcard__title { color: var(--ink); }
 }
+
+// ---------------------------------------------------------------------------
+// Archived card variant — .rcard--archived
+// Muted / dashed "recessed" treatment; neutralises the active accent glow.
+// ---------------------------------------------------------------------------
+.rcard--archived {
+  --accent: #8d9a92;
+
+  background: color-mix(in srgb, var(--card) 62%, var(--paper-2));
+  border-style: dashed;
+  box-shadow: 0 14px 34px -30px rgba(13, 24, 18, 0.4);
+
+  &::before { display: none; }
+
+  .rcard__title {
+    color: color-mix(in srgb, var(--ink) 80%, transparent);
+  }
+
+  &:hover {
+    transform: translateY(-3px);
+    border-style: solid;
+    border-color: color-mix(in srgb, var(--ink) 30%, transparent);
+    box-shadow: 0 30px 60px -34px rgba(13, 24, 18, 0.4);
+
+    &::before { display: none; }
+  }
+}
+
+[data-theme="dark"] {
+  .rcard--archived {
+    background: color-mix(in srgb, var(--card) 70%, var(--paper));
+  }
+
+  .rcard--archived:hover {
+    box-shadow: 0 34px 66px -34px rgba(0, 0, 0, 0.8);
+  }
+}
+
+// Archived pill badge (dashed border, muted)
+.rcard__badge--archived {
+  color: var(--ink-soft);
+  background: transparent;
+  border-style: dashed;
+
+  i { font-size: 0.65em; margin-right: 2px; }
+}
+
+// Description — clamped to 2 lines
+.rcard__desc {
+  font-size: 0.95rem;
+  color: var(--ink-soft);
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+// Footer actions row — wraps Restore form + View details link
+.rcard__actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.rcard__restore-form { margin: 0; }
+
+.rcard__restore {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: $font-sans;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--emerald-deep);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  min-height: 44px;
+  transition: color 0.18s var(--ease);
+
+  i { transition: transform 0.28s var(--ease); }
+
+  &:hover {
+    color: var(--emerald);
+    i { transform: rotate(-45deg); }
+  }
+}
+
+[data-theme="dark"] {
+  .rcard__restore { color: var(--emerald-bright); }
+  .rcard__restore:hover { color: var(--emerald-bright); filter: brightness(1.2); }
+}

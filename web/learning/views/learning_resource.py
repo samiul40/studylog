@@ -88,6 +88,9 @@ class ResourceListView(BaseUserResourceView, ListView):
         }
         context["search_query"] = self.request.GET.get("search", "")
         context["selected_type"] = self.request.GET.get("type", "")
+        context["archived_count"] = (
+            LearningResource.objects.for_user(self.request.user).archived().count()
+        )
         context["resource_types"] = ResourceType.objects.filter(
             Q(is_system=True) | Q(user=self.request.user)
         )
@@ -182,6 +185,10 @@ class ResourceUpdateView(BaseUserResourceView, UpdateView):
     form_class = LearningResourceForm
     template_name = "resources/resource_form.html"
 
+    def get_queryset(self):
+        # Include archived resources so users can edit without restoring first.
+        return LearningResource.objects.for_user(self.request.user)
+
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         kwargs["user"] = self.request.user
@@ -201,6 +208,10 @@ class ResourceDeleteView(BaseUserResourceView, DeleteView):
     model = LearningResource
     template_name = "resources/resource_confirm_delete.html"
     success_url = reverse_lazy("learning:resource_list")
+
+    def get_queryset(self):
+        # Include archived resources so users can delete without restoring first.
+        return LearningResource.objects.for_user(self.request.user)
 
     def form_valid(self, form):
         messages.success(self.request, "Resource deleted successfully.")
@@ -234,11 +245,28 @@ class ResourceArchiveListView(BaseUserResourceView, ListView):
     template_name = "resources/resource_archive_list.html"
     context_object_name = "resources"
 
+    _SORT_MAP = {
+        "-updated_at": "-updated_at",
+        "updated_at": "updated_at",
+        "-percentage": "-percentage",
+        "percentage": "percentage",
+    }
+
     def get_queryset(self):
-        return (
+        qs = (
             LearningResource.objects.for_user(self.request.user)
             .archived()
             .with_progress()
             .select_related("user", "resource_type")
-            .order_by("-updated_at")
         )
+        search = self.request.GET.get("search", "").strip()
+        if search:
+            qs = qs.filter(title__icontains=search)
+        sort = self.request.GET.get("sort", "-updated_at")
+        return qs.order_by(self._SORT_MAP.get(sort, "-updated_at"))
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["search_query"] = self.request.GET.get("search", "")
+        context["sort"] = self.request.GET.get("sort", "-updated_at")
+        return context
