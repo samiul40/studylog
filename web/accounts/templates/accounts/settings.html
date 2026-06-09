@@ -1,258 +1,449 @@
 {% extends 'base.html' %}
 
-{% block breadcrumbs %}
-<nav aria-label="breadcrumb">
-  <ol class="breadcrumb">
-    <li class="breadcrumb-item"><a href="{% url 'learning:dashboard' %}">Dashboard</a></li>
-    <li class="breadcrumb-item active">Settings</li>
-  </ol>
-</nav>
-{% endblock %}
+{% block title %}Settings — StudyLog{% endblock %}
+
+{% block main_class %}settings-main{% endblock %}
+
+{# Suppress base.html's default alerts wrapper — we render alerts inside .settings-wrap #}
+{% block alerts %}{% endblock %}
 
 {% block content %}
-<div class="page-header">
-  <h2>Settings</h2>
-</div>
+<div class="settings-wrap">
 
-<div class="row g-4 align-items-start">
+  {% include 'partials/_alerts.html' %}
 
-  <!-- Sidebar nav -->
-  <div class="col-lg-3 col-md-4">
-    <aside class="settings-sidebar">
-      <div class="settings-sidebar__header">
-        <p class="settings-sidebar__title">Account</p>
-      </div>
-      <nav>
-        <button class="settings-nav__item {% if not password_form.errors %}active{% endif %}" data-panel="account">
-          <i class="fas fa-user"></i>
-          Account Details
-        </button>
-        <button class="settings-nav__item {% if password_form.errors %}active{% endif %}" data-panel="security">
-          <i class="fas fa-lock"></i>
-          Security
-        </button>
-        <button class="settings-nav__item" data-panel="appearance">
-          <i class="fas fa-palette"></i>
-          Appearance
-        </button>
-      </nav>
-    </aside>
+  <nav class="settings-crumbs" aria-label="Breadcrumb">
+    <a href="{% url 'learning:dashboard' %}">Dashboard</a>
+    <span class="sep" aria-hidden="true">/</span>
+    <span class="cur">Settings</span>
+  </nav>
+
+  <div class="settings-page-header">
+    <h2>Settings</h2>
+    <p class="settings-page-sub">Manage your account, security, and how StudyLog looks to you.</p>
   </div>
 
-  <!-- Content panels -->
-  <div class="col-lg-9 col-md-8">
+  <div class="settings-grid">
 
-    <!-- Account Details -->
-    <div class="settings-panel {% if not password_form.errors %}active{% endif %}" id="panel-account">
-      <div class="form-card">
+    <aside class="scard snav-card">
+      <p class="snav__eyebrow">Account</p>
+      <div class="snav__list">
 
-        <div class="settings-form-header">
-          <h3 class="settings-form-title">Account Details</h3>
-          <p class="settings-form-subtitle">Update your name and email address</p>
-        </div>
+        <button type="button"
+                class="snav__item {% if not password_form.errors %}active{% endif %}"
+                data-panel="account" aria-controls="panel-account">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="8" r="4"></circle>
+            <path d="M4 21c0-4 4-6 8-6s8 2 8 6"></path>
+          </svg>
+          Account Details
+          <svg class="snav__chev" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M9 6l6 6-6 6"></path>
+          </svg>
+        </button>
 
-        {% if profile_form.errors %}
-        <div class="alert alert-danger mb-4">
-          <i class="fas fa-circle-exclamation me-2"></i> Please fix the errors below.
-        </div>
-        {% endif %}
+        <button type="button"
+                class="snav__item {% if password_form.errors %}active{% endif %}"
+                data-panel="security" aria-controls="panel-security">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="4" y="11" width="16" height="10" rx="2"></rect>
+            <path d="M8 11V7a4 4 0 0 1 8 0v4"></path>
+          </svg>
+          Security
+          <svg class="snav__chev" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M9 6l6 6-6 6"></path>
+          </svg>
+        </button>
 
-        <form method="post">
-          {% csrf_token %}
-          <input type="hidden" name="form_type" value="profile">
-
-          <div class="row g-3">
-            <div class="col-sm-6">
-              {% include "partials/_form_field.html" with field=profile_form.first_name %}
-            </div>
-            <div class="col-sm-6">
-              {% include "partials/_form_field.html" with field=profile_form.last_name %}
-            </div>
-          </div>
-
-          {% include "partials/_form_field.html" with field=profile_form.email %}
-
-          <div class="form-card__actions">
-            <span></span>
-            <button type="submit" class="btn btn-primary">
-              <span class="btn-text">Save Changes</span>
-              <span class="spinner-border spinner-border-sm d-none"></span>
-            </button>
-          </div>
-        </form>
+        <button type="button"
+                class="snav__item"
+                data-panel="appearance" aria-controls="panel-appearance">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="4"></circle>
+            <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path>
+          </svg>
+          Appearance
+          <svg class="snav__chev" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M9 6l6 6-6 6"></path>
+          </svg>
+        </button>
 
       </div>
-    </div>
+    </aside>
 
-    <!-- Security / Change Password -->
-    <div class="settings-panel {% if password_form.errors %}active{% endif %}" id="panel-security">
-      <div class="form-card">
+    <div class="panels">
 
-        <div class="settings-form-header">
-          <h3 class="settings-form-title">
-            {% if request.user.has_usable_password %}Change Password{% else %}Set a Password{% endif %}
-          </h3>
-          <p class="settings-form-subtitle">
-            {% if request.user.has_usable_password %}
-              Choose a new password for your account
-            {% else %}
-              Set a local password so you can also sign in without Google
-            {% endif %}
-          </p>
-        </div>
+      <section class="s-panel {% if not password_form.errors %}active{% endif %}"
+               id="panel-account" aria-label="Account Details">
+        <div class="scard spcard">
 
-        {% if request.user.has_usable_password %}
-
-          {% if password_form.errors %}
-          <div class="alert alert-danger mb-4">
-            <i class="fas fa-circle-exclamation me-2"></i> Please fix the errors below.
+          <div class="phead">
+            <h3>Account Details</h3>
+            <p>Update your name and email address.</p>
           </div>
-          {% endif %}
 
-          <form method="post">
+          {% with fn=request.user.first_name|slice:":1" ln=request.user.last_name|slice:":1" %}
+          <div class="profile-strip">
+            <div class="profile-strip__av" aria-hidden="true">
+              {% if fn or ln %}{{ fn|upper }}{{ ln|upper }}{% else %}{{ request.user.username|slice:":1"|upper }}{% endif %}
+            </div>
+            <div class="profile-strip__meta">
+              <div class="profile-strip__name">{{ request.user.get_full_name|default:request.user.username }}</div>
+              <div class="profile-strip__mail">{{ request.user.email }}</div>
+            </div>
+            {% with google_accs=request.user.socialaccount_set.all %}
+            {% if google_accs %}
+            <span class="gchip">
+              <svg viewBox="0 0 24 24" aria-hidden="true" width="14" height="14">
+                <path fill="#4285F4" d="M21.6 12.2c0-.6-.05-1.2-.16-1.8H12v3.4h5.4a4.6 4.6 0 0 1-2 3v2.5h3.2c1.9-1.7 3-4.3 3-7.1z"></path>
+                <path fill="#34A853" d="M12 22c2.7 0 5-1 6.6-2.7l-3.2-2.5c-.9.6-2 1-3.4 1-2.6 0-4.8-1.7-5.6-4.1H3.1v2.6A10 10 0 0 0 12 22z"></path>
+                <path fill="#FBBC05" d="M6.4 13.7a6 6 0 0 1 0-3.8V7.3H3.1a10 10 0 0 0 0 9z"></path>
+                <path fill="#EA4335" d="M12 6.1c1.5 0 2.8.5 3.8 1.5l2.8-2.8A10 10 0 0 0 3.1 7.3l3.3 2.6C7.2 7.7 9.4 6.1 12 6.1z"></path>
+              </svg>
+              Google connected
+            </span>
+            {% endif %}
+            {% endwith %}
+          </div>
+          {% endwith %}
+
+          <form method="post" novalidate>
             {% csrf_token %}
-            <input type="hidden" name="form_type" value="password">
-            {% include "partials/_form_field.html" with field=password_form.old_password %}
-            {% include "partials/_form_field.html" with field=password_form.new_password1 %}
-            {% include "partials/_form_field.html" with field=password_form.new_password2 %}
-            <div class="form-card__actions">
-              <span></span>
-              <button type="submit" class="btn btn-primary">
-                <span class="btn-text">Update Password</span>
-                <span class="spinner-border spinner-border-sm d-none"></span>
-              </button>
+            <input type="hidden" name="form_type" value="profile">
+
+            <div class="fldgrid">
+              {% include "partials/_form_field.html" with field=profile_form.first_name %}
+              {% include "partials/_form_field.html" with field=profile_form.last_name %}
+            </div>
+
+            {% include "partials/_form_field.html" with field=profile_form.email %}
+
+            <div class="pactions">
+              <span class="pactions__hint">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M5 12l5 5L20 7"></path>
+                </svg>
+                Changes save to your profile
+              </span>
+              <button type="submit" class="s-btn s-btn--primary">Save changes</button>
             </div>
           </form>
 
-        {% else %}
+        </div>
+      </section>
 
-          <p class="text-muted small mb-4">
-            Your account uses Google to sign in and doesn't have a local password.
-            Setting one won't affect your Google account — it just gives you an additional way to log in.
-          </p>
-          <a href="{% url 'account_set_password' %}" class="btn btn-primary">Set a password</a>
+      <section class="s-panel {% if password_form.errors %}active{% endif %}"
+               id="panel-security" aria-label="Security">
+        <div class="scard spcard">
 
+          <div class="phead">
+            <h3>{% if request.user.has_usable_password %}Change password{% else %}Set a password{% endif %}</h3>
+            <p>
+              {% if request.user.has_usable_password %}
+                Choose a new password for your account.
+              {% else %}
+                Set a local password so you can also sign in without Google.
+              {% endif %}
+            </p>
+          </div>
+
+          {% if request.user.has_usable_password %}
+
+            <form method="post" novalidate>
+              {% csrf_token %}
+              <input type="hidden" name="form_type" value="password">
+
+              {% include "partials/_form_field.html" with field=password_form.old_password %}
+              {% include "partials/_form_field.html" with field=password_form.new_password1 %}
+
+              <div class="strength" id="strength" hidden aria-live="polite">
+                <div class="strength__bars">
+                  <span></span><span></span><span></span><span></span>
+                </div>
+                <span class="strength__txt">Strength: <b id="strengthTxt">—</b></span>
+              </div>
+
+              {% include "partials/_form_field.html" with field=password_form.new_password2 %}
+
+              <div class="pactions">
+                <span class="pactions__hint">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                       stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <rect x="4" y="11" width="16" height="10" rx="2"></rect>
+                    <path d="M8 11V7a4 4 0 0 1 8 0v4"></path>
+                  </svg>
+                  You'll stay signed in on this device
+                </span>
+                <button type="submit" class="s-btn s-btn--primary">Update password</button>
+              </div>
+            </form>
+
+          {% else %}
+
+            <div class="s-note">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="10"></circle>
+                <path d="M12 16v-4M12 8h.01"></path>
+              </svg>
+              <div>
+                Your account currently signs in with <b>Google</b> and has no local password.
+                Setting one won't affect your Google sign-in - it just gives you an extra way to log in.
+                <div class="s-note__cta">
+                  <a href="{% url 'account_set_password' %}" class="s-btn s-btn--primary">Set a password</a>
+                </div>
+              </div>
+            </div>
+
+          {% endif %}
+        </div>
+
+        {% if request.user.has_usable_password %}
+        {% with google_accs=request.user.socialaccount_set.all %}
+        {% if google_accs %}
+        <div class="scard spcard">
+          <div class="phead">
+            <h3>Sign-in method</h3>
+            <p>How you access your StudyLog account.</p>
+          </div>
+          <div class="s-note">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="M12 16v-4M12 8h.01"></path>
+            </svg>
+            <span>Your account also signs in with <b>Google</b>. Changing your password here won't affect your Google account — it just updates your local login.</span>
+          </div>
+        </div>
+        {% endif %}
+        {% endwith %}
         {% endif %}
 
-      </div>
-    </div>
+      </section>
 
-    <!-- Appearance -->
-    <div class="settings-panel" id="panel-appearance">
-      <div class="form-card">
+      <section class="s-panel" id="panel-appearance" aria-label="Appearance">
+        <div class="scard spcard">
 
-        <div class="settings-form-header">
-          <h3 class="settings-form-title">Appearance</h3>
-          <p class="settings-form-subtitle">Choose how StudyLog looks to you</p>
+          <div class="phead">
+            <h3>Appearance</h3>
+            <p>Choose how StudyLog looks to you. Saved on this device.</p>
+          </div>
+
+          <div class="themes" role="radiogroup" aria-label="Theme preference">
+
+            <label class="theme-card">
+              <input type="radio" name="theme" value="light" class="theme-option__radio">
+              <div class="theme-prev">
+                <div class="pv pv--light">
+                  <div class="pv__bar"></div>
+                  <div class="pv__ln"></div>
+                  <div class="pv__ln s"></div>
+                </div>
+              </div>
+              <div class="theme-foot">
+                <span class="theme-lbl">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                       stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <circle cx="12" cy="12" r="4"></circle>
+                    <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path>
+                  </svg>
+                  Light
+                </span>
+                <span class="theme-radio" aria-hidden="true"></span>
+              </div>
+            </label>
+
+            <label class="theme-card">
+              <input type="radio" name="theme" value="dark" class="theme-option__radio">
+              <div class="theme-prev">
+                <div class="pv pv--dark">
+                  <div class="pv__bar"></div>
+                  <div class="pv__ln"></div>
+                  <div class="pv__ln s"></div>
+                </div>
+              </div>
+              <div class="theme-foot">
+                <span class="theme-lbl">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                       stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path>
+                  </svg>
+                  Dark
+                </span>
+                <span class="theme-radio" aria-hidden="true"></span>
+              </div>
+            </label>
+
+            <label class="theme-card">
+              <input type="radio" name="theme" value="system" class="theme-option__radio">
+              <div class="theme-prev">
+                <div class="pv pv--light">
+                  <div class="pv__bar"></div>
+                  <div class="pv__ln"></div>
+                </div>
+                <div class="pv pv--dark">
+                  <div class="pv__bar"></div>
+                  <div class="pv__ln s"></div>
+                </div>
+              </div>
+              <div class="theme-foot">
+                <span class="theme-lbl">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                       stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <rect x="3" y="4" width="18" height="12" rx="2"></rect>
+                    <path d="M8 20h8M12 16v4"></path>
+                  </svg>
+                  System
+                </span>
+                <span class="theme-radio" aria-hidden="true"></span>
+              </div>
+            </label>
+
+          </div>
         </div>
+      </section>
 
-        <div class="theme-selector">
-
-          <label class="theme-option" id="theme-opt-light">
-            <input type="radio" name="theme" value="light" class="theme-option__radio">
-            <div class="theme-option__preview theme-option__preview--light">
-              <div class="theme-preview-bar"></div>
-              <div class="theme-preview-lines">
-                <span></span>
-                <span class="short"></span>
-              </div>
-            </div>
-            <div class="theme-option__label">
-              <i class="fas fa-sun"></i> Light
-            </div>
-          </label>
-
-          <label class="theme-option" id="theme-opt-dark">
-            <input type="radio" name="theme" value="dark" class="theme-option__radio">
-            <div class="theme-option__preview theme-option__preview--dark">
-              <div class="theme-preview-bar"></div>
-              <div class="theme-preview-lines">
-                <span></span>
-                <span class="short"></span>
-              </div>
-            </div>
-            <div class="theme-option__label">
-              <i class="fas fa-moon"></i> Dark
-            </div>
-          </label>
-
-          <label class="theme-option" id="theme-opt-system">
-            <input type="radio" name="theme" value="system" class="theme-option__radio">
-            <div class="theme-option__preview theme-option__preview--system">
-              <div class="theme-preview-half theme-preview-half--light">
-                <div class="theme-preview-bar"></div>
-              </div>
-              <div class="theme-preview-half theme-preview-half--dark">
-                <div class="theme-preview-bar"></div>
-              </div>
-            </div>
-            <div class="theme-option__label">
-              <i class="fas fa-display"></i> System
-            </div>
-          </label>
-
-        </div>
-
-      </div>
-    </div>
-
-  </div>
-</div>
+    </div>{# /panels #}
+  </div>{# /settings-grid #}
+</div>{# /settings-wrap #}
 {% endblock %}
 
 {% block scripts %}
 <script nonce="{{ request.csp_nonce }}">
-  // ── Settings nav ────────────────────────────────────────────────────────────
-  const navItems = document.querySelectorAll('.settings-nav__item');
-  const panels = document.querySelectorAll('.settings-panel');
+(function () {
+  'use strict';
 
-  navItems.forEach(btn => {
-    btn.addEventListener('click', () => {
-      navItems.forEach(b => b.classList.remove('active'));
-      panels.forEach(p => p.classList.remove('active'));
-      btn.classList.add('active');
-      document.getElementById('panel-' + btn.dataset.panel).classList.add('active');
-    });
+  // Panel navigation
+  var navItems = document.querySelectorAll('.snav__item');
+  var panels   = document.querySelectorAll('.s-panel');
+
+  function showPanel(name) {
+    if (!document.getElementById('panel-' + name)) name = 'account';
+    navItems.forEach(function (b) { b.classList.toggle('active', b.dataset.panel === name); });
+    panels.forEach(function (p)   { p.classList.toggle('active', p.id === 'panel-' + name); });
+    if (history.replaceState) history.replaceState(null, '', '#' + name);
+  }
+
+  navItems.forEach(function (btn) {
+    btn.addEventListener('click', function () { showPanel(btn.dataset.panel); });
   });
 
-  // ── Theme preference ────────────────────────────────────────────────────────
-  const THEME_KEY = 'sf-theme';
+  var hash = (location.hash || '').replace('#', '');
+  if (hash && document.getElementById('panel-' + hash)) showPanel(hash);
+
+  // Theme preference
+  var THEME_KEY = 'sf-theme';
 
   function getSystemTheme() {
     return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
   }
 
-  function applyTheme(preference) {
-    const resolved = preference === 'system' ? getSystemTheme() : preference;
-    document.documentElement.setAttribute('data-theme', resolved);
-    localStorage.setItem(THEME_KEY, preference);
+  function applyTheme(pref) {
+    document.documentElement.setAttribute('data-theme', pref === 'system' ? getSystemTheme() : pref);
+    try { localStorage.setItem(THEME_KEY, pref); } catch (e) {}
   }
 
-  function syncThemeOptions() {
-    const saved = localStorage.getItem(THEME_KEY) || 'system';
-    document.querySelectorAll('.theme-option__radio').forEach(r => {
-      r.checked = (r.value === saved);
-      r.closest('.theme-option').classList.toggle('selected', r.value === saved);
+  function syncThemeUI() {
+    var saved = 'system';
+    try { saved = localStorage.getItem(THEME_KEY) || 'system'; } catch (e) {}
+    document.querySelectorAll('.theme-card').forEach(function (card) {
+      var radio = card.querySelector('input[type="radio"]');
+      if (!radio) return;
+      card.classList.toggle('sel', radio.value === saved);
+      radio.checked = radio.value === saved;
     });
   }
 
-  document.querySelectorAll('.theme-option__radio').forEach(radio => {
-    radio.addEventListener('change', () => {
-      if (radio.checked) {
-        applyTheme(radio.value);
-        document.querySelectorAll('.theme-option').forEach(o => o.classList.remove('selected'));
-        radio.closest('.theme-option').classList.add('selected');
-      }
+  document.querySelectorAll('.theme-option__radio').forEach(function (radio) {
+    radio.addEventListener('change', function () {
+      applyTheme(radio.value);
+      syncThemeUI();
     });
   });
 
-  // Re-apply if OS preference changes while System is selected
-  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
-    if ((localStorage.getItem(THEME_KEY) || 'system') === 'system') {
-      applyTheme('system');
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function () {
+    var pref = 'system';
+    try { pref = localStorage.getItem(THEME_KEY) || 'system'; } catch (e) {}
+    if (pref === 'system') applyTheme('system');
+  });
+
+  syncThemeUI();
+
+  // Password eye toggle
+  document.querySelectorAll('#panel-security input[type="password"]').forEach(function (input) {
+    var pwWrap = document.createElement('div');
+    pwWrap.className = 'pw-wrap';
+    input.parentNode.insertBefore(pwWrap, input);
+    pwWrap.appendChild(input);
+    input.classList.add('has-eye');
+
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'eye-btn';
+    btn.setAttribute('aria-label', 'Show password');
+    btn.innerHTML =
+      '<svg class="eye-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+        '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"></path><circle cx="12" cy="12" r="3"></circle>' +
+      '</svg>' +
+      '<svg class="eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+        '<path d="M17.9 17.9A10.3 10.3 0 0 1 12 19c-6.5 0-10-7-10-7a18 18 0 0 1 5.1-5.9M9.9 4.2A10.3 10.3 0 0 1 12 5c6.5 0 10 7 10 7a18 18 0 0 1-2.2 3.2M1 1l22 22M9.5 9.5a3 3 0 0 0 4.2 4.2"></path>' +
+      '</svg>';
+
+    btn.addEventListener('click', function () {
+      var show = input.type === 'password';
+      input.type = show ? 'text' : 'password';
+      btn.classList.toggle('show', show);
+      btn.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+    });
+
+    pwWrap.appendChild(btn);
+  });
+
+  // Password strength meter
+  var newPwInput  = document.querySelector('#panel-security input[name="new_password1"]');
+  var strengthEl  = document.getElementById('strength');
+  var strengthTxt = document.getElementById('strengthTxt');
+
+  if (newPwInput && strengthEl && strengthTxt) {
+    var bars   = strengthEl.querySelectorAll('.strength__bars span');
+    var LEVELS = [
+      { t: 'Too short', c: '#e5484d' },
+      { t: 'Weak',      c: '#e5484d' },
+      { t: 'Fair',      c: '#f2b138' },
+      { t: 'Good',      c: '#10b981' },
+      { t: 'Strong',    c: '#0a7d57' }
+    ];
+
+    function scorePassword(v) {
+      if (!v.length)    return -1;
+      if (v.length < 8) return 0;
+      var s = 1;
+      if (/[a-z]/.test(v) && /[A-Z]/.test(v)) s++;
+      if (/\d/.test(v)) s++;
+      if (/[^A-Za-z0-9]/.test(v)) s++;
+      if (v.length >= 12) s = Math.min(4, s + 1);
+      return Math.min(4, s);
     }
-  });
 
-  syncThemeOptions();
+    newPwInput.addEventListener('input', function () {
+      var v = newPwInput.value;
+      if (!v) { strengthEl.hidden = true; return; }
+      strengthEl.hidden = false;
+      var s   = Math.max(0, scorePassword(v));
+      var lvl = LEVELS[s];
+      bars.forEach(function (b, i) { b.style.background = i <= s ? lvl.c : ''; });
+      strengthTxt.textContent = lvl.t;
+      strengthTxt.style.color = lvl.c;
+    });
+  }
+
+}());
 </script>
 {% endblock %}
