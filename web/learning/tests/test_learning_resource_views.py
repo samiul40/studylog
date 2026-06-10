@@ -1,5 +1,8 @@
+from datetime import timedelta
+
 import pytest
 from django.urls import reverse
+from django.utils import timezone
 from model_bakery import baker
 
 from learning.models import LearningResource, ResourceType
@@ -252,3 +255,181 @@ def test_resource_archive_requires_login(client):
 
     assert response.status_code == 302
     assert "/login/" in response.url
+
+
+# ---------------------------------------------------------------------------
+# ResourceListView — archived_count context
+# ---------------------------------------------------------------------------
+
+
+def test_resource_list_archived_count_in_context(client_logged_in, user):
+    baker.make(LearningResource, user=user, is_archived=True)
+    baker.make(LearningResource, user=user, is_archived=True)
+    baker.make(LearningResource, user=user, is_archived=False)
+
+    response = client_logged_in.get(reverse("learning:resource_list"))
+
+    assert response.status_code == 200
+    assert response.context["archived_count"] == 2
+
+
+def test_resource_list_archived_count_zero_when_no_archived(client_logged_in, user):
+    baker.make(LearningResource, user=user, is_archived=False)
+
+    response = client_logged_in.get(reverse("learning:resource_list"))
+
+    assert response.context["archived_count"] == 0
+
+
+def test_resource_list_archived_count_excludes_other_users(client_logged_in, user):
+    baker.make(LearningResource, user=user, is_archived=True)
+    baker.make(LearningResource, is_archived=True)  # different user
+
+    response = client_logged_in.get(reverse("learning:resource_list"))
+
+    assert response.context["archived_count"] == 1
+
+
+# ---------------------------------------------------------------------------
+# ResourceArchiveListView — search and sort
+# ---------------------------------------------------------------------------
+
+
+def test_resource_archive_list_search_filters_by_title(client_logged_in, user):
+    baker.make(LearningResource, user=user, is_archived=True, title="Python Basics")
+    baker.make(LearningResource, user=user, is_archived=True, title="Django REST")
+
+    response = client_logged_in.get(
+        reverse("learning:resource_archive_list") + "?search=python"
+    )
+
+    assert response.status_code == 200
+    resources = list(response.context["resources"])
+    assert len(resources) == 1
+    assert resources[0].title == "Python Basics"
+
+
+def test_resource_archive_list_search_no_match_returns_empty(client_logged_in, user):
+    baker.make(LearningResource, user=user, is_archived=True, title="Python Basics")
+
+    response = client_logged_in.get(
+        reverse("learning:resource_archive_list") + "?search=javascript"
+    )
+
+    assert response.status_code == 200
+    assert list(response.context["resources"]) == []
+
+
+def test_resource_archive_list_search_query_in_context(client_logged_in, user):
+    response = client_logged_in.get(
+        reverse("learning:resource_archive_list") + "?search=test"
+    )
+
+    assert response.context["search_query"] == "test"
+
+
+def test_resource_archive_list_sort_defaults_to_recently_archived(
+    client_logged_in, user
+):
+    response = client_logged_in.get(reverse("learning:resource_archive_list"))
+
+    assert response.context["sort"] == "-updated_at"
+
+
+def test_resource_archive_list_sort_param_in_context(client_logged_in, user):
+    response = client_logged_in.get(
+        reverse("learning:resource_archive_list") + "?sort=updated_at"
+    )
+
+    assert response.context["sort"] == "updated_at"
+
+
+def test_resource_archive_list_sort_invalid_param_falls_back_to_default(
+    client_logged_in, user
+):
+    baker.make(LearningResource, user=user, is_archived=True)
+
+    response = client_logged_in.get(
+        reverse("learning:resource_archive_list") + "?sort=invalid"
+    )
+
+    assert response.status_code == 200
+    assert response.context["sort"] == "invalid"  # stored as-is; queryset uses default
+
+
+def test_resource_archive_list_sort_by_updated_at_ordering(client_logged_in, user):
+    older = baker.make(LearningResource, user=user, is_archived=True)
+    newer = baker.make(LearningResource, user=user, is_archived=True)
+
+    LearningResource.objects.filter(pk=older.pk).update(
+        updated_at=timezone.now() - timedelta(days=10)
+    )
+    LearningResource.objects.filter(pk=newer.pk).update(
+        updated_at=timezone.now() - timedelta(days=1)
+    )
+
+    response_recent = client_logged_in.get(
+        reverse("learning:resource_archive_list") + "?sort=-updated_at"
+    )
+    response_oldest = client_logged_in.get(
+        reverse("learning:resource_archive_list") + "?sort=updated_at"
+    )
+
+    recent_ids = [r.pk for r in response_recent.context["resources"]]
+    oldest_ids = [r.pk for r in response_oldest.context["resources"]]
+
+    assert recent_ids[0] == newer.pk
+    assert oldest_ids[0] == older.pk
+
+
+# ---------------------------------------------------------------------------
+# ResourceUpdateView — accessible for archived resources
+# ---------------------------------------------------------------------------
+
+
+def test_archived_resource_update_is_accessible(client_logged_in, user):
+    rt = ResourceType.objects.get(slug="book")
+    resource = baker.make(
+        LearningResource, user=user, is_archived=True, resource_type=rt
+    )
+
+    url = reverse("learning:resource_update", args=[resource.pk])
+    response = client_logged_in.get(url)
+
+    assert response.status_code == 200
+
+
+def test_archived_resource_can_be_updated(client_logged_in, user):
+    rt = ResourceType.objects.get(slug="book")
+    resource = baker.make(
+        LearningResource,
+        user=user,
+        is_archived=True,
+        title="Old Title",
+        resource_type=rt,
+    )
+
+    url = reverse("learning:resource_update", args=[resource.pk])
+    client_logged_in.post(
+        url,
+        {"title": "New Title", "resource_type": rt.pk, "description": ""},
+    )
+
+    resource.refresh_from_db()
+    assert resource.title == "New Title"
+    assert resource.is_archived is True  # archive state unchanged
+
+
+# ---------------------------------------------------------------------------
+# ResourceDeleteView — accessible for archived resources
+# ---------------------------------------------------------------------------
+
+
+def test_archived_resource_can_be_deleted(client_logged_in, user):
+    resource = baker.make(LearningResource, user=user, is_archived=True)
+
+    url = reverse("learning:resource_delete", args=[resource.pk])
+    response = client_logged_in.post(url)
+
+    assert response.status_code == 302
+    assert not LearningResource.objects.filter(pk=resource.pk).exists()

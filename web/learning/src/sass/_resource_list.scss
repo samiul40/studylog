@@ -1,0 +1,439 @@
+@use '../../../studyflow/src/sass/abstracts/variables' as *;
+
+// =============================================================================
+// _resource_list.scss — Resource list page chrome
+// (card component lives in _resource_card.scss)
+// =============================================================================
+
+// ---------------------------------------------------------------------------
+// Additive design tokens not yet in :root (matches _resource_form.scss pattern)
+// ---------------------------------------------------------------------------
+:root {
+  --sky:        #2f80c2;
+  --ring-track: rgba(13, 24, 18, 0.10);
+  --r-card:     18px;
+}
+
+[data-theme="dark"] {
+  --sky:        #6db4ec;
+  --ring-track: rgba(243, 241, 232, 0.10);
+  --shadow-card: 0 30px 60px -36px rgba(0, 0, 0, 0.7);
+}
+
+// ---------------------------------------------------------------------------
+// Page background (replaces Bootstrap container on <main>)
+// ---------------------------------------------------------------------------
+.rlist-bg {
+  background: var(--paper);
+  color: var(--ink);
+  transition: background 0.4s var(--ease), color 0.4s var(--ease);
+}
+
+// ---------------------------------------------------------------------------
+// Centred wrapper — 1080px max, same clamp padding as the spec
+// ---------------------------------------------------------------------------
+.rl-wrap {
+  width: 100%;
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: clamp(12px, 2vw, 20px) clamp(16px, 4vw, 24px) 40px;
+  overflow-x: hidden;
+}
+
+// ---------------------------------------------------------------------------
+// Breadcrumbs
+// ---------------------------------------------------------------------------
+.rl-crumbs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px;
+  font-family: $font-mono;
+  font-size: 0.72rem;
+  letter-spacing: 0.02em;
+  color: var(--ink-faint);
+  margin-bottom: 22px;
+
+  a {
+    color: var(--ink-soft);
+    text-decoration: none;
+    transition: color 0.18s;
+
+    &:hover { color: var(--emerald-deep); }
+  }
+
+  &__sep { opacity: 0.5; }
+  &__cur { color: var(--ink); font-weight: 600; }
+}
+
+// ---------------------------------------------------------------------------
+// Page header
+// ---------------------------------------------------------------------------
+.rl-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+
+  &__title {
+    font-family: $font-display;
+    font-size: clamp(1.7rem, 3vw, 2.2rem);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    color: var(--ink);
+    margin: 0;
+    line-height: 1.05;
+  }
+
+  &__sub {
+    color: var(--ink-soft);
+    font-size: 0.96rem;
+    margin: 5px 0 0;
+  }
+
+  &__actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    flex-shrink: 0;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Shared button styles (scoped to resource list)
+// ---------------------------------------------------------------------------
+.rl-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: $font-sans;
+  font-weight: 600;
+  font-size: 0.94rem;
+  padding: 11px 20px;
+  border-radius: 100px;
+  border: 1.5px solid transparent;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: all 0.22s var(--ease);
+  cursor: pointer;
+
+  svg { width: 16px; height: 16px; flex: 0 0 auto; }
+
+  &--primary {
+    background: var(--emerald);
+    color: #042b1d;
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.25) inset,
+      0 8px 22px -10px rgba(16, 185, 129, 0.7);
+
+    &:hover {
+      background: var(--emerald-bright);
+      color: #042b1d;
+      transform: translateY(-2px);
+    }
+  }
+
+  &--ghost {
+    background: transparent;
+    color: var(--ink-soft);
+    border-color: var(--line);
+
+    &:hover {
+      color: var(--ink);
+      border-color: color-mix(in srgb, var(--ink) 30%, transparent);
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Search / filter toolbar
+// ---------------------------------------------------------------------------
+.rl-toolbar {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 26px;
+}
+
+.rl-search {
+  position: relative;
+  flex: 1 1 280px;
+
+  &__icon {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 17px;
+    height: 17px;
+    color: var(--ink-faint);
+    pointer-events: none;
+  }
+
+  &__input {
+    width: 100%;
+    background: var(--field);
+    border: 1.5px solid var(--line);
+    border-radius: 12px;
+    padding: 12px 14px 12px 42px;
+    font-family: $font-sans;
+    font-size: 0.96rem;
+    color: var(--ink);
+    transition: border-color 0.18s, box-shadow 0.18s;
+
+    &::placeholder { color: var(--ink-faint); }
+
+    &:focus {
+      outline: none;
+      border-color: var(--emerald);
+      box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.18);
+    }
+  }
+}
+
+.rl-selectwrap {
+  position: relative;
+  flex: 0 0 auto;
+  // Prevent the select from silently expanding when alone on a wrapped flex row
+  width: max-content;
+
+  &__chevron {
+    position: absolute;
+    right: 13px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 16px;
+    height: 16px;
+    color: var(--ink-soft);
+    pointer-events: none;
+  }
+}
+
+.rl-select {
+  appearance: none;
+  -webkit-appearance: none;
+  background: var(--field);
+  border: 1.5px solid var(--line);
+  border-radius: 12px;
+  padding: 12px 40px 12px 14px;
+  font-family: $font-sans;
+  font-size: 0.96rem;
+  color: var(--ink);
+  cursor: pointer;
+  transition: border-color 0.18s, box-shadow 0.18s;
+
+  &:focus {
+    outline: none;
+    border-color: var(--emerald);
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.18);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Card grid — 3 cols desktop, 2 at ≤980px, 1 at ≤720px
+// ---------------------------------------------------------------------------
+.rl-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+  align-items: stretch;
+
+  @media (max-width: 980px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (max-width: 720px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Empty state
+// ---------------------------------------------------------------------------
+.rl-empty {
+  text-align: center;
+  padding: 64px 24px;
+
+  &__icon {
+    font-size: 2.5rem;
+    display: block;
+    margin-bottom: 16px;
+  }
+
+  &__title {
+    font-family: $font-display;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--ink);
+    margin: 0 0 8px;
+  }
+
+  &__text {
+    color: var(--ink-soft);
+    font-size: 0.96rem;
+    margin: 0 0 24px;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Dark-mode tweaks for form controls
+// ---------------------------------------------------------------------------
+[data-theme="dark"] {
+  // In dark mode bump the primary button to the brighter emerald so it reads
+  // clearly against the dark card-heavy page background.
+  .rl-btn--primary {
+    background: var(--emerald-bright);
+    color: #021a11;
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.18) inset,
+      0 8px 22px -10px rgba(30, 214, 136, 0.55);
+
+    &:hover {
+      color: #021a11;
+    }
+  }
+
+  .rl-search__input,
+  .rl-select {
+    background: var(--field);
+    color: var(--ink);
+    border-color: var(--line);
+
+    &::placeholder { color: var(--ink-faint); }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Mobile chrome (≤760px): bottom nav padding + toolbar stacking fix
+// ---------------------------------------------------------------------------
+@media (max-width: 760px) {
+  .rl-wrap { padding-bottom: 16px; }
+
+  // Stack toolbar vertically. Must reset .rl-search flex-basis to auto — in
+  // column flex the 280px basis becomes a min-height not a min-width.
+  .rl-toolbar {
+    flex-direction: column;
+  }
+
+  .rl-search {
+    flex: 0 0 auto;
+    width: 100%;
+  }
+
+  // Pin the select wrapper to a compact width.
+  // Native <select> sizes to its widest <option> text, so without a max-width
+  // a long resource-type name would make the dropdown wider than the search bar.
+  .rl-selectwrap {
+    align-self: flex-start;
+    max-width: 220px;
+  }
+
+  .rl-select {
+    width: 100%;
+    min-width: 140px;
+  }
+
+  // Header: stack title + buttons vertically on small screens
+  .rl-header {
+    flex-direction: column;
+    align-items: flex-start;
+
+    &__actions {
+      width: 100%;
+    }
+  }
+}
+
+// =============================================================================
+// Archive list page chrome
+// =============================================================================
+
+// ---------------------------------------------------------------------------
+// Info banner — amber-tinted, explains what "archived" means
+// ---------------------------------------------------------------------------
+.arc-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 13px;
+  padding: 15px 18px;
+  margin-bottom: 22px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--amber) 9%, var(--card));
+  border: 1px solid color-mix(in srgb, var(--amber) 36%, var(--line));
+
+  &__icon {
+    color: var(--amber);
+    font-size: 1.18rem;
+    flex: 0 0 auto;
+    margin-top: 2px;
+  }
+
+  &__text {
+    font-size: 0.92rem;
+    color: var(--ink-soft);
+    margin: 0;
+    line-height: 1.55;
+
+    strong { color: var(--ink); font-weight: 700; }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Card grid — 2 columns desktop, 1 at ≤720px
+// ---------------------------------------------------------------------------
+.arc-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 18px;
+  align-items: stretch;
+
+  @media (max-width: 720px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Empty state — richer, icon-tile variant
+// ---------------------------------------------------------------------------
+.arc-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  max-width: 440px;
+  margin: 0 auto;
+  padding: 70px 20px 60px;
+
+  &__icon-tile {
+    width: 74px;
+    height: 74px;
+    border-radius: 20px;
+    border: 1px dashed var(--line);
+    background: var(--card);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+    font-size: 1.7rem;
+    color: var(--ink-faint);
+  }
+
+  &__title {
+    font-family: $font-display;
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    margin: 0 0 12px;
+  }
+
+  &__text {
+    font-size: 0.95rem;
+    color: var(--ink-soft);
+    margin: 0 0 24px;
+    text-wrap: pretty;
+  }
+}

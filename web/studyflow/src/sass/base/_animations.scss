@@ -17,7 +17,7 @@
   }
 }
 
-main.flex-grow-1 {
+body:not(.is-authed) main.flex-grow-1 {
   animation: pageFadeIn 0.22s ease-out both;
 }
 
@@ -29,7 +29,7 @@ main.flex-grow-1 {
   to   { transform: scaleX(1); }
 }
 
-.progress-bar {
+body:not(.is-authed) .progress-bar {
   transform-origin: left center;
   animation: progressFill 0.75s cubic-bezier(0.22, 1, 0.36, 1) both;
   animation-delay: 0.1s;
@@ -47,11 +47,11 @@ main.flex-grow-1 {
 
 // ── Reduced motion ────────────────────────────────────────────────────────────
 @media (prefers-reduced-motion: reduce) {
-  main.flex-grow-1 {
+  body:not(.is-authed) main.flex-grow-1 {
     animation: none;
   }
 
-  .progress-bar {
+  body:not(.is-authed) .progress-bar {
     animation: none;
   }
 

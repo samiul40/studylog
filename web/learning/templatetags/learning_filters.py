@@ -1,4 +1,8 @@
+import json
+import math
+
 from django import template
+from django.utils.safestring import mark_safe
 
 register = template.Library()
 
@@ -29,7 +33,30 @@ def hours_from_minutes(minutes):
 
 @register.filter
 def remaining_mins(minutes):
-    """Sub-hour minutes component of a minutes value. Returns 0 for falsy input."""
+    """Sub-hour minutes component. Returns 0 for falsy input."""
     if not minutes:
         return 0
     return int(minutes) % 60
+
+
+@register.filter
+def ring_dashoffset(pct):
+    """SVG stroke-dashoffset for a stroked ring with r=43 (C≈270.2)."""
+    r = 43
+    circumference = 2 * math.pi * r
+    offset = circumference * (1 - (int(pct) if pct else 0) / 100)
+    return f"{offset:.1f}"
+
+
+@register.filter
+def ring_offset(pct, circumference):
+    """SVG stroke-dashoffset for a given circumference and percentage."""
+    c = float(circumference)
+    offset = c * (1 - (int(pct) if pct else 0) / 100)
+    return f"{offset:.1f}"
+
+
+@register.filter
+def tojson(value):
+    """Serialize a Python value to a JSON literal, safe for inline <script>."""
+    return mark_safe(json.dumps(value, ensure_ascii=False))

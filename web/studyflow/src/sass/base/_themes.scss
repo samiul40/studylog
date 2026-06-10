@@ -4,14 +4,25 @@
 // =============================================================================
 @use '../abstracts/variables' as *;
 
-// Default: hide dark lockup (shown only in [data-theme="dark"])
-.navbar-brand .brand-lockup--dark { display: none; }
+// (legacy brand-lockup rules removed — navbar redesigned with inline SVG)
 
 [data-theme="dark"] {
 
+  // ── Design-token CSS vars (resource detail + shared components) ───────────
+  --paper:       #070d0a;
+  --paper-2:     #0e1813;
+  --card:        #11201a;
+  --field:       #0c1611;
+  --ink-soft:    rgba(243, 241, 232, 0.64);
+  --ink-faint:   rgba(243, 241, 232, 0.42);
+  --line:        rgba(243, 241, 232, 0.12);
+  --line-soft:   rgba(243, 241, 232, 0.07);
+  --ring-track:  rgba(243, 241, 232, 0.10);
+  --emerald-deep: #1ed688;
+
   // ── Body ────────────────────────────────────────────────────────────────────
   body {
-    background-color: #0f172a;
+    background-color: var(--paper);
     color: #e2e8f0;
   }
 
@@ -22,56 +33,14 @@
 
   a { color: $emerald-400; &:hover { color: $emerald-300; } }
 
-  // ── Navbar ──────────────────────────────────────────────────────────────────
-  .navbar {
-    background-color: #1e293b !important;
-    border-bottom-color: #334155;
-
-    .navbar-brand { color: #f1f5f9; &:hover { color: #f1f5f9; } }
-
-    .nav-link {
-      color: #94a3b8;
-      &:hover { color: #f1f5f9; background-color: #253047; }
-      &.active { color: $emerald-400; background-color: rgba(52, 211, 153, 0.12); }
-    }
-
-    .navbar-user-trigger {
-      background: #253047;
-      border-color: #334155;
-      &:hover { background: #334155; border-color: #475569; }
-      span { color: #e2e8f0; }
-    }
-
-    .dropdown-menu {
-      background: #1e293b;
-      border-color: #334155;
-
-      .dropdown-header-info {
-        border-bottom-color: #334155;
-        small { color: #64748b; }
-        strong { color: #e2e8f0; }
-      }
-
-      .dropdown-item {
-        color: #94a3b8;
-        &:hover { background-color: #253047; color: #f1f5f9; }
-        &.text-danger { color: #f87171; }
-        &.text-danger:hover { background-color: rgba(239, 68, 68, 0.12); }
-      }
-
-      .dropdown-divider { border-color: #334155; }
-    }
-
-    .navbar-toggler { border-color: #334155; }
-    .navbar-toggler-icon { filter: invert(0.8); }
+  // ── App bar (redesign) — most tokens auto-apply via CSS vars; only pixel
+  //    values that can't use vars are listed here.
+  .appbar-dropdown {
+    box-shadow: 0 24px 48px -20px rgba(0, 0, 0, 0.6);
   }
 
-  @media (max-width: 991px) {
-    .navbar-collapse {
-      border-top-color: #334155;
-
-      .nav-link.active { background: rgba(52, 211, 153, 0.12); color: $emerald-400; }
-    }
+  .nav-avatar {
+    background: rgba(243, 241, 232, 0.08);
   }
 
   // ── Form controls ────────────────────────────────────────────────────────────
@@ -422,12 +391,4 @@
   // ── Mobile bottom nav ─────────────────────────────────────────────────────────
   // Detailed dark-mode overrides live in _mobile_nav.scss to keep them co-located.
 
-  // ── Nav avatar ────────────────────────────────────────────────────────────────
-  .nav-avatar { background: #059669; }
-
-  // ── In-app navbar brand lockup (image swap) ───────────────────────────────────
-  .navbar-brand {
-    .brand-lockup--light { display: none; }
-    .brand-lockup--dark  { display: inline; }
-  }
 }

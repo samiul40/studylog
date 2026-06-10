@@ -1,0 +1,432 @@
+@use '../../../studyflow/src/sass/abstracts/variables' as *;
+
+// =============================================================================
+// _resource_card.scss — Resource card component (.rcard)
+// =============================================================================
+
+// ---------------------------------------------------------------------------
+// Per-type accent colour (default = emerald; overridden per slug below)
+// ---------------------------------------------------------------------------
+.rcard {
+  --accent: var(--emerald);
+
+  // --- Book (amber) ---
+  &--book { --accent: var(--amber); }
+
+  // --- Video / YouTube / Vimeo (sky blue) ---
+  &--video   { --accent: var(--sky); }
+  &--youtube { --accent: var(--sky); }
+  &--vimeo   { --accent: var(--sky); }
+
+  // --- Podcast (purple) ---
+  &--podcast { --accent: #a855a8; }
+
+  // --- Reading / online-course → default emerald (no override needed) ---
+}
+
+// ---------------------------------------------------------------------------
+// Card shell
+// ---------------------------------------------------------------------------
+.rcard {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--r-card, 18px);
+  box-shadow: var(--shadow-card);
+  padding: 24px;
+  position: relative;
+  overflow: hidden;
+  // CSS Grid items default to min-width:auto which can make cards wider than
+  // their 1fr column. Setting 0 allows the column to truly constrain the card.
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  transition:
+    transform 0.35s var(--ease),
+    border-color 0.35s var(--ease),
+    box-shadow 0.35s var(--ease);
+
+  // Soft accent glow in the top-right corner (fades in on hover)
+  &::before {
+    content: "";
+    position: absolute;
+    top: -40%;
+    right: -20%;
+    width: 60%;
+    height: 80%;
+    background: radial-gradient(
+      circle,
+      color-mix(in srgb, var(--accent) 16%, transparent),
+      transparent 70%
+    );
+    opacity: 0;
+    transition: opacity 0.4s var(--ease);
+    pointer-events: none;
+  }
+
+  &:hover {
+    transform: translateY(-4px);
+    border-color: color-mix(in srgb, var(--accent) 50%, var(--line));
+    box-shadow: 0 30px 60px -34px rgba(13, 24, 18, 0.4);
+
+    &::before { opacity: 0.8; }
+
+    .rcard__cta-arrow { transform: translateX(4px); }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Head — eyebrow + title + status badge
+// ---------------------------------------------------------------------------
+.rcard__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.rcard__head-left {
+  // Must be able to shrink below content width so the eyebrow can truncate
+  flex: 1 1 0;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.rcard__eyebrow {
+  font-family: $font-mono;
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-bottom: 8px;
+  // Keep the full eyebrow on a single line; truncate long type names
+  display: flex;
+  align-items: baseline;
+  gap: 0;
+  white-space: nowrap;
+  overflow: hidden;
+
+  // "Resource · " label — never shrinks
+  &-prefix { flex: 0 0 auto; }
+
+  b {
+    color: color-mix(in srgb, var(--accent) 72%, var(--ink));
+    font-weight: 600;
+    flex: 1 1 0;          // fills remaining width so overflow has a boundary
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;  // must be on the element itself, not just the parent
+    text-overflow: ellipsis;
+  }
+}
+
+[data-theme="dark"] .rcard__eyebrow b {
+  color: color-mix(in srgb, var(--accent) 70%, #fff);
+}
+
+.rcard__title {
+  font-family: $font-display;
+  font-size: 1.12rem;
+  font-weight: 700;
+  line-height: 1.16;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  margin: 0;
+  // Clamp to 2 lines
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: calc(2 * 1.16em);
+}
+
+// ---------------------------------------------------------------------------
+// Status badge
+// ---------------------------------------------------------------------------
+.rcard__badge {
+  flex: 0 0 auto;
+  font-family: $font-mono;
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 6px 11px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  color: var(--ink-soft);
+  white-space: nowrap;
+
+  &--done {
+    color: var(--emerald-deep);
+    border-color: color-mix(in srgb, var(--emerald) 42%, transparent);
+    background: color-mix(in srgb, var(--emerald) 12%, transparent);
+  }
+
+  &--prog {
+    color: var(--emerald-deep);
+    border-color: color-mix(in srgb, var(--emerald) 42%, transparent);
+    background: color-mix(in srgb, var(--emerald) 10%, transparent);
+  }
+
+  &--new {
+    color: var(--ink-soft);
+    background: transparent;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Ring row — SVG ring + stat rows side by side
+// ---------------------------------------------------------------------------
+.rcard__ringrow {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+}
+
+// ---------------------------------------------------------------------------
+// Progress ring (stroked SVG)
+// ---------------------------------------------------------------------------
+.rcard__ring {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+
+  svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+    overflow: visible;
+  }
+}
+
+.ring__track {
+  fill: none;
+  stroke: var(--ring-track);
+}
+
+.ring__val {
+  fill: none;
+  stroke: var(--accent);
+  stroke-linecap: round;
+  stroke-dashoffset: var(--ring-offset, 270.2);
+}
+
+.ring__txt {
+  position: relative;
+  text-align: center;
+  z-index: 1;
+}
+
+.ring__num {
+  font-family: $font-display;
+  font-weight: 700;
+  font-size: 1.14rem;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+
+.ring__cap {
+  font-family: $font-mono;
+  font-size: 0.52rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-top: 4px;
+}
+
+// ---------------------------------------------------------------------------
+// Stat rows (units complete / this week / time logged)
+// ---------------------------------------------------------------------------
+.rcard__stats {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.rcard__stat {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 0;
+  border-bottom: 1px dashed var(--line);
+
+  &:first-child { padding-top: 0; }
+  &:last-child  { border-bottom: 0; padding-bottom: 0; }
+}
+
+.rcard__stat-key {
+  font-family: $font-mono;
+  font-size: 0.62rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.rcard__stat-val {
+  font-family: $font-display;
+  font-weight: 700;
+  font-size: 1.06rem;
+  white-space: nowrap;
+  color: var(--ink);
+
+  small {
+    font-family: $font-sans;
+    font-weight: 600;
+    font-size: 0.8rem;
+    color: var(--ink-soft);
+  }
+}
+
+.rcard__stat-accent { color: var(--amber); }
+
+// ---------------------------------------------------------------------------
+// Card footer — date + CTA
+// ---------------------------------------------------------------------------
+.rcard__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-top: 1px solid var(--line);
+  padding-top: 16px;
+  margin-top: auto;
+}
+
+.rcard__date {
+  font-family: $font-mono;
+  font-size: 0.66rem;
+  color: var(--ink-faint);
+}
+
+.rcard__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--emerald-deep);
+  text-decoration: none;
+}
+
+.rcard__cta-arrow {
+  width: 15px;
+  height: 15px;
+  flex: 0 0 auto;
+  transition: transform 0.2s;
+}
+
+// ---------------------------------------------------------------------------
+// Dark-mode card overrides
+// ---------------------------------------------------------------------------
+[data-theme="dark"] {
+  .rcard:hover {
+    box-shadow: 0 34px 66px -34px rgba(0, 0, 0, 0.8);
+  }
+
+  .rcard__title { color: var(--ink); }
+}
+
+// ---------------------------------------------------------------------------
+// Archived card variant — .rcard--archived
+// Muted / dashed "recessed" treatment; neutralises the active accent glow.
+// ---------------------------------------------------------------------------
+.rcard--archived {
+  --accent: #8d9a92;
+
+  background: color-mix(in srgb, var(--card) 62%, var(--paper-2));
+  border-style: dashed;
+  box-shadow: 0 14px 34px -30px rgba(13, 24, 18, 0.4);
+
+  &::before { display: none; }
+
+  .rcard__title {
+    color: color-mix(in srgb, var(--ink) 80%, transparent);
+  }
+
+  &:hover {
+    transform: translateY(-3px);
+    border-style: solid;
+    border-color: color-mix(in srgb, var(--ink) 30%, transparent);
+    box-shadow: 0 30px 60px -34px rgba(13, 24, 18, 0.4);
+
+    &::before { display: none; }
+  }
+}
+
+[data-theme="dark"] {
+  .rcard--archived {
+    background: color-mix(in srgb, var(--card) 70%, var(--paper));
+  }
+
+  .rcard--archived:hover {
+    box-shadow: 0 34px 66px -34px rgba(0, 0, 0, 0.8);
+  }
+}
+
+// Archived pill badge (dashed border, muted)
+.rcard__badge--archived {
+  color: var(--ink-soft);
+  background: transparent;
+  border-style: dashed;
+
+  i { font-size: 0.65em; margin-right: 2px; }
+}
+
+// Description — clamped to 2 lines
+.rcard__desc {
+  font-size: 0.95rem;
+  color: var(--ink-soft);
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+// Footer actions row — wraps Restore form + View details link
+.rcard__actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.rcard__restore-form { margin: 0; }
+
+.rcard__restore {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: $font-sans;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--emerald-deep);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  min-height: 44px;
+  transition: color 0.18s var(--ease);
+
+  i { transition: transform 0.28s var(--ease); }
+
+  &:hover {
+    color: var(--emerald);
+    i { transform: rotate(-45deg); }
+  }
+}
+
+[data-theme="dark"] {
+  .rcard__restore { color: var(--emerald-bright); }
+  .rcard__restore:hover { color: var(--emerald-bright); filter: brightness(1.2); }
+}

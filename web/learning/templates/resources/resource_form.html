@@ -1,281 +1,573 @@
 {% extends "base.html" %}
 
-{% block breadcrumbs %}
-<nav aria-label="breadcrumb">
-  <ol class="breadcrumb">
-    <li class="breadcrumb-item"><a href="{% url 'learning:dashboard' %}">Dashboard</a></li>
-    <li class="breadcrumb-item"><a href="{% url 'learning:resource_list' %}">Resources</a></li>
-    {% if form.instance.pk %}
-    <li class="breadcrumb-item">
-      <a href="{% url 'learning:resource_detail' form.instance.pk %}">{{ form.instance.title }}</a>
-    </li>
-    <li class="breadcrumb-item active">Edit</li>
-    {% else %}
-    <li class="breadcrumb-item active">Add Resource</li>
-    {% endif %}
-  </ol>
-</nav>
-{% endblock %}
+{% block title %}{% if form.instance.pk %}Edit Resource{% else %}Add Resource{% endif %} — StudyLog{% endblock %}
+
+{# Swap out Bootstrap container so we can paint our own background + centring #}
+{% block main_class %}rf-bg{% endblock %}
+
+{# Suppress the breadcrumb and alert zones — handled inside the card #}
+{% block breadcrumbs %}{% endblock %}
+{% block alerts %}{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-  <div class="col-md-7 col-lg-6">
+<div class="rf-page">
 
-    <div class="form-card">
+  {# ── Breadcrumb ─────────────────────────────────────────────────────────── #}
+  <nav class="rf-crumbs" aria-label="breadcrumb">
+    <a href="{% url 'learning:dashboard' %}">Dashboard</a>
+    <span class="rf-crumbs__sep">/</span>
+    <a href="{% url 'learning:resource_list' %}">Resources</a>
+    {% if form.instance.pk %}
+      <span class="rf-crumbs__sep">/</span>
+      <a href="{% url 'learning:resource_detail' form.instance.pk %}">{{ form.instance.title }}</a>
+      <span class="rf-crumbs__sep">/</span>
+      <span class="rf-crumbs__cur">Edit</span>
+    {% else %}
+      <span class="rf-crumbs__sep">/</span>
+      <span class="rf-crumbs__cur">Add Resource</span>
+    {% endif %}
+  </nav>
 
-      <div class="form-card__header">
-        <div class="form-card__icon">
-          <i class="fas {% if form.instance.pk %}fa-pen{% else %}fa-plus{% endif %}"></i>
-        </div>
-        <div>
-          <h3 class="form-card__title">
-            {% if form.instance.pk %}Edit Resource{% else %}Add Learning Resource{% endif %}
-          </h3>
-          <p class="form-card__subtitle">
-            {% if form.instance.pk %}Update the details below{% else %}Fill in the details to start tracking{% endif %}
-          </p>
-        </div>
-      </div>
+  {# ── Form card ──────────────────────────────────────────────────────────── #}
+  <div class="rf-fcard">
 
-      {% if form.errors %}
-      <div class="alert alert-danger mb-4">
-        <i class="fas fa-circle-exclamation me-2"></i> Please fix the errors below.
-      </div>
-      {% endif %}
-
-      <form method="post">
-        {% csrf_token %}
-        {{ form.youtube_units }}
-
-        {% include "partials/_form_field.html" with field=form.title %}
-        {% include "partials/_form_field.html" with field=form.resource_type %}
-
-        <!-- New type fields — shown only when "Add new type" is selected -->
-        <div id="new-type-fields" style="display:none;">
-          {% include "partials/_form_field.html" with field=form.new_resource_type %}
-          {% include "partials/_form_field.html" with field=form.new_content_kind %}
-        </div>
-
-        {% include "partials/_form_field.html" with field=form.url %}
-
-        {% if not form.instance.pk %}
-        <div id="yt-import-bar" class="mb-3" style="display:none;">
-          <button type="button" id="yt-fetch-btn" class="btn btn-sm btn-outline-danger w-100">
-            <i class="fab fa-youtube me-1"></i> Import from YouTube
-          </button>
-        </div>
-
-        <div id="yt-preview" class="mb-3" style="display:none;">
-          <div class="d-flex justify-content-between align-items-center mb-2">
-            <small class="text-muted fw-semibold" id="yt-preview-label"></small>
-            <button type="button" id="yt-clear-btn" class="btn btn-link btn-sm text-muted p-0">
-              <i class="fas fa-times me-1"></i>Clear
-            </button>
-          </div>
-          <div class="table-responsive" style="max-height:260px;overflow-y:auto;">
-            <table class="table table-sm mb-0">
-              <thead class="table-light sticky-top">
-                <tr>
-                  <th style="width:2.5rem">#</th>
-                  <th>Title</th>
-                  <th style="width:5rem">Duration</th>
-                </tr>
-              </thead>
-              <tbody id="yt-units-tbody"></tbody>
-            </table>
-          </div>
-        </div>
-
-        <div id="unit-count-wrapper">
-          {% include "partials/_form_field.html" with field=form.unit_count %}
-        </div>
+    {# Card header #}
+    <div class="rf-fcard__head">
+      <div class="rf-fcard__icon">
+        {% if form.instance.pk %}
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"></path>
+          </svg>
+        {% else %}
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 5v14M5 12h14"></path>
+          </svg>
         {% endif %}
-
-        {% include "partials/_form_field.html" with field=form.description %}
-
-        <div class="form-card__actions">
-          <a href="{% if form.instance.pk %}
-           {% url 'learning:resource_detail' form.instance.pk %}
-         {% else %}
-           {% url 'learning:resource_list' %}
-         {% endif %}" class="btn btn-cancel">
-            Cancel
-          </a>
-          <button type="submit" class="btn btn-primary">
-            <span class="btn-text">
-              {% if form.instance.pk %}Update Resource{% else %}Create Resource{% endif %}
-            </span>
-            <span class="spinner-border spinner-border-sm d-none"></span>
-          </button>
-        </div>
-
-      </form>
+      </div>
+      <div>
+        <h1 class="rf-fcard__title">
+          {% if form.instance.pk %}Edit Resource{% else %}Add Learning Resource{% endif %}
+        </h1>
+        <p class="rf-fcard__sub">
+          {% if form.instance.pk %}Update the details below{% else %}Fill in the details to start tracking{% endif %}
+        </p>
+      </div>
     </div>
 
-  </div>
-</div>
+    {# Error banner — shown when Django form validation fails #}
+    {% if form.errors %}
+    <div class="rf-banner" role="alert">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"></circle><path d="M12 8v5M12 16h.01"></path>
+      </svg>
+      <span>Please fix the errors highlighted below.</span>
+    </div>
+    {% endif %}
+
+    <form method="post" autocomplete="off">
+      {% csrf_token %}
+
+      {# YouTube units — hidden, populated by JS before submit #}
+      {{ form.youtube_units }}
+
+      {# Resource-type hidden fields — the combobox JS writes into these #}
+      <input type="hidden" name="resource_type" id="id_resource_type"
+             value="{% if form.resource_type.value %}{{ form.resource_type.value }}{% endif %}">
+      <input type="hidden" name="new_resource_type" id="id_new_resource_type"
+             value="{{ form.new_resource_type.value|default:'' }}">
+      <input type="hidden" name="new_content_kind" id="id_new_content_kind"
+             value="{{ form.new_content_kind.value|default:'' }}">
+
+      {# ── 1. Title ──────────────────────────────────────────────────────── #}
+      <div class="rf-field {% if form.title.errors %}rf-field--invalid{% endif %}" id="rf-title-field">
+        <label class="rf-field__label" for="id_title">Title</label>
+        <input class="rf-control" id="id_title" type="text" name="title"
+               value="{{ form.title.value|default:'' }}"
+               placeholder="e.g. The Complete React Developer Course">
+        <div class="rf-field__err">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round">
+            <circle cx="12" cy="12" r="10"></circle><path d="M12 8v5M12 16h.01"></path>
+          </svg>
+          {% for err in form.title.errors %}{{ err }}{% empty %}This field is required.{% endfor %}
+        </div>
+      </div>
+
+      {# ── 2. Resource type — smart combobox ─────────────────────────────── #}
+      <div class="rf-field {% if form.non_field_errors %}rf-field--invalid{% endif %}" id="rf-type-field">
+        <label class="rf-field__label">Resource type</label>
+
+        <div class="rf-combo" id="rf-combo">
+          <div class="rf-combo__control" id="rf-combo-control">
+            <input type="text" id="rf-combo-input"
+                   placeholder="Search types, or type to create one…"
+                   autocomplete="off" spellcheck="false">
+            <span class="rf-combo__tag" id="rf-combo-tag" style="display:none;"></span>
+            <svg class="rf-combo__chev" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M6 9l6 6 6-6"></path>
+            </svg>
+          </div>
+          <div class="rf-combo__panel" id="rf-combo-panel"></div>
+        </div>
+
+        {# New-type kind picker — revealed when user creates a new type #}
+        <div class="rf-newtype" id="rf-newtype" style="display:none;">
+          <div class="rf-newtype__cap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round">
+              <path d="M12 5v14M5 12h14"></path>
+            </svg>
+            Creating new type · <span id="rf-newtype-name">—</span>
+          </div>
+          <div class="rf-newtype__sub">How is progress tracked?</div>
+          <div class="rf-kindseg" id="rf-kindseg"></div>
+        </div>
+
+        <div class="rf-field__hint">Pick an existing type or just type a new name — we'll create it for you.</div>
+
+        {% if form.non_field_errors %}
+        <div class="rf-field__err" style="display:flex;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round">
+            <circle cx="12" cy="12" r="10"></circle><path d="M12 8v5M12 16h.01"></path>
+          </svg>
+          {% for err in form.non_field_errors %}{{ err }}{% endfor %}
+        </div>
+        {% endif %}
+      </div>
+
+      {# ── 3. URL ────────────────────────────────────────────────────────── #}
+      <div class="rf-field" id="rf-url-field">
+        <label class="rf-field__label" for="id_url">
+          URL <span class="rf-opt">Optional</span>
+        </label>
+        <input class="rf-control" id="id_url" type="url" name="url"
+               value="{{ form.url.value|default:'' }}"
+               placeholder="https://example.com">
+        <div class="rf-field__hint">
+          Optional link to the resource. Paste a YouTube playlist to import units automatically.
+        </div>
+      </div>
+
+      {% if not form.instance.pk %}
+
+      {# ── 4. YouTube import bar (add mode only, shown when URL is YouTube) #}
+      <div class="rf-yt-bar" id="rf-yt-bar">
+        <button type="button" class="rf-btn-yt" id="rf-yt-fetch">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M23 12s0-3.8-.5-5.6a3 3 0 0 0-2.1-2.1C18.6 3.8 12 3.8 12 3.8s-6.6 0-8.4.5a3 3 0 0 0-2.1 2.1C1 8.2 1 12 1 12s0 3.8.5 5.6a3 3 0 0 0 2.1 2.1c1.8.5 8.4.5 8.4.5s6.6 0 8.4-.5a3 3 0 0 0 2.1-2.1C23 15.8 23 12 23 12z"></path>
+            <path d="M9.8 15.5v-7l6 3.5z" fill="#fff"></path>
+          </svg>
+          Import units from YouTube
+        </button>
+      </div>
+
+      {# ── YouTube preview table ─────────────────────────────────────────── #}
+      <div class="rf-yt-preview" id="rf-yt-preview">
+        <div class="rf-yt-preview__top">
+          <span class="rf-yt-preview__label">
+            <span class="rf-dot-ok"></span>
+            <span id="rf-yt-label">Videos found in playlist</span>
+          </span>
+          <button type="button" class="rf-yt-clear" id="rf-yt-clear">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+              <path d="M18 6L6 18M6 6l12 12"></path>
+            </svg>
+            Clear
+          </button>
+        </div>
+        <div class="rf-yt-table">
+          <div class="rf-yt-head">
+            <span>#</span><span>Title</span><span style="text-align:right">Time</span>
+          </div>
+          <div class="rf-yt-scroll" id="rf-yt-rows"></div>
+        </div>
+      </div>
+
+      {# ── 5. Number of units / chapters (hidden when YT import active) ──── #}
+      <div class="rf-field" id="rf-unit-count-field">
+        <label class="rf-field__label" for="id_unit_count" id="rf-unit-count-label">
+          Number of units <span class="rf-opt">Optional</span>
+        </label>
+        <input class="rf-control" id="id_unit_count" type="number" name="unit_count"
+               min="1" value="{{ form.unit_count.value|default:'' }}"
+               placeholder="e.g. 25">
+        <div class="rf-field__hint" id="rf-unit-count-hint">
+          We'll create this many empty units you can tick off as you go.
+        </div>
+      </div>
+
+      {% endif %}
+
+      {# ── 6. Description ────────────────────────────────────────────────── #}
+      <div class="rf-field" style="margin-bottom:0;">
+        <label class="rf-field__label" for="id_description">
+          Description <span class="rf-opt">Optional</span>
+        </label>
+        <textarea class="rf-control" id="id_description" name="description"
+                  placeholder="What is this resource about? Add any notes for future-you.">{{ form.description.value|default:'' }}</textarea>
+      </div>
+
+      {# ── Actions ───────────────────────────────────────────────────────── #}
+      <div class="rf-fcard__actions">
+        <a href="{% if form.instance.pk %}{% url 'learning:resource_detail' form.instance.pk %}{% else %}{% url 'learning:resource_list' %}{% endif %}"
+           class="rf-btn rf-btn--ghost">
+          Cancel
+        </a>
+        <button type="submit" class="rf-btn rf-btn--primary">
+          {% if form.instance.pk %}Update Resource{% else %}Create Resource{% endif %}
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 6L9 17l-5-5"></path>
+          </svg>
+        </button>
+      </div>
+
+    </form>
+  </div>{# .rf-fcard #}
+
+</div>{# .rf-page #}
 {% endblock %}
 
 {% block scripts %}
 <script nonce="{{ request.csp_nonce }}">
-  const resourceTypeData = {
-    {% for rt in form.resource_type.field.queryset %}"{{ rt.pk }}": { "unit_label": "{{ rt.unit_label }}", "content_kind": "{{ rt.content_kind }}" },
+(function () {
+  "use strict";
+
+  /* ── Resource type data from Django ─────────────────────────────────────── */
+  const RF_TYPES = [
+    {% for rt in form.resource_type.field.queryset %}
+    { id: {{ rt.pk }}, name: "{{ rt.name|escapejs }}", slug: "{{ rt.slug|escapejs }}", kind: "{{ rt.content_kind }}" },
     {% endfor %}
+  ];
+
+  /* ── Icon SVG strings ───────────────────────────────────────────────────── */
+  const ICON = {
+    video: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="3"></rect><path d="M10 9l5 3-5 3z"></path></svg>',
+    reading: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5a2 2 0 0 1 2-2h6v18H6a2 2 0 0 1-2-2z"></path><path d="M20 5a2 2 0 0 0-2-2h-6v18h6a2 2 0 0 0 2-2z"></path></svg>'
   };
 
-  const newTypeFields = document.getElementById("new-type-fields");
-  const unitCountWrapper = document.getElementById("unit-count-wrapper");
-  const unitCountLabel = unitCountWrapper ? unitCountWrapper.querySelector("label") : null;
+  const KINDS = [
+    { val: 'video',   title: 'Video / Audio', sub: 'Tracked by units' },
+    { val: 'reading', title: 'Reading',        sub: 'Tracked by chapters' }
+  ];
 
-  function onTypeChange(pk) {
-    const isAddNew = !pk;
+  /* ── Hidden Django form fields ──────────────────────────────────────────── */
+  const hiddenTypeId   = document.getElementById('id_resource_type');
+  const hiddenNewName  = document.getElementById('id_new_resource_type');
+  const hiddenNewKind  = document.getElementById('id_new_content_kind');
 
-    if (newTypeFields) newTypeFields.style.display = isAddNew ? "block" : "none";
+  /* ── Combobox DOM ───────────────────────────────────────────────────────── */
+  const combo         = document.getElementById('rf-combo');
+  const comboInput    = document.getElementById('rf-combo-input');
+  const comboPanel    = document.getElementById('rf-combo-panel');
+  const comboTag      = document.getElementById('rf-combo-tag');
+  const newtypeBlock  = document.getElementById('rf-newtype');
+  const newtypeName   = document.getElementById('rf-newtype-name');
+  const kindseg       = document.getElementById('rf-kindseg');
+  const unitCountField = document.getElementById('rf-unit-count-field');
+  const unitCountLabel = document.getElementById('rf-unit-count-label');
+  const unitCountHint  = document.getElementById('rf-unit-count-hint');
 
-    if (unitCountLabel && pk && resourceTypeData[pk]) {
-      unitCountLabel.textContent = `Number of ${resourceTypeData[pk].unit_label}s`;
-    } else if (unitCountLabel) {
-      unitCountLabel.textContent = "Number of units";
-    }
+  /* ── State ──────────────────────────────────────────────────────────────── */
+  let selectedType = null; // { id, name, slug, kind } | { isNew:true, name, kind }
+  let newKind = 'video';
+  let updateBar = null; // assigned by the YouTube import block below
+
+  /* ── HTML escaping helper ───────────────────────────────────────────────── */
+  function esc(s) {
+    return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   }
 
-  const ts = new TomSelect("#id_resource_type", {
-    allowEmptyOption: true,
-    onChange: onTypeChange,
+  /* ── Build kind picker ──────────────────────────────────────────────────── */
+  kindseg.innerHTML = KINDS.map(k => `
+    <label class="rf-kindopt-wrap">
+      <input type="radio" name="rf-kind" value="${k.val}" ${k.val === 'video' ? 'checked' : ''}>
+      <span class="rf-kindopt">
+        <span class="rf-kindopt__ic">${ICON[k.val]}</span>
+        <span>
+          <span class="rf-kindopt__t">${k.title}</span><br>
+          <span class="rf-kindopt__s">${k.sub}</span>
+        </span>
+      </span>
+    </label>`).join('');
+
+  kindseg.addEventListener('change', e => {
+    if (e.target.name === 'rf-kind') {
+      newKind = e.target.value;
+      if (selectedType && selectedType.isNew) {
+        selectedType.kind = newKind;
+        hiddenNewKind.value = newKind;
+      }
+      updateUnitLabel();
+    }
   });
 
-  onTypeChange(ts.getValue());
+  /* ── Combobox panel rendering ───────────────────────────────────────────── */
+  function renderPanel() {
+    const q  = comboInput.value.trim();
+    const ql = q.toLowerCase();
+    const matches = RF_TYPES.filter(t => t.name.toLowerCase().includes(ql));
+    const exact   = RF_TYPES.some(t => t.name.toLowerCase() === ql);
+    let html = '';
 
-  // YouTube import (create form only)
+    if (matches.length) {
+      html += '<div class="rf-combo__group">Your types</div>';
+      html += matches.map(t => {
+        const sel = selectedType && !selectedType.isNew && selectedType.id === t.id;
+        return `<div class="rf-combo__opt${sel ? ' selected' : ''}" data-id="${t.id}">
+          <span class="rf-combo__opt__ic">${ICON[t.kind]}</span>
+          <span class="rf-combo__opt__t">${esc(t.name)}</span>
+          <span class="rf-combo__opt__k">${t.kind === 'reading' ? 'Reading' : 'Video / Audio'}</span>
+          <svg class="rf-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 6L9 17l-5-5"></path>
+          </svg>
+        </div>`;
+      }).join('');
+    } else if (!q) {
+      html += '<div class="rf-combo__empty">Start typing to search or create a type.</div>';
+    } else {
+      html += '<div class="rf-combo__empty">No matches found.</div>';
+    }
+
+    if (q && !exact) {
+      html += `<div class="rf-combo__create" id="rf-combo-create">
+        <span class="rf-combo__create__ic">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round">
+            <path d="M12 5v14M5 12h14"></path>
+          </svg>
+        </span>
+        <span>Create <b>"${esc(q)}"</b></span>
+      </div>`;
+    }
+
+    comboPanel.innerHTML = html;
+  }
+
+  /* ── Open / close ───────────────────────────────────────────────────────── */
+  function openCombo() {
+    combo.classList.add('is-open');
+    renderPanel();
+  }
+
+  function closeCombo() {
+    combo.classList.remove('is-open');
+  }
+
+  /* ── Select existing type ───────────────────────────────────────────────── */
+  function selectExistingType(t) {
+    selectedType = { id: t.id, name: t.name, slug: t.slug, kind: t.kind };
+    comboInput.value = t.name;
+    comboTag.textContent = t.kind === 'reading' ? 'Reading' : 'Video / Audio';
+    comboTag.style.display = '';
+    newtypeBlock.style.display = 'none';
+    hiddenTypeId.value  = t.id;
+    hiddenNewName.value = '';
+    hiddenNewKind.value = '';
+    closeCombo();
+    clearTypeError();
+    updateUnitLabel();
+    if (updateBar) updateBar();
+  }
+
+  /* ── Create new type ────────────────────────────────────────────────────── */
+  function selectCreateNew(name) {
+    selectedType = { isNew: true, name, kind: newKind };
+    comboInput.value = name;
+    comboTag.textContent = 'New';
+    comboTag.style.display = '';
+    newtypeName.textContent = name;
+    newtypeBlock.style.display = 'block';
+    hiddenTypeId.value  = '';
+    hiddenNewName.value = name;
+    hiddenNewKind.value = newKind;
+    closeCombo();
+    clearTypeError();
+    updateUnitLabel();
+    if (updateBar) updateBar();
+  }
+
+  /* ── Event wiring ───────────────────────────────────────────────────────── */
+  document.getElementById('rf-combo-control').addEventListener('click', () => {
+    comboInput.focus();
+    openCombo();
+  });
+
+  comboInput.addEventListener('focus', openCombo);
+
+  comboInput.addEventListener('input', () => {
+    comboTag.style.display = 'none';
+    newtypeBlock.style.display = 'none';
+    selectedType = null;
+    hiddenTypeId.value  = '';
+    hiddenNewName.value = '';
+    hiddenNewKind.value = '';
+    clearTypeError();
+    renderPanel();
+    if (updateBar) updateBar();
+  });
+
+  comboPanel.addEventListener('click', e => {
+    const opt    = e.target.closest('.rf-combo__opt');
+    const create = e.target.closest('.rf-combo__create');
+    if (opt) {
+      const t = RF_TYPES.find(x => x.id === +opt.dataset.id);
+      if (t) selectExistingType(t);
+    } else if (create) {
+      const name = comboInput.value.trim();
+      if (name) selectCreateNew(name);
+    }
+  });
+
+  document.addEventListener('click', e => {
+    if (!combo.contains(e.target)) closeCombo();
+  });
+
+  /* ── Type error state ───────────────────────────────────────────────────── */
+  function clearTypeError() {
+    document.getElementById('rf-type-field').classList.remove('rf-field--invalid');
+  }
+
+  /* ── Unit count label (kind-aware) ──────────────────────────────────────── */
+  function updateUnitLabel() {
+    if (!unitCountLabel || !unitCountHint) return;
+    const kind = selectedType ? selectedType.kind : null;
+    const word = kind === 'reading' ? 'chapters' : 'units';
+    unitCountLabel.innerHTML = `Number of ${word} <span class="rf-opt">Optional</span>`;
+    unitCountHint.textContent = `We'll create this many empty ${word} you can tick off as you go.`;
+  }
+
+  /* ── Initialise combobox from existing hidden field values ──────────────── */
+  (function initCombo() {
+    const existingId      = hiddenTypeId.value;
+    const existingNewName = hiddenNewName.value;
+    const existingNewKind = hiddenNewKind.value;
+
+    if (existingId) {
+      const t = RF_TYPES.find(x => x.id === +existingId);
+      if (t) { selectExistingType(t); return; }
+    }
+    if (existingNewName) {
+      if (existingNewKind) {
+        newKind = existingNewKind;
+        const radio = kindseg.querySelector(`input[value="${newKind}"]`);
+        if (radio) radio.checked = true;
+      }
+      selectCreateNew(existingNewName);
+    }
+  })();
+
+  /* ── YouTube import (add form only) ─────────────────────────────────────── */
   (function () {
-    const urlField = document.getElementById("id_url");
-    const titleField = document.getElementById("id_title");
-    const importBar = document.getElementById("yt-import-bar");
-    const fetchBtn = document.getElementById("yt-fetch-btn");
-    const preview = document.getElementById("yt-preview");
-    const previewLabel = document.getElementById("yt-preview-label");
-    const tbody = document.getElementById("yt-units-tbody");
-    const clearBtn = document.getElementById("yt-clear-btn");
-    const hiddenUnits = document.getElementById("id_youtube_units");
+    const urlField   = document.getElementById('id_url');
+    const ytBar      = document.getElementById('rf-yt-bar');
+    const ytPreview  = document.getElementById('rf-yt-preview');
+    const ytFetch    = document.getElementById('rf-yt-fetch');
+    const ytClear    = document.getElementById('rf-yt-clear');
+    const ytLabel    = document.getElementById('rf-yt-label');
+    const ytRows     = document.getElementById('rf-yt-rows');
+    const hiddenUnits = document.getElementById('id_youtube_units');
 
-    if (!urlField || !importBar) return;
+    if (!ytBar || !urlField) return; // edit form — nothing to do
 
     const YT_RE = /youtube\.com|youtu\.be/;
 
-    function updateBar() {
-      importBar.style.display = YT_RE.test(urlField.value.trim()) ? "block" : "none";
-    }
+    updateBar = function () {
+      const isYouTubeType = selectedType && !selectedType.isNew && selectedType.slug === 'youtube';
+      const isYtUrl       = YT_RE.test(urlField.value.trim());
+      const hasPreview    = ytPreview.classList.contains('rf-yt-preview--visible');
+      ytBar.classList.toggle('rf-yt-bar--visible', isYouTubeType && isYtUrl && !hasPreview);
+    };
 
-    urlField.addEventListener("input", updateBar);
-    urlField.addEventListener("paste", () => setTimeout(updateBar, 0));
-    updateBar();
+    urlField.addEventListener('input', updateBar);
+    urlField.addEventListener('paste', () => setTimeout(updateBar, 0));
 
-    function formatDuration(mins) {
-      if (!mins) return "—";
-      const h = Math.floor(mins / 60);
-      const m = mins % 60;
+    function fmtDuration(mins) {
+      if (!mins) return '—';
+      const h = Math.floor(mins / 60), m = mins % 60;
       return h > 0 ? `${h}h ${m}m` : `${m}m`;
     }
 
     function syncHidden() {
-      if (!hiddenUnits || !tbody) return;
-      const units = Array.from(tbody.querySelectorAll("tr")).map(row => ({
-        title: (row.querySelector("input[type='text']") || {}).value || "",
+      if (!hiddenUnits || !ytRows) return;
+      const units = Array.from(ytRows.querySelectorAll('.rf-yt-row')).map(row => ({
+        title: (row.querySelector('input[type="text"]') || {}).value || '',
         duration_minutes: parseInt(row.dataset.durationMinutes) || null,
       }));
       hiddenUnits.value = JSON.stringify(units);
     }
 
     function resetImport() {
-      if (hiddenUnits) hiddenUnits.value = "";
-      if (tbody) tbody.innerHTML = "";
-      if (preview) preview.style.display = "none";
-      if (unitCountWrapper) unitCountWrapper.style.display = "block";
+      if (hiddenUnits) hiddenUnits.value = '';
+      ytRows.innerHTML = '';
+      ytPreview.classList.remove('rf-yt-preview--visible');
+      if (unitCountField) unitCountField.style.display = '';
+      updateBar();
     }
 
-    clearBtn && clearBtn.addEventListener("click", resetImport);
+    ytClear.addEventListener('click', resetImport);
 
-    fetchBtn && fetchBtn.addEventListener("click", async () => {
+    ytFetch.addEventListener('click', async () => {
       const url = urlField.value.trim();
       if (!YT_RE.test(url)) return;
 
-      fetchBtn.disabled = true;
-      fetchBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Fetching…';
+      ytFetch.disabled = true;
+      ytFetch.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Fetching…';
 
       try {
-        const csrf = document.querySelector("[name=csrfmiddlewaretoken]").value;
+        const csrf = document.querySelector('[name=csrfmiddlewaretoken]').value;
         const resp = await fetch("{% url 'learning:youtube_preview' %}", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "X-CSRFToken": csrf },
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf },
           body: JSON.stringify({ url }),
         });
         const data = await resp.json();
+        if (!resp.ok || data.error) throw new Error(data.error || 'Fetch failed.');
 
-        if (!resp.ok || data.error) throw new Error(data.error || "Fetch failed.");
+        // Auto-fill title
+        const titleEl = document.getElementById('id_title');
+        if (titleEl && !titleEl.value.trim() && data.title) titleEl.value = data.title;
 
-        if (titleField && !titleField.value.trim() && data.title) {
-          titleField.value = data.title;
+        // Auto-select a video-kind type if none chosen yet
+        if (!selectedType) {
+          const videoType = RF_TYPES.find(t => t.kind === 'video');
+          if (videoType) selectExistingType(videoType);
         }
 
-        if (!ts.getValue()) {
-          const videoPk = Object.keys(resourceTypeData).find(
-            pk => resourceTypeData[pk].content_kind === "video"
-          );
-          if (videoPk) {
-            ts.setValue(videoPk);
-          } else {
-            const nameInput = document.getElementById("id_new_resource_type");
-            const kindSelect = document.getElementById("id_new_content_kind");
-            if (nameInput) nameInput.value = "YouTube";
-            if (kindSelect) kindSelect.value = "video";
-            onTypeChange(null);
-          }
-        }
-
-        tbody.innerHTML = "";
+        // Populate rows
+        ytRows.innerHTML = '';
         data.units.forEach((unit, i) => {
-          const tr = document.createElement("tr");
-          tr.dataset.durationMinutes = unit.duration_minutes || "";
-
-          const td1 = document.createElement("td");
-          td1.className = "text-muted";
-          td1.textContent = i + 1;
-
-          const td2 = document.createElement("td");
-          const input = document.createElement("input");
-          input.type = "text";
-          input.className = "form-control form-control-sm";
-          input.value = unit.title;
-          input.addEventListener("input", syncHidden);
-          td2.appendChild(input);
-
-          const td3 = document.createElement("td");
-          td3.className = "text-muted small";
-          td3.textContent = formatDuration(unit.duration_minutes);
-
-          tr.appendChild(td1);
-          tr.appendChild(td2);
-          tr.appendChild(td3);
-          tbody.appendChild(tr);
+          const row = document.createElement('div');
+          row.className = 'rf-yt-row';
+          row.dataset.durationMinutes = unit.duration_minutes || '';
+          row.innerHTML = `
+            <span class="rf-yt-row__n">${i + 1}</span>
+            <input class="rf-yt-row__in" type="text" value="${esc(unit.title || '')}">
+            <span class="rf-yt-row__d">${fmtDuration(unit.duration_minutes)}</span>`;
+          row.querySelector('input').addEventListener('input', syncHidden);
+          ytRows.appendChild(row);
         });
 
         const count = data.units.length;
-        previewLabel.textContent = data.is_playlist
-          ? `${count} video${count !== 1 ? "s" : ""} found in playlist`
-          : "1 video found";
+        ytLabel.textContent = data.is_playlist
+          ? `${count} video${count !== 1 ? 's' : ''} found in playlist`
+          : '1 video found';
 
-        preview.style.display = "block";
-        if (unitCountWrapper) unitCountWrapper.style.display = "none";
+        ytBar.classList.remove('rf-yt-bar--visible');
+        ytPreview.classList.add('rf-yt-preview--visible');
+        if (unitCountField) unitCountField.style.display = 'none';
 
         syncHidden();
-
       } catch (err) {
-        alert("Could not fetch YouTube data: " + err.message);
+        alert('Could not fetch YouTube data: ' + err.message);
       } finally {
-        fetchBtn.disabled = false;
-        fetchBtn.innerHTML = '<i class="fab fa-youtube me-1"></i> Import from YouTube';
+        ytFetch.disabled = false;
+        ytFetch.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor">
+          <path d="M23 12s0-3.8-.5-5.6a3 3 0 0 0-2.1-2.1C18.6 3.8 12 3.8 12 3.8s-6.6 0-8.4.5a3 3 0 0 0-2.1 2.1C1 8.2 1 12 1 12s0 3.8.5 5.6a3 3 0 0 0 2.1 2.1c1.8.5 8.4.5 8.4.5s6.6 0 8.4-.5a3 3 0 0 0 2.1-2.1C23 15.8 23 12 23 12z"></path>
+          <path d="M9.8 15.5v-7l6 3.5z" fill="#fff"></path>
+        </svg> Import units from YouTube`;
       }
     });
   })();
+
+})();
 </script>
 {% endblock %}

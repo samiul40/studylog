@@ -1,5 +1,6 @@
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.utils import timezone
 
 from .learning_resource import LearningResource
 
@@ -39,6 +40,7 @@ class LearningUnit(models.Model):
         help_text="How many minutes of the video have been watched.",
     )
     notes = models.TextField(blank=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -90,6 +92,7 @@ class LearningUnit(models.Model):
     def save(self, *args, **kwargs):
         self._set_order_if_missing()
         self._update_status_from_progress()
+        self._update_completed_at()
         self.full_clean()
         super().save(*args, **kwargs)
 
@@ -124,3 +127,24 @@ class LearningUnit(models.Model):
 
         else:
             self.status = self.StatusChoices.IN_PROGRESS
+
+    def to_inline_dict(self):
+        """Compact dict for AJAX responses on the resource detail page."""
+        return {
+            "id": self.id,
+            "status": self.status,
+            "duration_minutes": self.duration_minutes,
+            "video_progress_minutes": self.video_progress_minutes,
+            "notes": self.notes,
+            "progress_percent": self.progress_percent,
+            "completed_at": (
+                self.completed_at.isoformat() if self.completed_at else None
+            ),
+        }
+
+    def _update_completed_at(self):
+        if self.status == self.StatusChoices.COMPLETED:
+            if not self.completed_at:
+                self.completed_at = timezone.now()
+        else:
+            self.completed_at = None

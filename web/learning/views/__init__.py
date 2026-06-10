@@ -9,9 +9,9 @@ from .learning_resource import (
     ResourceUpdateView,
 )
 from .learning_unit import (
-    LearningUnitBulkCreateView,
     LearningUnitCreateView,
     LearningUnitDeleteView,
+    LearningUnitInlinePatchView,
     LearningUnitReorderView,
     LearningUnitUpdateStatusView,
     LearningUnitUpdateView,
@@ -31,7 +31,7 @@ __all__ = [
     "LearningUnitUpdateView",
     "LearningUnitReorderView",
     "LearningUnitUpdateStatusView",
-    "LearningUnitBulkCreateView",
+    "LearningUnitInlinePatchView",
     "YouTubePreviewView",
     "dashboard_view",
 ]
