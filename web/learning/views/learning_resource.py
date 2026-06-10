@@ -51,7 +51,7 @@ class ResourceListView(BaseUserResourceView, ListView):
             .with_progress()
             .with_weekly_units()
             .with_time_logged()
-            .select_related("user", "resource_type")
+            .select_related("resource_type")
         )
 
         search_query = self.request.GET.get("search", "").strip()
