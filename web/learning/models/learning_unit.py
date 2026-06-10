@@ -47,6 +47,13 @@ class LearningUnit(models.Model):
     class Meta:
         db_table = "learning_unit"
         ordering = ["order"]
+        indexes = [
+            models.Index(fields=["resource", "status"], name="lu_resource_status_idx"),
+            models.Index(
+                fields=["resource", "status", "updated_at"],
+                name="lu_resource_status_updated_idx",
+            ),
+        ]
         constraints = [
             models.CheckConstraint(
                 condition=models.Q(

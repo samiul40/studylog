@@ -34,6 +34,9 @@ class LearningResource(models.Model):
     class Meta:
         db_table = "learning_resource"
         ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=["user", "is_archived"], name="lr_user_archived_idx"),
+        ]
         permissions = [
             (
                 "view_dashboard",
