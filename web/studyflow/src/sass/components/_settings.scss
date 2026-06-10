@@ -263,7 +263,6 @@ $s-ease:           cubic-bezier(0.22, 1, 0.36, 1);
   border-radius: 14px;
   background: rgba(13, 24, 18, 0.035);
   border: 1px solid rgba(13, 24, 18, 0.08);
-  flex-wrap: wrap;
 }
 
 [data-theme="dark"] .profile-strip {
@@ -291,6 +290,14 @@ $s-ease:           cubic-bezier(0.22, 1, 0.36, 1);
 
 .profile-strip__meta { min-width: 0; flex: 1; }
 
+.profile-strip__nameline {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 3px;
+}
+
 .profile-strip__name {
   font-family: $font-display;
   font-weight: 700;
@@ -305,8 +312,8 @@ $s-ease:           cubic-bezier(0.22, 1, 0.36, 1);
   font-family: $font-mono;
   font-size: 0.72rem;
   color: $s-ink-soft-l;
-  margin-top: 3px;
-  word-break: break-all;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 [data-theme="dark"] .profile-strip__mail { color: $s-ink-soft-d; }
@@ -697,6 +704,11 @@ $s-ease:           cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 // ── Responsive ─────────────────────────────────────────────────────────────────
+@media (max-width: 720px) {
+  // Restore top offset cancelled by padding: 0 !important on .settings-main
+  .settings-main { padding-top: 68px !important; }
+}
+
 @media (max-width: 860px) {
   .settings-grid { grid-template-columns: 1fr; }
 

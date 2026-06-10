@@ -40,7 +40,8 @@
   }
 
   .nav-avatar {
-    background: rgba(243, 241, 232, 0.08);
+    background: $emerald-500;
+    color: #fff;
   }
 
   // ── Form controls ────────────────────────────────────────────────────────────
@@ -115,16 +116,17 @@
     &__icon { background: rgba(52, 211, 153, 0.12); }
   }
 
-  .login-card { background: #1e293b; border-color: #334155; }
-  .login-brand { color: #f1f5f9; }
+  .login-card { background: #11201a; border-color: rgba(243, 241, 232, 0.12); }
+  .login-brand { color: #f3f1e8; }
+  .login-subtitle { color: rgba(243, 241, 232, 0.64); }
   .login-toggle-pass {
-    background: #0f172a;
-    border-color: #334155;
-    color: #64748b;
-    &:hover { color: #cbd5e1; }
+    background: #0c1611;
+    border-color: rgba(243, 241, 232, 0.12);
+    color: rgba(243, 241, 232, 0.42);
+    &:hover { color: #f3f1e8; }
   }
-  .login-divider { color: #475569; &::before, &::after { background: #334155; } }
-  .login-footer-links a, .login-footer-link-center a { color: #64748b; &:hover { color: $emerald-400; } }
+  .login-divider { color: rgba(243, 241, 232, 0.42); &::before, &::after { background: rgba(243, 241, 232, 0.12); } }
+  .login-footer-links a, .login-footer-link-center a { color: rgba(243, 241, 232, 0.42); &:hover { color: $emerald-400; } }
 
   // ── Settings sidebar ─────────────────────────────────────────────────────────
   .settings-sidebar { background: #1e293b; border-color: #334155; }

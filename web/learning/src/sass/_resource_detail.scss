@@ -287,6 +287,13 @@
     border-color: color-mix(in srgb, var(--rose) 35%, transparent);
     &:hover { background: color-mix(in srgb, var(--rose) 10%, transparent); border-color: var(--rose); }
   }
+
+  &--sm {
+    padding: 5px 11px;
+    font-size: 0.78rem;
+    gap: 5px;
+    svg { width: 12px; height: 12px; }
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -422,8 +429,12 @@
     align-items: center;
     justify-content: space-between;
     margin-bottom: 18px;
-    gap: 12px;
-    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  &__hd > :first-child {
+    min-width: 0;
+    flex: 1;
   }
 
   &__title {
@@ -469,7 +480,7 @@
 
   &__main {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 10px;
     padding: 13px 14px;
     cursor: pointer;
@@ -515,6 +526,8 @@
     justify-content: center;
     transition: border-color 0.15s, background 0.15s, transform 0.1s;
     padding: 0;
+    margin-top: 1px;
+    flex-shrink: 0;
 
     svg {
       width: 13px;
@@ -572,33 +585,71 @@
     width: 22px;
     flex-shrink: 0;
     text-align: right;
+    margin-top: 5px;
+  }
+
+  // Body: title + meta row
+  &__body {
+    flex: 1;
+    min-width: 0;
   }
 
   &__name {
-    flex: 1;
-    min-width: 0;
-    font-size: 0.96rem;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+    font-size: 0.95rem;
     font-weight: 500;
     color: var(--ink);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    line-height: 1.35;
     transition: color 0.15s;
   }
 
-  &.is-done &__name { color: var(--ink-faint); text-decoration: line-through; }
-
-  &__bmeta {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-shrink: 0;
+  &.is-done &__name {
+    color: var(--ink-soft);
+    text-decoration: line-through;
+    text-decoration-color: color-mix(in srgb, var(--ink) 35%, transparent);
   }
 
-  // Chevron
+  // Meta row: duration + note flag, beneath the title
+  &__meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 4px;
+    font-family: $font-mono;
+    font-size: 0.7rem;
+    color: var(--ink-soft);
+  }
+
+  &__meta-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+
+    svg {
+      width: 11px;
+      height: 11px;
+      opacity: 0.7;
+      flex-shrink: 0;
+    }
+  }
+
+  &__meta-warn {
+    color: var(--amber);
+    svg { opacity: 1; }
+  }
+
+  &__noteflag { color: var(--emerald-deep); }
+
+  // Chevron — top-aligned, small nudge to sit with first title line
   &__chev {
     color: var(--ink-faint);
     flex-shrink: 0;
+    margin-top: 2px;
     transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1), color 0.15s;
 
     svg { width: 16px; height: 16px; display: block; }
@@ -969,7 +1020,7 @@
   .u__main {
     padding: 13px 14px;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 10px;
   }
 }
@@ -1017,8 +1068,6 @@
   .rdbtn { flex: 1; justify-content: center; }
 
   .b__inner { padding-left: 14px; }
-
-  .u__bmeta { flex-shrink: 1; }
 
 }
 

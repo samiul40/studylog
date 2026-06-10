@@ -10,12 +10,12 @@
 // Avatar circle (initials)
 // ---------------------------------------------------------------------------
 .nav-avatar {
-  width: 2rem;
-  height: 2rem;
+  width: 38px;
+  height: 38px;
   border-radius: 50%;
   background: $emerald-500;
   color: #fff;
-  font-size: 0.6875rem;
+  font-size: 0.78rem;
   font-weight: 700;
   display: flex;
   align-items: center;
@@ -38,7 +38,7 @@
     bottom: 0;
     left: 0;
     right: 0;
-    height: 64px;
+    height: 72px;
     padding-bottom: env(safe-area-inset-bottom, 0);
     // Light mode — Option A: paper-tinted bar
     background: rgba(251, 250, 244, 0.95);
@@ -67,10 +67,6 @@
     &:hover,
     &.active {
       color: #0a7d57; // emerald-deep
-
-      .mobile-bottom-nav__icon {
-        background: rgba(16, 185, 129, 0.16);
-      }
     }
   }
 
@@ -93,7 +89,7 @@
 
   // Push main content above the nav bar (only when the nav is actually in the DOM)
   body:has(.mobile-bottom-nav) main.flex-grow-1 {
-    padding-bottom: calc(64px + 1.5rem) !important;
+    padding-bottom: calc(72px + 1.5rem) !important;
   }
 
   // Hide footer on mobile since bottom nav replaces it
@@ -114,10 +110,6 @@
       &:hover,
       &.active {
         color: #1ed688; // --emerald-bright
-
-        .mobile-bottom-nav__icon {
-          background: rgba(16, 185, 129, 0.18);
-        }
       }
     }
   }

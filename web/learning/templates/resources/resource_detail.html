@@ -362,6 +362,23 @@
     return `<span class="b__summary">${ICON.clock}${fmtDur(dur)}</span>`;
   }
 
+  function metaHtml(u) {
+    const dur = u.duration_minutes, vid = u.video_progress_minutes;
+    const items = [];
+    if (dur) {
+      const durText = u.status === 'in_progress'
+        ? `${fmtDur(vid || 0)} / ${fmtDur(dur)}`
+        : fmtDur(dur);
+      items.push(`<span class="u__meta-item">${ICON.clock}${durText}</span>`);
+    }{% if resource.resource_type.content_kind != "reading" %} else {
+      items.push(`<span class="u__meta-item u__meta-warn">${ICON.warn}Set duration</span>`);
+    }{% endif %}
+    if (u.notes) {
+      items.push(`<span class="u__meta-item u__noteflag">${ICON.note}note</span>`);
+    }
+    return items.length ? `<div class="u__meta">${items.join('')}</div>` : '';
+  }
+
   function escNl(s) {
     return esc(s).replace(/\n/g, '<br>');
   }
@@ -439,12 +456,11 @@
       <div class="u__main" data-act="open" data-id="${u.id}">
         <span class="u__grip" data-grip="${u.id}" title="Drag to reorder" tabindex="-1">${ICON.grip}</span>
         <button class="u__check ${checkCls(u)}" data-act="toggle" data-id="${u.id}"
-          aria-label="Toggle complete" title="Mark complete / clear"></button>
-        <span class="u__idx mono">${idxStr}</span>
-        <span class="u__name">${esc(u.title)}</span>
-        <div class="u__bmeta">
-          ${summaryHtml(u)}
-          ${u.notes ? `<span class="b__noteicon" title="Has a note">${ICON.note}</span>` : ''}
+          aria-label="Toggle complete" title="Mark complete / clear">${ICON.check}</button>
+        <span class="u__idx">${idxStr}</span>
+        <div class="u__body">
+          <span class="u__name">${esc(u.title)}</span>
+          ${metaHtml(u)}
         </div>
         <span class="u__chev">${ICON.chev}</span>
       </div>

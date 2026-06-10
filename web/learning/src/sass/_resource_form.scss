@@ -490,6 +490,8 @@ textarea.rf-control {
 
 .rf-kindopt-wrap {
   position: relative;
+  display: flex;
+  flex-direction: column;
 
   input {
     position: absolute;
@@ -502,6 +504,7 @@ textarea.rf-control {
   display: flex;
   align-items: center;
   gap: 10px;
+  flex: 1;
   border: 1.5px solid var(--line);
   border-radius: 12px;
   padding: 12px 14px;

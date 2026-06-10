@@ -7,29 +7,29 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% block title %}StudyLog — Track your learning, actually finish things{% endblock %}</title>
-  <meta name="description" content="{% block meta_description %}StudyLog helps you organise videos, books, and courses — and keeps you honest about your progress. Free to use.{% endblock %}">
+  <title>{% block title %}StudyLog - Free Learning Tracker for Courses, Books and Videos{% endblock %}</title>
+  <meta name="description" content="{% block meta_description %}StudyLog is a free learning tracker that helps you organise courses, books, videos and goals while tracking your progress and building consistent habits.{% endblock %}">
 
   <!-- Open Graph (WhatsApp, Slack, iMessage, Facebook) -->
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="StudyLog">
-  <meta property="og:title" content="{% block og_title %}StudyLog — Track your learning, actually finish things{% endblock %}">
-  <meta property="og:description" content="{% block og_description %}StudyLog helps you organise videos, books, and courses — and keeps you honest about your progress. Free to use.{% endblock %}">
+  <meta property="og:title" content="{% block og_title %}StudyLog - Free Learning Tracker for Courses, Books and Videos{% endblock %}">
+  <meta property="og:description" content="{% block og_description %}StudyLog is a free learning tracker that helps you organise courses, books, videos and goals while tracking your progress and building consistent habits.{% endblock %}">
   <meta property="og:url" content="https://studylog.co.uk{{ request.path }}">
   {% block og_image %}<meta property="og:image" content="https://studylog.co.uk{% static 'img/og-image.png' %}">{% endblock %}
 
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="{% block twitter_title %}StudyLog — Track your learning, actually finish things{% endblock %}">
-  <meta name="twitter:description" content="{% block twitter_description %}StudyLog helps you organise videos, books, and courses — and keeps you honest about your progress. Free to use.{% endblock %}">
+  <meta name="twitter:title" content="{% block twitter_title %}StudyLog - Free Learning Tracker for Courses, Books and Videos{% endblock %}">
+  <meta name="twitter:description" content="{% block twitter_description %}StudyLog is a free learning tracker that helps you organise courses, books, videos and goals while tracking your progress and building consistent habits.{% endblock %}">
   <meta name="twitter:image" content="https://studylog.co.uk{% static 'img/og-image.png' %}">
 
   <!-- Favicons -->
-  <link rel="icon" type="image/svg+xml" href="{% static 'img/studylog-icon-tile.svg' %}">
   <link rel="icon" type="image/png" sizes="32x32" href="{% static 'img/favicon-32.png' %}">
   <link rel="icon" type="image/png" sizes="16x16" href="{% static 'img/favicon-16.png' %}">
-  <link rel="apple-touch-icon" sizes="180x180" href="{% static 'img/favicon-180.png' %}">
   <link rel="shortcut icon" href="{% static 'img/favicon-32.png' %}">
+  <link rel="apple-touch-icon" sizes="180x180" href="{% static 'img/favicon-180.png' %}">
+  <link rel="icon" type="image/svg+xml" href="{% static 'img/studylog-icon-tile.svg' %}">
 
   <!-- Theme init: apply before CSS to avoid flash -->
   <!-- Also strips the preload class after first paint to re-enable transitions -->

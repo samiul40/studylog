@@ -22,10 +22,11 @@
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
+  align-content: center;
   gap: 16px;
   max-width: 960px;
   margin: 0 auto;
-  height: 64px;
+  height: 76px;
   padding: 0 clamp(18px, 4vw, 32px);
 }
 
@@ -41,7 +42,7 @@
 
 .appbar__lockup {
   display: block;
-  height: 30px;
+  height: 38px;
   width: auto;
 
   &--dark { display: none; }
@@ -268,10 +269,23 @@
 }
 
 // ---------------------------------------------------------------------------
-// Mobile: collapse nav links, strip usermenu border/name
+// Mobile: collapse nav links, strip usermenu border/name, fix to top
 // ---------------------------------------------------------------------------
 @media (max-width: 720px) {
-  .appbar__inner { height: 58px; }
+  // Fix to top so it stays visible when scrolling (sticky can break when
+  // overflow-x: hidden is set on html/body, common on iOS Safari)
+  .appbar {
+    position: fixed;
+    left: 0;
+    right: 0;
+  }
+
+  // Offset page content so it doesn't slide under the fixed bar
+  body:has(.appbar) > main {
+    padding-top: 68px;
+  }
+
+  .appbar__inner { height: 68px; }
   .appbar__nav   { display: none; }
 
   // Avatar-only pill on mobile
