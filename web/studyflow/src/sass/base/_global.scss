@@ -37,7 +37,7 @@ body {
 }
 
 body {
-  background-color: $grey-50;
+  background-color: var(--paper);
   color: $grey-800;
   font-family: $font-sans;
   font-size: $font-size-base;
