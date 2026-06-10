@@ -27,76 +27,6 @@ function initDurationPickers(root) {
   });
 }
 
-// Bulk Unit Modal Logic
-function addRow(title = "", duration = "", contentKind = "") {
-  const table = document.querySelector("#units-table tbody");
-  if (!table) return;
-
-  const row = document.createElement("tr");
-
-  const totalMins = parseInt(duration) || 0;
-  const durationHours = Math.floor(totalMins / 60);
-  const durationMins = totalMins % 60;
-
-  const durationCell =
-    contentKind !== "reading"
-      ? `
-        <td>
-          <div class="duration-picker">
-            <div class="input-group input-group-sm">
-              <input type="number" class="form-control dp-hours" min="0" placeholder="h" value="${durationHours || ""}">
-              <span class="input-group-text">h</span>
-              <input type="number" class="form-control dp-mins" min="0" max="59" placeholder="m" value="${durationMins || ""}">
-              <span class="input-group-text">m</span>
-            </div>
-            <input type="hidden" name="duration[]" value="${duration}">
-          </div>
-        </td>
-      `
-      : "";
-
-  row.innerHTML = `
-    <td>
-      <input type="text" name="title[]" class="form-control" value="${title}">
-    </td>
-    ${durationCell}
-    <td>
-      <button type="button" class="btn btn-danger btn-sm">
-        Delete
-      </button>
-    </td>
-  `;
-
-  row.querySelector("button")?.addEventListener("click", () => {
-    row.remove();
-  });
-
-  initDurationPickers(row);
-  table.appendChild(row);
-}
-
-function initBulkModal() {
-  const modal = document.getElementById("bulkUnitModal");
-  if (!modal) return;
-
-  const contentKind = modal.dataset.contentKind;
-
-  modal.addEventListener("shown.bs.modal", function () {
-    const tbody = document.querySelector("#units-table tbody");
-    if (!tbody) return;
-
-    tbody.innerHTML = "";
-
-    for (let i = 0; i < 5; i++) {
-      addRow("", "", contentKind);
-    }
-  });
-
-  modal.querySelector("[data-action='add-row']")?.addEventListener("click", function () {
-    addRow("", "", contentKind);
-  });
-}
-
 // Mark as Complete button — copies duration picker values into progress picker
 function initMarkComplete(root) {
   root.querySelectorAll('[data-action="mark-complete"]').forEach(btn => {
@@ -167,7 +97,6 @@ document.addEventListener("DOMContentLoaded", function () {
     document.body.appendChild(modal);
   });
 
-  initBulkModal();
   togglePassword();
   initDurationPickers(document);
   initMarkComplete(document);

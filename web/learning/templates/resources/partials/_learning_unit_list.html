@@ -1,96 +1,23 @@
 {% load learning_filters %}
-<div class="unit-card">
-
-  <div class="unit-card__header">
-    <h4 class="unit-card__title">Learning Units</h4>
-    <div class="d-flex gap-2">
-      {% if perms.learning.add_learningunit %}
-      <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addUnitModal">
-        <i class="fas fa-plus me-1"></i> Add Unit
-      </button>
-      {% endif %}
-      {% if perms.learning.add_learningunit %}
-      <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#bulkUnitModal">
-        <i class="fas fa-list me-1"></i> Add Multiple
-      </button>
-      {% endif %}
-    </div>
-  </div>
-
-  {% if units %}
-  <ul id="unit-list" class="unit-list">
-
-    {% for unit in units %}
-    <li class="unit-item" data-id="{{ unit.id }}">
-
-      <span class="drag-handle">
-        <i class="fas fa-grip-vertical"></i>
+<div class="rd-card units-card">
+  <div class="units-card__hd">
+    <div>
+      <h3 class="units-card__title d-inline">Learning units</h3>
+      <span class="units-card__count">
+        {{ completed_units }} of {{ total_units }} complete
       </span>
-
-      <div class="unit-item__body">
-        <div class="unit-item__title">
-          {{ unit.title }}
-
-          {% if unit.duration_minutes and unit.video_progress_minutes != none %}
-          <span class="unit-item__duration">
-            <i class="fas fa-clock"></i> {{ unit.video_progress_minutes|format_duration }} / {{ unit.duration_minutes|format_duration }} ({{ unit.progress_percent}}%)
-          </span>
-          {% elif unit.duration_minutes %}
-          <span class="unit-item__duration">
-            <i class="fas fa-clock"></i> {{ unit.duration_minutes|format_duration }}
-          </span>
-          {% endif %}
-
-        </div>
-
-        {% if unit.notes %}
-        <div class="unit-item__notes">{{ unit.notes|truncatewords:12 }}</div>
-        {% endif %}
-      </div>
-
-      <div class="unit-item__actions">
-
-        {% if perms.learning.change_learningunit %}
-        <form method="post" action="{% url 'learning:unit_update_status' unit.id %}">
-          {% csrf_token %}
-          <select name="status" {% if unit.is_status_locked %}disabled{% endif %}
-            class="unit-status-select unit-status-select--{{ unit.status }}">
-            <option value="not_started" {% if unit.status == "not_started" %}selected{% endif %}>Not Started</option>
-            <option value="in_progress" {% if unit.status == "in_progress" %}selected{% endif %}>In Progress</option>
-            <option value="completed" {% if unit.status == "completed" %}selected{% endif %}>Completed</option>
-          </select>
-        </form>
-        {% endif %}
-
-        {% if perms.learning.change_learningunit %}
-        <button class="unit-action-btn unit-action-btn--edit" data-bs-toggle="modal"
-          data-bs-target="#editUnitModal{{ unit.id }}">
-          <i class="fas fa-pen"></i>
-        </button>
-        {% endif %}
-
-        {% if perms.learning.delete_learningunit %}
-        <button class="unit-action-btn unit-action-btn--delete" data-bs-toggle="modal"
-          data-bs-target="#deleteUnitModal{{ unit.id }}">
-          <i class="fas fa-trash"></i>
-        </button>
-        {% endif %}
-
-      </div>
-
-    </li>
-
-    {% include "resources/partials/_learning_unit_edit_modal.html" %}
-    {% include "resources/partials/_learning_unit_delete_modal.html" %}
-
-    {% endfor %}
-  </ul>
-
-  {% else %}
-  <div class="unit-empty">
-    <i class="fas fa-list-check unit-empty__icon"></i>
-    <p class="unit-empty__text">No units yet - add your first unit to start tracking.</p>
+    </div>
+    {% if perms.learning.add_learningunit %}
+    <button class="rdbtn rdbtn--primary rdbtn--sm" data-bs-toggle="modal" data-bs-target="#addUnitModal" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 5v14M5 12h14"></path>
+      </svg>
+      Add unit
+    </button>
+    {% endif %}
   </div>
-  {% endif %}
 
+  <ul id="unit-list" class="ulist">
+    {# Populated by JavaScript in resource_detail.html #}
+  </ul>
 </div>

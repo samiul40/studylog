@@ -1,48 +1,47 @@
-<div class="modal fade" id="addUnitModal" tabindex="-1">
+<div class="modal fade modal--rd" id="addUnitModal" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <form method="post" action="{% url 'learning:unit_create' resource.pk %}">
         {% csrf_token %}
         <div class="modal-header">
-          <h5 class="modal-title"><i class="fas fa-plus me-2"></i>Add Learning Unit</h5>
+          <h5 class="modal-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 5v14M5 12h14"></path>
+            </svg>
+            Add learning unit
+          </h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
-        <div class="modal-body">
-          <div class="mb-3">
-            <label class="form-label">Title</label>
-            <input type="text" name="title" class="form-control" required autofocus>
+        <div class="modal-body" style="display:flex;flex-direction:column;gap:18px">
+          <div>
+            <div class="modal-field-label">Title</div>
+            <input type="text" name="title" class="modal-input" required autofocus
+              placeholder="e.g. Routing &amp; Middleware">
           </div>
           {% if resource.resource_type.content_kind != "reading" %}
-          <div class="mb-3">
-            <label class="form-label">Duration</label>
-            <div class="duration-picker">
-              <div class="input-group">
-                <input type="number" class="form-control dp-hours" min="0" placeholder="h">
-                <span class="input-group-text">h</span>
-                <input type="number" class="form-control dp-mins" min="0" max="59" placeholder="m">
-                <span class="input-group-text">m</span>
+          <div>
+            <div class="modal-field-label">
+              Duration
+              <span class="modal-field-hint">optional — you can set it inline later</span>
+            </div>
+            <div class="modal-dur-row duration-picker">
+              <div class="modal-dur-box">
+                <input type="number" class="dp-hours" min="0" placeholder="0" aria-label="Hours">
+                <span class="modal-dur-box__u">h</span>
+              </div>
+              <div class="modal-dur-box">
+                <input type="number" class="dp-mins" min="0" max="59" placeholder="0" aria-label="Minutes">
+                <span class="modal-dur-box__u">m</span>
               </div>
               <input type="hidden" name="duration_minutes">
-            </div>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Video Progress</label>
-            <div class="duration-picker">
-              <div class="input-group">
-                <input type="number" class="form-control dp-hours" min="0" placeholder="h">
-                <span class="input-group-text">h</span>
-                <input type="number" class="form-control dp-mins" min="0" max="59" placeholder="m">
-                <span class="input-group-text">m</span>
-              </div>
-              <input type="hidden" name="video_progress_minutes">
             </div>
           </div>
           {% endif %}
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-cancel" data-bs-dismiss="modal">Cancel</button>
-          <button type="submit" class="btn btn-primary">
-            <span class="btn-text">Create Unit</span>
+          <button type="button" class="rdbtn rdbtn--ghost" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="rdbtn rdbtn--primary">
+            <span class="btn-text">Create unit</span>
             <span class="spinner-border spinner-border-sm d-none"></span>
           </button>
         </div>

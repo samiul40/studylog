@@ -1,9 +1,9 @@
 from django.urls import path
 
 from .views import (
-    LearningUnitBulkCreateView,
     LearningUnitCreateView,
     LearningUnitDeleteView,
+    LearningUnitInlinePatchView,
     LearningUnitReorderView,
     LearningUnitUpdateStatusView,
     LearningUnitUpdateView,
@@ -24,11 +24,6 @@ urlpatterns = [
     path("", ResourceListView.as_view(), name="resource_list"),
     path("<int:pk>/", ResourceDetailView.as_view(), name="resource_detail"),
     path("create/", ResourceCreateView.as_view(), name="resource_create"),
-    path(
-        "<int:resource_pk>/units/bulk-create/",
-        LearningUnitBulkCreateView.as_view(),
-        name="unit_bulk_create",
-    ),
     path(
         "<int:pk>/edit/",
         ResourceUpdateView.as_view(),
@@ -53,6 +48,11 @@ urlpatterns = [
         "<int:resource_pk>/units/<int:unit_pk>/delete/",
         LearningUnitDeleteView.as_view(),
         name="unit_delete",
+    ),
+    path(
+        "<int:resource_pk>/units/<int:unit_pk>/patch/",
+        LearningUnitInlinePatchView.as_view(),
+        name="unit_inline_update",
     ),
     path(
         "<int:resource_pk>/units/reorder/",

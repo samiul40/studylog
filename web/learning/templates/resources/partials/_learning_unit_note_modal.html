@@ -1,0 +1,60 @@
+{# Note modal — wired by resource_detail.html JS #}
+<div class="modal fade modal--rd" id="noteModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7z"></path>
+            <path d="M15 2v5h5M8.5 12.5h7M8.5 16.5h5"></path>
+          </svg>
+          Note
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p id="noteUnitName" class="modal-unit-label"></p>
+        <textarea id="noteText" class="modal-input" rows="5"
+          placeholder="Jot a takeaway, a timestamp to revisit, or where you got stuck…"></textarea>
+      </div>
+      <div class="modal-footer">
+        <button type="button" id="noteRemove" class="rdbtn rdbtn--danger me-auto" style="display:none">Remove note</button>
+        <button type="button" class="rdbtn rdbtn--ghost" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" id="noteSave" class="rdbtn rdbtn--primary">
+          <span class="btn-text">Save note</span>
+          <span class="spinner-border spinner-border-sm d-none"></span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{# Delete unit confirm modal #}
+<div class="modal fade modal--rd" id="delUnitModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--rose)">
+            <path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
+          </svg>
+          Delete unit
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p style="color:var(--ink-soft);margin:0">Delete <strong id="delUnitName" style="color:var(--ink)"></strong>? This removes its duration, progress and notes — and can't be undone.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="rdbtn rdbtn--ghost" data-bs-dismiss="modal">Cancel</button>
+        <form id="delUnitForm" method="post">
+          {% csrf_token %}
+          <button type="submit" class="rdbtn rdbtn--danger">
+            <span class="btn-text">Delete unit</span>
+            <span class="spinner-border spinner-border-sm d-none"></span>
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
