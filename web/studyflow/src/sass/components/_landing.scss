@@ -19,17 +19,11 @@
   text-transform: uppercase;
 }
 
-// Nail the html + body background so no browser-painted dark strip bleeds
-// through at the top/bottom. Covers: OS dark mode, app data-theme dark, both.
+// Body/html background matches the hero + footer (dark ink) so any flex
+// overflow space at the top or bottom of the page is seamless, not paper-white.
 html:has(.landing-page),
 body:has(.landing-page) {
-  background: #f3f1e8;
-}
-@media (prefers-color-scheme: dark) {
-  html:has(.landing-page),
-  body:has(.landing-page) {
-    background: #070d0a;
-  }
+  background: #0d1812;
 }
 
 // Remove shell padding and entrance animation from main — landing controls its own spacing and entrance
@@ -52,7 +46,10 @@ body:has(.landing-page) > main.flex-grow-1 {
     line-height: 1.02;
     letter-spacing: -0.02em;
     color: inherit;
+    margin: 0;
   }
+
+  p { margin: 0; }
 
   a { color: inherit; text-decoration: none; }
 }
@@ -61,44 +58,52 @@ body:has(.landing-page) > main.flex-grow-1 {
   .landing-page { color: var(--bone); }
 }
 
-// ── Sticky nav ────────────────────────────────────────────────────────────────
+// ── Nav ───────────────────────────────────────────────────────────────────────
 .lnav {
-  position: sticky;
+  position: fixed;
   top: 0;
-  z-index: 50;
-  background: rgba(243, 241, 232, 0.88);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border-bottom: 1px solid transparent;
-  transition: border-color 0.3s, background 0.3s;
-
-  &.scrolled { border-bottom-color: var(--line-light); }
+  left: 0;
+  right: 0;
+  z-index: 100;
+  background: color-mix(in srgb, var(--paper) 82%, transparent);
+  backdrop-filter: saturate(160%) blur(14px);
+  -webkit-backdrop-filter: saturate(160%) blur(14px);
+  border-bottom: 1px solid var(--line-soft);
+  transition: background 0.4s var(--ease-cv);
 
   &__inner {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    height: 70px;
+    height: 76px;
   }
 
   &__actions {
     display: flex;
     align-items: center;
-    gap: 14px;
+    gap: 10px;
   }
 
   &__link {
     font-weight: 600;
-    font-size: 0.96rem;
-    padding: 8px 6px;
+    font-size: 0.92rem;
+    padding: 8px 13px;
+    border-radius: 100px;
     color: var(--ink);
+    transition: background 0.18s, color 0.18s;
 
-    &:hover { color: var(--emerald-deep); }
+    &:hover {
+      color: var(--ink);
+      background: color-mix(in srgb, var(--ink) 6%, transparent);
+    }
   }
-}
 
-@media (prefers-color-scheme: dark) {
-  .lnav { background: rgba(7, 13, 10, 0.88); }
+  // CTA button matches navlink height
+  .l-btn {
+    padding: 8px 18px;
+    font-size: 0.92rem;
+    line-height: 1;
+  }
 }
 
 @media (max-width: 560px) {
@@ -191,9 +196,9 @@ body:has(.landing-page) > main.flex-grow-1 {
   position: relative;
   background: var(--ink);
   color: var(--bone);
-  border-radius: 0 0 var(--r-lg) var(--r-lg);
   overflow: hidden;
-  padding: clamp(56px, 8vw, 100px) 0 clamp(72px, 9vw, 116px);
+  border-radius: 0 0 var(--r-lg) var(--r-lg);
+  padding: calc(clamp(56px, 8vw, 100px) + 76px) 0 clamp(72px, 9vw, 116px);
 
   &__bg { position: absolute; inset: 0; pointer-events: none; }
 
@@ -1067,9 +1072,8 @@ body:has(.landing-page) > main.flex-grow-1 {
 .l-foot {
   background: var(--ink);
   color: var(--bone);
-  padding: 60px 0 40px;
   border-radius: var(--r-lg) var(--r-lg) 0 0;
-  margin-top: 14px;
+  padding: 60px 0 40px;
 
   &__top {
     display: flex;
