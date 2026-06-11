@@ -1144,13 +1144,167 @@ body:has(.landing-page) > main.flex-grow-1 {
   }
 }
 
+// ── What is StudyLog ──────────────────────────────────────────────────────────
+.l-about__inner {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: clamp(36px, 6vw, 88px);
+  align-items: center;
+}
+
+.l-about__points {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.l-apoint {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: var(--card-cv);
+  border: 1px solid var(--line-light);
+  border-radius: var(--r-md);
+  padding: 19px 22px;
+  font-weight: 600;
+  font-size: 1.02rem;
+  transition: border-color 0.3s, transform 0.3s var(--ease-cv);
+
+  &:hover { border-color: rgba(16,185,129,0.4); transform: translateX(4px); }
+
+  &__ic {
+    width: 34px; height: 34px;
+    flex: 0 0 auto;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background: rgba(16,185,129,0.14);
+    color: var(--emerald-deep);
+
+    svg { width: 16px; height: 16px; }
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .l-apoint__ic { color: var(--emerald-bright); }
+  .l-apoint:hover { box-shadow: 0 24px 48px -24px rgba(0,0,0,0.5); }
+}
+
+// ── Who is it for ─────────────────────────────────────────────────────────────
+.l-who__grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: clamp(14px, 2vw, 20px);
+  margin-top: 56px;
+}
+
+.l-wcard {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+  background: var(--card-cv);
+  border: 1px solid var(--line-light);
+  border-radius: var(--r-md);
+  padding: 28px 26px;
+  transition: transform 0.4s var(--ease-cv), box-shadow 0.4s var(--ease-cv), border-color 0.4s;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 24px 48px -24px rgba(13,24,18,0.18);
+    border-color: rgba(16,185,129,0.4);
+  }
+
+  &__ic {
+    width: 50px; height: 50px;
+    flex: 0 0 auto;
+    border-radius: 13px;
+    background: var(--ink);
+    color: var(--emerald-bright);
+    display: grid;
+    place-items: center;
+
+    svg { width: 23px; height: 23px; }
+  }
+
+  h3 { font-size: 1.32rem; margin-bottom: 8px; letter-spacing: -0.02em; }
+
+  p { color: var(--ink-soft); font-size: 0.97rem; }
+}
+
+@media (prefers-color-scheme: dark) {
+  .l-wcard:hover { box-shadow: 0 24px 48px -24px rgba(0,0,0,0.5); }
+}
+
+// ── FAQ ───────────────────────────────────────────────────────────────────────
+.l-faq__list {
+  max-width: 780px;
+  margin-top: 44px;
+  border-top: 1px solid var(--line-light);
+}
+
+.l-faq__item {
+  border-bottom: 1px solid var(--line-light);
+
+  summary {
+    list-style: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 23px 4px;
+    font-family: $font-display;
+    font-weight: 700;
+    font-size: clamp(1.08rem, 1.8vw, 1.22rem);
+    letter-spacing: -0.01em;
+
+    &::-webkit-details-marker { display: none; }
+    &:hover .l-faq__chev { border-color: rgba(16,185,129,0.5); }
+  }
+
+  p {
+    color: var(--ink-soft);
+    font-size: 1rem;
+    padding: 0 48px 24px 4px;
+    max-width: 46em;
+  }
+
+  &[open] .l-faq__chev {
+    transform: rotate(45deg);
+    background: rgba(16,185,129,0.12);
+    border-color: rgba(16,185,129,0.5);
+  }
+}
+
+.l-faq__chev {
+  width: 30px; height: 30px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  border: 1.5px solid var(--line-light);
+  display: grid;
+  place-items: center;
+  color: var(--emerald-deep);
+  transition: transform 0.3s var(--ease-cv), background 0.3s, border-color 0.3s;
+
+  svg { width: 14px; height: 14px; }
+}
+
+@media (prefers-color-scheme: dark) {
+  .l-faq__chev { color: var(--emerald-bright); }
+}
+
 // ── Reveal animations ─────────────────────────────────────────────────────────
 .reveal {
   opacity: 0;
   transform: translateY(12px);
+  will-change: opacity, transform;
   transition: opacity 0.45s var(--ease-cv), transform 0.45s var(--ease-cv);
 
-  &.in { opacity: 1; transform: none; }
+  &.in {
+    opacity: 1;
+    transform: none;
+    will-change: auto; /* release compositor layer once settled */
+  }
   &.d1 { transition-delay: 0.07s; }
   &.d2 { transition-delay: 0.14s; }
   &.d3 { transition-delay: 0.21s; }
@@ -1158,12 +1312,14 @@ body:has(.landing-page) > main.flex-grow-1 {
 
 // ── Responsive ────────────────────────────────────────────────────────────────
 @media (max-width: 900px) {
-  .l-hero__inner  { grid-template-columns: 1fr; gap: 44px; }
-  .pcard          { max-width: 440px; }
-  .l-features     { grid-template-columns: 1fr; max-width: 460px; }
-  .l-flow__grid   { grid-template-columns: 1fr; max-width: 460px; gap: 32px; }
-  .l-app__inner   { grid-template-columns: 1fr; }
-  .phone-wrap     { order: -1; }
+  .l-hero__inner     { grid-template-columns: 1fr; gap: 44px; }
+  .pcard             { max-width: 440px; }
+  .l-features        { grid-template-columns: 1fr; max-width: 460px; }
+  .l-flow__grid      { grid-template-columns: 1fr; max-width: 460px; gap: 32px; }
+  .l-app__inner      { grid-template-columns: 1fr; }
+  .phone-wrap        { order: -1; }
+  .l-about__inner    { grid-template-columns: 1fr; gap: 36px; }
+  .l-who__grid       { grid-template-columns: 1fr; max-width: 520px; }
 }
 
 @media (max-width: 560px) {
