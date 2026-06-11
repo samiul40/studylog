@@ -10,6 +10,15 @@
   box-sizing: border-box;
 }
 
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+}
+
 // Suppress all transitions, animations, and blur filters during the initial
 // page paint for authenticated users. The preload class is removed by JS
 // after DOMContentLoaded + one rAF, so hover effects work normally after.

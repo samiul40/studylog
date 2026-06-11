@@ -522,12 +522,6 @@
 
 {% block scripts %}
 <script nonce="{{ request.csp_nonce }}">
-  // sticky nav border
-  const lnav = document.getElementById('lnav');
-  const onScroll = () => lnav.classList.toggle('scrolled', window.scrollY > 8);
-  window.addEventListener('scroll', onScroll, { passive: true });
-  onScroll();
-
   // hero draw-in
   requestAnimationFrame(() => document.getElementById('hero').classList.add('in'));
 
