@@ -7,6 +7,7 @@ from django.db.models import (
     ExpressionWrapper,
     F,
     IntegerField,
+    Max,
     Q,
     Sum,
     Value,
@@ -54,6 +55,25 @@ class LearningResourceQuerySet(models.QuerySet):
                     units__updated_at__gte=seven_days_ago,
                 ),
             )
+        )
+
+    def with_status_order(self):
+        """
+        Annotate with status_order: 0=in_progress, 1=not_started, 2=completed.
+        Also annotates last_unit_activity with the most recent unit updated_at.
+        Requires with_progress() first (uses the percentage annotation).
+        """
+        return self.annotate(
+            last_unit_activity=Max("units__updated_at"),
+            status_order=Case(
+                When(
+                    Q(percentage__gt=0) & Q(percentage__lt=100),
+                    then=Value(0),
+                ),
+                When(percentage=0, then=Value(1)),
+                default=Value(2),
+                output_field=IntegerField(),
+            ),
         )
 
     def with_time_logged(self):

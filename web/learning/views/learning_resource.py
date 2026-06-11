@@ -1,7 +1,7 @@
 import json
 
 from django.contrib import messages
-from django.db.models import Q
+from django.db.models import F, Q
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
 from django.views import View
@@ -51,7 +51,9 @@ class ResourceListView(BaseUserResourceView, ListView):
             .with_progress()
             .with_weekly_units()
             .with_time_logged()
+            .with_status_order()
             .select_related("resource_type")
+            .order_by("status_order", F("last_unit_activity").desc(nulls_first=True))
         )
 
         search_query = self.request.GET.get("search", "").strip()
