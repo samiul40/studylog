@@ -27,6 +27,14 @@ def _user_unit_qs(user):
     )
 
 
+def _make_completed(resource, completed_at=None):
+    """Create a completed unit with a controlled completed_at timestamp."""
+    unit = baker.make(LearningUnit, resource=resource, status="completed")
+    ts = completed_at or timezone.now()
+    LearningUnit.objects.filter(pk=unit.pk).update(completed_at=ts)
+    return unit
+
+
 # ---------------------------------------------------------------------------
 # get_dashboard_stats — top-level
 # ---------------------------------------------------------------------------
@@ -50,6 +58,19 @@ class TestGetDashboardStatsReturnShape:
             "resource_types_with_counts",
             "weekly_completions",
             "weekly_summary",
+            # v3 keys
+            "in_progress_count",
+            "study_streak",
+            "month_started",
+            "month_finished",
+            "weekly_activity",
+            "backlog",
+            "time_invested",
+            "stale_resources",
+            "momentum",
+            "heatmap",
+            "resources_table",
+            "greeting_headline",
         }
         assert expected_keys == set(result.keys())
 
@@ -256,13 +277,7 @@ class TestGetWeeklyCompletions:
         assert all(entry["count"] == 0 for entry in result)
 
     def test_counts_completion_in_current_week(self, user, resource):
-        now = timezone.now()
-        baker.make(
-            LearningUnit,
-            resource=resource,
-            status="completed",
-            updated_at=now,
-        )
+        _make_completed(resource, completed_at=timezone.now())
 
         result = _get_weekly_completions(_user_unit_qs(user))
 
@@ -285,12 +300,7 @@ class TestGetWeeklyCompletions:
             hour=0, minute=0, second=0, microsecond=0
         )
         old = current_week_start - datetime.timedelta(weeks=8, days=1)
-        baker.make(
-            LearningUnit,
-            resource=resource,
-            status="completed",
-            updated_at=old,
-        )
+        _make_completed(resource, completed_at=old)
 
         result = _get_weekly_completions(_user_unit_qs(user))
 
@@ -320,14 +330,13 @@ class TestGetWeeklySummary:
         assert labels == ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 
     def test_counts_units_completed_this_week(self, user, resource):
-        now = timezone.now()
-        baker.make(
+        unit = baker.make(
             LearningUnit,
             resource=resource,
             status="completed",
             duration_minutes=30,
-            updated_at=now,
         )
+        LearningUnit.objects.filter(pk=unit.pk).update(completed_at=timezone.now())
 
         result = _get_weekly_summary(_user_unit_qs(user))
 
@@ -341,12 +350,7 @@ class TestGetWeeklySummary:
             hour=0, minute=0, second=0, microsecond=0
         )
         last_week = current_week_start - datetime.timedelta(days=1)
-        baker.make(
-            LearningUnit,
-            resource=resource,
-            status="completed",
-            updated_at=last_week,
-        )
+        _make_completed(resource, completed_at=last_week)
 
         result = _get_weekly_summary(_user_unit_qs(user))
 
@@ -356,20 +360,9 @@ class TestGetWeeklySummary:
         r1 = baker.make(LearningResource, user=user, is_archived=False)
         r2 = baker.make(LearningResource, user=user, is_archived=False)
         now = timezone.now()
-        baker.make(
-            LearningUnit,
-            resource=r1,
-            status="completed",
-            updated_at=now,
-            _quantity=2,
-        )
-        baker.make(
-            LearningUnit,
-            resource=r2,
-            status="completed",
-            updated_at=now,
-            _quantity=1,
-        )
+        _make_completed(r1, completed_at=now)
+        _make_completed(r1, completed_at=now)
+        _make_completed(r2, completed_at=now)
 
         result = _get_weekly_summary(_user_unit_qs(user))
 
@@ -377,20 +370,13 @@ class TestGetWeeklySummary:
 
     def test_learning_time_sums_duration_of_completed_units(self, user, resource):
         now = timezone.now()
-        baker.make(
-            LearningUnit,
-            resource=resource,
-            status="completed",
-            duration_minutes=45,
-            updated_at=now,
+        u1 = baker.make(
+            LearningUnit, resource=resource, status="completed", duration_minutes=45
         )
-        baker.make(
-            LearningUnit,
-            resource=resource,
-            status="completed",
-            duration_minutes=15,
-            updated_at=now,
+        u2 = baker.make(
+            LearningUnit, resource=resource, status="completed", duration_minutes=15
         )
+        LearningUnit.objects.filter(pk__in=[u1.pk, u2.pk]).update(completed_at=now)
 
         result = _get_weekly_summary(_user_unit_qs(user))
 
