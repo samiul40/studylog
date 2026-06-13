@@ -43,6 +43,7 @@ class ResourceListView(BaseUserResourceView, ListView):
     permission_required = "learning.view_learningresource"
     template_name = "resources/resource_list.html"
     context_object_name = "resources"
+    paginate_by = 24
 
     def get_queryset(self):
         qs = (
@@ -70,24 +71,22 @@ class ResourceListView(BaseUserResourceView, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        # Materialise the queryset once so we can compute page-level stats
-        # without hitting the DB again for each count.
-        resources = list(context["resources"])
-        context["resources"] = resources
-
-        def is_in_progress(r):
-            return 0 < r.percentage < 100
-
-        def completed_this_week(r):
-            return r.percentage >= 100 and getattr(r, "units_this_week", 0) > 0
-
-        in_progress_count = sum(1 for r in resources if is_in_progress(r))
-        completed_this_week_count = sum(1 for r in resources if completed_this_week(r))
+        # self.object_list is the full (unpaginated) queryset — use it for
+        # accurate stats across all matching resources, not just the current page.
+        full_qs = self.object_list
         context["page_stats"] = {
-            "total": len(resources),
-            "in_progress": in_progress_count,
-            "completed_this_week": completed_this_week_count,
+            "total": full_qs.count(),
+            "in_progress": full_qs.filter(percentage__gt=0, percentage__lt=100).count(),
+            "completed_this_week": full_qs.filter(
+                percentage=100, units_this_week__gt=0
+            ).count(),
         }
+
+        # Build a base query string (preserves search/type) for pagination links.
+        params = self.request.GET.copy()
+        params.pop("page", None)
+        context["base_query_string"] = params.urlencode()
+
         context["search_query"] = self.request.GET.get("search", "")
         context["selected_type"] = self.request.GET.get("type", "")
         context["archived_count"] = (
