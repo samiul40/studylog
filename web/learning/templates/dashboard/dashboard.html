@@ -1,365 +1,369 @@
 {% extends "base.html" %}
 {% load learning_filters %}
 
-{% block breadcrumbs %}
-<nav aria-label="breadcrumb">
-  <ol class="breadcrumb">
-    <li class="breadcrumb-item active" aria-current="page">Dashboard</li>
-  </ol>
-</nav>
-{% endblock %}
+{% block title %}Dashboard — StudyLog{% endblock %}
+{% block main_class %}db-page{% endblock %}
+{% block breadcrumbs %}{% endblock %}
+{% block alerts %}{% endblock %}
 
 {% block content %}
+<div class="db-wrap">
 
-<!-- Page header -->
-<div class="page-header">
-  <h2>Dashboard</h2>
-  {% if perms.learning.add_learningresource %}
-  <a href="{% url 'learning:resource_create' %}" class="btn btn-primary">
-    <i class="fas fa-plus me-1"></i> Add Resource
-  </a>
-  {% endif %}
-</div>
-
-<!-- Filter pills -->
-<div class="filter-pills">
-
-  <a href="{% url 'learning:dashboard' %}" class="filter-pill {% if not active_filter %}active{% endif %}">
-    <i class="fas fa-border-all"></i> All
-    <span class="pill-count">{{ total_resources }}</span>
-  </a>
-
-  {% for item in resource_types_with_counts %}
-  <a href="{% url 'learning:dashboard' %}?type={{ item.type.slug }}"
-    class="filter-pill {% if active_filter == item.type.slug %}active{% endif %} {% if item.count == 0 %}disabled{% endif %}">
-    <i class="fas fa-layer-group"></i> {{ item.type.name }}
-    <span class="pill-count">{{ item.count }}</span>
-  </a>
-  {% endfor %}
-
-</div>
-
-<!-- Insight banner — shown at top when there's progress -->
-{% if most_progress and most_progress.percent > 0 %}
-<div class="insight-banner">
-  <span>🚀</span>
-  <div class="insight-banner__text">
-    Top progress: <strong>{{ most_progress.title }}</strong> — {{ most_progress.percent }}% complete
-  </div>
-</div>
-{% endif %}
-
-<!-- KPI cards -->
-<div class="row g-3 mb-4">
-
-  <div class="col-6 col-md-3">
-    <div class="kpi-card h-100">
-      <div class="kpi-icon kpi-icon--emerald">
-        <i class="fas fa-folder-open"></i>
-      </div>
-      <div>
-        <div class="kpi-value">{{ total_resources }}</div>
-        <div class="kpi-label">Resources</div>
-      </div>
+  {# ─── Greeting ─────────────────────────────────────────────────────────── #}
+  <header class="greet">
+    <div class="greet__main">
+      <h2 class="greet__title">{{ greeting }}, {{ first_name }}.</h2>
+      {% if greeting_headline %}
+      <p class="greet__sub">{{ greeting_headline }}</p>
+      {% endif %}
     </div>
-  </div>
+    <time class="greet__date">{{ today_label }}</time>
+  </header>
 
-  <div class="col-6 col-md-3">
-    <div class="kpi-card h-100">
-      <div class="kpi-icon kpi-icon--blue">
-        <i class="fas fa-list-check"></i>
-      </div>
-      <div>
-        <div class="kpi-value">{{ total_units }}</div>
-        <div class="kpi-label">Total Units</div>
-      </div>
+  {# ─── KPI strip ────────────────────────────────────────────────────────── #}
+  <div class="kpis">
+
+    <div class="kpi-card">
+      <div class="kpi-card__value">{{ total_resources }}</div>
+      <div class="kpi-card__label">Resources <span class="kpi-card__detail">· {{ in_progress_count }} in progress</span></div>
     </div>
-  </div>
 
-  <div class="col-6 col-md-3">
-    <div class="kpi-card h-100">
-      <div class="kpi-icon kpi-icon--violet">
-        <i class="fas fa-circle-check"></i>
-      </div>
-      <div>
-        <div class="kpi-value">{{ completed_units }}</div>
-        <div class="kpi-label">Completed</div>
-      </div>
+    <div class="kpi-card">
+      <div class="kpi-card__value">{{ completion_rate }}<small>%</small></div>
+      <div class="kpi-card__label">Completion <span class="kpi-card__detail">of {{ total_units }} units</span></div>
     </div>
-  </div>
 
-  <div class="col-6 col-md-3">
-    <div class="kpi-card h-100">
-      <div class="kpi-icon kpi-icon--amber">
-        <i class="fas fa-hourglass-half"></i>
-      </div>
-      <div>
-        <div class="kpi-value">{{ incomplete_units }}</div>
-        <div class="kpi-label">Remaining</div>
-      </div>
-    </div>
-  </div>
-
-</div>
-
-{% if total_resources > 0 and total_units == 0 %}
-<div class="tip-banner mb-4">
-  <i class="fas fa-lightbulb me-2"></i>
-  You have resources but no units yet — <a href="{% url 'learning:resource_list' %}">open a resource</a> and add units to start tracking your progress.
-</div>
-{% endif %}
-
-<!-- This Week summary -->
-<div class="row g-3 mb-4">
-
-  <div class="col-lg-5">
-    <p class="section-title">This Week</p>
-    <div class="card p-4 h-100">
-      <div class="week-stats">
-
-        <div class="week-stat">
-          <div class="week-stat__icon week-stat__icon--violet">
-            <i class="fas fa-folder-open"></i>
-          </div>
-          <div>
-            <div class="week-stat__value">{{ weekly_summary.resources_worked_on }}</div>
-            <div class="week-stat__label">Resources Worked On</div>
-          </div>
+    <div class="kpi-card kpi-card--month">
+      <div class="kpi-month">
+        <div class="kpi-month__part">
+          <span class="kpi-card__value">{{ month_started }}</span>
+          <small>started</small>
         </div>
-
-        <div class="week-stat">
-          <div class="week-stat__icon week-stat__icon--emerald">
-            <i class="fas fa-circle-check"></i>
-          </div>
-          <div>
-            <div class="week-stat__value">{{ weekly_summary.units_completed }}</div>
-            <div class="week-stat__label">Units Completed</div>
-          </div>
+        <div class="kpi-month__div" aria-hidden="true"></div>
+        <div class="kpi-month__part">
+          <span class="kpi-card__value">{{ month_finished }}</span>
+          <small>finished</small>
         </div>
-
-        <div class="week-stat">
-          <div class="week-stat__icon week-stat__icon--blue">
-            <i class="fas fa-clock"></i>
-          </div>
-          <div>
-            <div class="week-stat__value">
-              {{ weekly_summary.learning_time_minutes|format_duration }}
-            </div>
-            <div class="week-stat__label">Learning Time</div>
-          </div>
-        </div>
-
       </div>
+      <div class="kpi-card__label">This month</div>
     </div>
-  </div>
 
-  <div class="col-lg-7">
-    <p class="section-title">Daily Activity This Week</p>
-    <div class="chart-card h-100">
-      <canvas id="dailyChart"></canvas>
+    <div class="kpi-card">
+      <div class="kpi-card__value">{{ study_streak }}<small>days</small></div>
+      <div class="kpi-card__label">Study streak</div>
     </div>
-  </div>
 
-</div>
+  </div>{# /kpis #}
 
-{% if total_units > 0 %}
+  {# ─── Card grid ────────────────────────────────────────────────────────── #}
+  <div class="dgrid">
 
-<!-- Charts -->
-<div class="row g-3 mb-4 mt-5">
-  <div class="col-md-4 d-flex flex-column">
-    <p class="section-title">Completion Breakdown</p>
-    <div class="chart-card chart-card--donut w-100 flex-grow-1">
-      <div class="chart-canvas-wrap">
-        <canvas id="completionChart"></canvas>
-      </div>
-    </div>
-  </div>
+    {# ── Row 1: Weekly activity + Backlog ─────────────────────────────────── #}
 
-  <div class="col-md-8 d-flex flex-column">
-    <p class="section-title">Completion Activity (last 8 weeks)</p>
-    <div class="chart-card w-100 flex-grow-1">
-      <canvas id="activityChart"></canvas>
-    </div>
-  </div>
-</div>
-
-{% endif %}
-
-<!-- Empty state -->
-{% if total_resources == 0 %}
-<div class="empty-state">
-  <span class="empty-state__icon">📚</span>
-  <div class="empty-state__title">No resources yet</div>
-  <p class="empty-state__text">
-    Start tracking your learning by adding your first resource — a course, book, or YouTube playlist.
-  </p>
-  {% if perms.learning.add_learningresource %}
-  <a href="{% url 'learning:resource_create' %}" class="btn btn-primary">
-    <i class="fas fa-plus me-1"></i> Add Your First Resource
-  </a>
-  {% endif %}
-</div>
-{% endif %}
-
-{% if total_units > 0 and total_resources > 0 %}
-
-<!-- Course progress + Recently added -->
-<div class="row g-3 mb-4">
-
-  <div class="col-lg-8">
-    <p class="section-title">Course Progress</p>
-    <div class="card p-4">
-      <div class="progress-list">
-        {% if resource_progress %}
-        {% for resource in resource_progress %}
-        <div class="progress-item">
-          <div class="progress-item__header">
-            <span class="progress-item__title">{{ resource.title }}</span>
-            <span class="progress-item__pct">{{ resource.percent }}%</span>
-          </div>
-          <div class="progress">
-            <div class="progress-bar" role="progressbar" style="width: {{ resource.percent }}%;"
-              aria-valuenow="{{ resource.percent }}" aria-valuemin="0" aria-valuemax="100">
+    <div class="dcard dcard--span8">
+      <div class="dcard__kicker">Units completed per week</div>
+      {% if weekly_activity %}
+      <div class="week-chart" aria-label="Units completed per week bar chart">
+        {% for wk in weekly_activity %}
+        <div class="week-col">
+          <div class="week-col__track">
+            <div class="week-col__bar-group" style="height: max({{ wk.height_pct }}%, 5px)">
+              {% if wk.count %}<span class="week-col__count">{{ wk.count }}</span>{% endif %}
+              <div class="week-col__bar {% if wk.is_current %}week-col__bar--current{% endif %}"></div>
             </div>
           </div>
+          <span class="week-col__label">{{ wk.label }}</span>
         </div>
         {% endfor %}
-        {% else %}
-        <p class="text-muted mb-0">No progress yet — mark some units as complete.</p>
-        {% endif %}
       </div>
+      {% else %}
+      <p class="dcard__empty">No completed units in the last 8 weeks.</p>
+      {% endif %}
     </div>
-  </div>
 
-  <div class="col-lg-4">
-    <p class="section-title">Recently Added</p>
-    {% if recent_resources %}
-    <div class="recent-list">
-      {% for r in recent_resources %}
-      <a href="{{ r.get_absolute_url }}" class="recent-item">
-        <div>
-          <div class="recent-item__title">{{ r.title }}</div>
-          <div class="recent-item__meta">
-            <span class="resource-badge resource-badge--{{ r.resource_type.slug }}">
-              {{ r.resource_type.name }}
+    <div class="dcard dcard--span4">
+      <div class="dcard__kicker">Backlog</div>
+      {% if backlog.total > 0 %}
+      <div class="backlog-hero">
+        <span class="backlog-hero__pct">{{ backlog.pct }}%</span>
+        <span class="backlog-hero__sub">of {{ backlog.total }} units completed</span>
+      </div>
+      <div class="seg-bar" aria-label="Completion breakdown">
+        <div class="seg-bar__fill seg-bar__fill--done"
+             style="width: {{ backlog.completed_pct }}%"></div>
+        <div class="seg-bar__fill seg-bar__fill--inprog"
+             style="width: {{ backlog.in_progress_pct }}%"></div>
+        <div class="seg-bar__fill seg-bar__fill--todo"
+             style="width: {{ backlog.not_started_pct }}%"></div>
+      </div>
+      <div class="seg-legend">
+        <span class="seg-legend__item">
+          <span class="seg-legend__swatch seg-legend__swatch--done"></span>
+          <span class="seg-legend__label">Completed</span>
+          <span class="seg-legend__count">{{ backlog.completed }}</span>
+        </span>
+        <span class="seg-legend__item">
+          <span class="seg-legend__swatch seg-legend__swatch--inprog"></span>
+          <span class="seg-legend__label">In progress</span>
+          <span class="seg-legend__count">{{ backlog.in_progress }}</span>
+        </span>
+        <span class="seg-legend__item">
+          <span class="seg-legend__swatch seg-legend__swatch--todo"></span>
+          <span class="seg-legend__label">Not started</span>
+          <span class="seg-legend__count">{{ backlog.not_started }}</span>
+        </span>
+      </div>
+      {% else %}
+      <p class="dcard__empty">No units yet — add some to track progress.</p>
+      {% endif %}
+      <p class="dcard__footnote">Across all active resources</p>
+    </div>
+
+    {# ── Row 2: Time invested + Needs attention + Momentum ─────────────────── #}
+
+    <div class="dcard dcard--span4 dcard--half-mid">
+      <div class="dcard__kicker">Time invested &mdash; video &amp; audio</div>
+      <div class="time-hero">
+        <div class="time-hero__left">
+          <span class="time-hero__val">{{ time_invested.this_week }}</span>
+          <span class="time-hero__period">this week</span>
+        </div>
+        <div class="time-hero__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+        </div>
+      </div>
+      <div class="time-cells">
+        <div class="time-cell">
+          <span class="time-cell__label">This month</span>
+          <span class="time-cell__val">{{ time_invested.this_month }}</span>
+        </div>
+        <div class="time-cell">
+          <span class="time-cell__label">All time</span>
+          <span class="time-cell__val">{{ time_invested.all_time }}</span>
+        </div>
+      </div>
+      <p class="dcard__footnote">Watch / listen time across video &amp; audio resources</p>
+    </div>
+
+    <div class="dcard dcard--span4 dcard--half-mid">
+      <div class="dcard__kicker">Needs attention</div>
+      {% if stale_resources %}
+      <div class="attn-list">
+        {% for r in stale_resources %}
+        <div class="attn-row">
+          <div class="attn-row__info">
+            <div class="attn-row__title">{{ r.title }}</div>
+            <div class="attn-row__meta">
+              <span class="type-pill type-pill--{{ r.content_kind }}">{{ r.type_name }}</span>
+              <span class="idle-pill">{{ r.idle_days }}d idle</span>
+            </div>
+          </div>
+          <a href="{{ r.url }}" class="attn-row__resume">Resume &rarr;</a>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p class="dcard__footnote dcard__footnote--center">
+        Nothing idle &mdash; all resources active in the last 2 weeks
+      </p>
+      {% endif %}
+      <p class="dcard__footnote">Untouched for 14+ days</p>
+    </div>
+
+    <div class="dcard dcard--span4">
+      <div class="dcard__kicker">Momentum &mdash; vs last week</div>
+      <div class="momentum-rows">
+
+        <div class="momentum-row">
+          <div class="momentum-row__top">
+            <span class="momentum-row__label">Units completed</span>
+            {% if momentum.units_delta_dir != "new" %}
+            <span class="delta-pill delta-pill--{{ momentum.units_delta_dir }}">
+              {% if momentum.units_delta_dir == "up" %}▲{% else %}▼{% endif %}
+              {{ momentum.units_delta_pct }}%
             </span>
+            {% else %}
+            <span class="delta-pill delta-pill--new">new</span>
+            {% endif %}
+          </div>
+          <div class="momentum-row__val">{{ momentum.units_this_week }}</div>
+          <div class="momentum-bars">
+            <div class="momentum-bar momentum-bar--last"
+                 style="width: max({{ momentum.units_last_pct }}%, {% if momentum.units_last_week %}4px{% else %}0px{% endif %})">
+              {% if momentum.units_last_week %}<span>last wk &middot; {{ momentum.units_last_week }}</span>{% endif %}
+            </div>
+            <div class="momentum-bar momentum-bar--this"
+                 style="width: max({{ momentum.units_this_pct }}%, 4px)">
+              <span>this wk &middot; {{ momentum.units_this_week }}</span>
+            </div>
           </div>
         </div>
-        <i class="fas fa-arrow-right recent-item__arrow"></i>
-      </a>
-      {% endfor %}
+
+        <div class="momentum-row">
+          <div class="momentum-row__top">
+            <span class="momentum-row__label">Time logged</span>
+            {% if momentum.time_delta_dir != "new" %}
+            <span class="delta-pill delta-pill--{{ momentum.time_delta_dir }}">
+              {% if momentum.time_delta_dir == "up" %}▲{% else %}▼{% endif %}
+              {{ momentum.time_delta_pct }}%
+            </span>
+            {% else %}
+            <span class="delta-pill delta-pill--new">new</span>
+            {% endif %}
+          </div>
+          <div class="momentum-row__val">{{ momentum.time_this_week_display }}</div>
+          <div class="momentum-bars">
+            <div class="momentum-bar momentum-bar--last"
+                 style="width: max({{ momentum.time_last_pct }}%, {% if momentum.time_last_week %}4px{% else %}0px{% endif %})">
+              {% if momentum.time_last_week %}<span>last wk &middot; {{ momentum.time_last_week_display }}</span>{% endif %}
+            </div>
+            <div class="momentum-bar momentum-bar--this"
+                 style="width: max({{ momentum.time_this_pct }}%, 4px)">
+              <span>this wk &middot; {{ momentum.time_this_week_display }}</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
     </div>
-    {% endif %}
-  </div>
 
-</div>
+    {# ── Row 3: Year activity heatmap ─────────────────────────────────────── #}
 
-{% endif %}
+    <div class="dcard dcard--span12">
+      <div class="dcard__kicker">Activity &mdash; {{ heatmap.year }}</div>
+      <div class="heat-scroll">
+        <div class="heat-inner">
+          <div class="heat-months-row">
+            <div class="heat-corner" aria-hidden="true"></div>
+            <div class="heat-months" aria-hidden="true">
+              {% for ml in heatmap.month_labels %}
+              <span class="heat-month" style="left: {{ ml.left_px }}px">{{ ml.label }}</span>
+              {% endfor %}
+            </div>
+          </div>
+          <div class="heat-body">
+            <div class="heat-days" aria-hidden="true">
+              <span>Mon</span>
+              <span></span>
+              <span>Wed</span>
+              <span></span>
+              <span>Fri</span>
+              <span></span>
+              <span></span>
+            </div>
+            <div class="heat-grid" role="grid" aria-label="Activity heatmap for {{ heatmap.year }}">
+              {% for week in heatmap.weeks %}
+              <div class="heat-col" role="row">
+                {% for cell in week %}
+                {% if cell.show %}
+                <div class="heat-cell heat-cell--l{{ cell.level }}"
+                     role="gridcell"
+                     title="{% if cell.count %}{{ cell.label }}: {{ cell.count }} unit{{ cell.count|pluralize }}{% else %}{{ cell.label }}{% endif %}">
+                </div>
+                {% else %}
+                <div class="heat-cell heat-cell--empty" role="gridcell" aria-hidden="true"></div>
+                {% endif %}
+                {% endfor %}
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+          <div class="heat-footer">
+            <span class="heat-footer__summary">
+              {{ heatmap.total_units }} unit{{ heatmap.total_units|pluralize }}
+              completed across {{ heatmap.active_days }} active
+              day{{ heatmap.active_days|pluralize }} in {{ heatmap.year }}
+            </span>
+            <div class="heat-legend" aria-label="Activity scale">
+              <span class="heat-legend__label">Less</span>
+              <div class="heat-legend__cells">
+                <div class="heat-cell heat-cell--l0"></div>
+                <div class="heat-cell heat-cell--l1"></div>
+                <div class="heat-cell heat-cell--l2"></div>
+                <div class="heat-cell heat-cell--l3"></div>
+                <div class="heat-cell heat-cell--l4"></div>
+              </div>
+              <span class="heat-legend__label">More</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
 
-{% endblock %}
-{% block scripts %}
-<script nonce="{{ request.csp_nonce }}">
-  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-  const gridColor   = isDark ? '#334155' : '#f3f4f6';
-  const tickColor   = isDark ? '#94a3b8' : '#6b7280';
-  const barInactive = isDark ? 'rgba(52,211,153,0.2)' : '#d1fae5';
-  const remainColor = isDark ? '#334155' : '#e5e7eb';
+    {# ── Row 4: Resources table ───────────────────────────────────────────── #}
 
-  const completionCtx = document.getElementById('completionChart');
-  if (completionCtx) {
-    new Chart(completionCtx, {
-      type: 'doughnut',
-      data: {
-        labels: ['Completed', 'Remaining'],
-        datasets: [{
-          data: [{{ completed_units }}, {{ incomplete_units }}],
-          backgroundColor: ['#10b981', remainColor],
-          borderWidth: 0,
-          hoverOffset: 4,
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        cutout: '70%',
-        plugins: {
-          legend: {
-            position: 'bottom',
-            labels: { font: { size: 12, weight: '600' }, padding: 16, color: tickColor }
-          }
-        }
-      }
-    });
-  }
+    <div class="dcard dcard--span12">
+      <div class="dcard__kicker">Resources &mdash; progress, pace &amp; forecast</div>
+      {% if resources_table %}
+      <div class="pace-table">
+        <div class="pace-table__head">
+          <span>Resource</span>
+          <span>Progress</span>
+          <span>Pace</span>
+          <span>Last activity</span>
+          <span>Est. finish</span>
+        </div>
+        {% for r in resources_table %}
+        <a href="{{ r.url }}" class="pace-row">
+          <div class="pace-row__title-cell">
+            <span class="pace-row__title">{{ r.title }}</span>
+            <span class="type-pill type-pill--{{ r.content_kind }}">{{ r.type_name }}</span>
+          </div>
+          <div class="pace-row__progress">
+            <div class="pace-bar">
+              <div class="pace-bar__fill pace-bar__fill--{{ r.content_kind }}"
+                   style="width: {{ r.pct }}%"></div>
+            </div>
+            <span class="pace-row__pct">{{ r.pct }}%</span>
+          </div>
+          <span class="pace-row__pace">{{ r.pace_display }}</span>
+          <span class="pace-row__last {% if r.is_idle %}pace-row__last--idle{% endif %}">
+            {{ r.last_activity }}{% if r.is_idle %} &mdash; {{ r.idle_days }}d idle{% endif %}
+          </span>
+          <span class="pace-row__est">{{ r.est_finish }}</span>
 
-  const dailyCtx = document.getElementById('dailyChart');
-  if (dailyCtx) {
-    const dailyCounts = [{% for d in weekly_summary.daily_completions %}{{ d.count }},{% endfor %}];
-    const todayIndex = new Date().getDay() === 0 ? 6 : new Date().getDay() - 1;
-    new Chart(dailyCtx, {
-      type: 'bar',
-      data: {
-        labels: [{% for d in weekly_summary.daily_completions %}"{{ d.label }}",{% endfor %}],
-        datasets: [{
-          label: 'Units Completed',
-          data: dailyCounts,
-          backgroundColor: dailyCounts.map((_, i) => i === todayIndex ? '#10b981' : barInactive),
-          borderRadius: 6,
-          borderSkipped: false,
-        }]
-      },
-      options: {
-        responsive: true,
-        scales: {
-          y: {
-            beginAtZero: true,
-            grid: { color: gridColor },
-            ticks: { font: { size: 11 }, precision: 0, stepSize: 1, color: tickColor }
-          },
-          x: {
-            grid: { display: false },
-            ticks: { font: { size: 12, weight: '600' }, color: tickColor }
-          }
-        },
-        plugins: { legend: { display: false } }
-      }
-    });
-  }
+          {# Mobile label/value pairs (hidden on desktop) #}
+          <div class="pace-row__mobile">
+            <div class="pace-row__mobile-progress">
+              <div class="pace-bar">
+                <div class="pace-bar__fill pace-bar__fill--{{ r.content_kind }}"
+                     style="width: {{ r.pct }}%"></div>
+              </div>
+              <span class="pace-row__pct">{{ r.pct }}%</span>
+            </div>
+            <div class="pace-row__mobile-pair">
+              <span class="pace-row__mobile-lbl">Pace</span>
+              <span>{{ r.pace_display }}</span>
+            </div>
+            <div class="pace-row__mobile-pair">
+              <span class="pace-row__mobile-lbl">Last activity</span>
+              <span class="{% if r.is_idle %}pace-row__last--idle{% endif %}">
+                {{ r.last_activity }}{% if r.is_idle %} &mdash; {{ r.idle_days }}d idle{% endif %}
+              </span>
+            </div>
+            <div class="pace-row__mobile-pair">
+              <span class="pace-row__mobile-lbl">Est. finish</span>
+              <span>{{ r.est_finish }}</span>
+            </div>
+          </div>
+        </a>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p class="dcard__empty">
+        No in-progress resources yet.
+        {% if perms.learning.add_learningresource %}
+        <a href="{% url 'learning:resource_create' %}">Add your first resource &rarr;</a>
+        {% endif %}
+      </p>
+      {% endif %}
+    </div>
 
-  const activityCtx = document.getElementById('activityChart');
-  if (activityCtx) {
-    new Chart(activityCtx, {
-      type: 'line',
-      data: {
-        labels: [{% for w in weekly_completions %}"{{ w.label }}",{% endfor %}],
-        datasets: [{
-          label: 'Units Completed',
-          data: [{% for w in weekly_completions %}{{ w.count }},{% endfor %}],
-          borderColor: '#10b981',
-          backgroundColor: 'rgba(16,185,129,0.1)',
-          borderWidth: 2,
-          pointBackgroundColor: '#10b981',
-          pointRadius: 4,
-          tension: 0.3,
-          fill: true,
-        }]
-      },
-      options: {
-        responsive: true,
-        scales: {
-          y: {
-            beginAtZero: true,
-            grid: { color: gridColor },
-            ticks: { font: { size: 11 }, precision: 0, stepSize: 1, color: tickColor }
-          },
-          x: {
-            grid: { display: false },
-            ticks: { font: { size: 11 }, color: tickColor }
-          }
-        },
-        plugins: { legend: { display: false } }
-      }
-    });
-  }
-</script>
+  </div>{# /dgrid #}
+
+</div>{# /db-wrap #}
 {% endblock %}
