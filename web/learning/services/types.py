@@ -99,8 +99,6 @@ class HeatmapData(TypedDict):
     year: int
     weeks: List[List[HeatmapCell]]
     month_labels: List[HeatmapMonthLabel]
-    total_units: int
-    active_days: int
 
 
 class ResourceTableRow(TypedDict):

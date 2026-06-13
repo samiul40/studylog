@@ -497,9 +497,6 @@ def _get_heatmap(unit_qs) -> HeatmapData:
     )
     daily_map = {entry["day"]: entry["count"] for entry in raw}
 
-    total_units = sum(daily_map.values())
-    active_days = len(daily_map)
-
     # Grid starts on the Monday on or before Jan 1
     grid_start = jan1 - datetime.timedelta(days=jan1.weekday())
     # Grid ends on the Sunday on or after Dec 31
@@ -555,8 +552,6 @@ def _get_heatmap(unit_qs) -> HeatmapData:
         "year": year,
         "weeks": weeks,
         "month_labels": month_labels,
-        "total_units": total_units,
-        "active_days": active_days,
     }
 
 
