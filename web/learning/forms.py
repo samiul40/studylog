@@ -77,9 +77,18 @@ class LearningResourceForm(forms.ModelForm):
         cleaned_data = super().clean()
         resource_type = cleaned_data.get("resource_type")
         new_name = cleaned_data.get("new_resource_type", "").strip()
-        new_kind = cleaned_data.get("new_content_kind", "").strip()
 
+        if not new_name and not resource_type:
+            raise forms.ValidationError(
+                "Please select an existing type or add a new one."
+            )
+
+        return cleaned_data
+
+    def save(self, commit=True):
+        new_name = self.cleaned_data.get("new_resource_type", "").strip()
         if new_name:
+            new_kind = self.cleaned_data.get("new_content_kind", "").strip()
             slug = slugify(new_name)
             rt, _ = ResourceType.objects.get_or_create(
                 slug=slug,
@@ -89,13 +98,8 @@ class LearningResourceForm(forms.ModelForm):
                     "content_kind": (new_kind or ResourceType.ContentKind.VIDEO),
                 },
             )
-            cleaned_data["resource_type"] = rt
-        elif not resource_type:
-            raise forms.ValidationError(
-                "Please select an existing type or add a new one."
-            )
-
-        return cleaned_data
+            self.instance.resource_type = rt
+        return super().save(commit=commit)
 
 
 class LearningUnitForm(forms.ModelForm):

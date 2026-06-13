@@ -102,6 +102,51 @@
     {% endfor %}
   </div>
 
+  {# ── Pagination ────────────────────────────────────────────────────────── #}
+  {% if is_paginated %}
+  <nav class="rl-pagination" aria-label="Resource pages">
+    {% if page_obj.has_previous %}
+    <a class="rl-page-btn"
+       href="?{% if base_query_string %}{{ base_query_string }}&{% endif %}page={{ page_obj.previous_page_number }}"
+       aria-label="Previous page">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+           stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M15 18l-6-6 6-6"></path>
+      </svg>
+    </a>
+    {% else %}
+    <span class="rl-page-btn rl-page-btn--disabled" aria-disabled="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+           stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M15 18l-6-6 6-6"></path>
+      </svg>
+    </span>
+    {% endif %}
+
+    <span class="rl-page-info">
+      Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+    </span>
+
+    {% if page_obj.has_next %}
+    <a class="rl-page-btn"
+       href="?{% if base_query_string %}{{ base_query_string }}&{% endif %}page={{ page_obj.next_page_number }}"
+       aria-label="Next page">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+           stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M9 18l6-6-6-6"></path>
+      </svg>
+    </a>
+    {% else %}
+    <span class="rl-page-btn rl-page-btn--disabled" aria-disabled="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+           stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M9 18l6-6-6-6"></path>
+      </svg>
+    </span>
+    {% endif %}
+  </nav>
+  {% endif %}
+
   {% else %}
   {# ── Empty state ───────────────────────────────────────────────────────── #}
   <div class="rl-empty">

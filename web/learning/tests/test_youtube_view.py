@@ -67,7 +67,7 @@ class TestYouTubePreviewView:
     def test_service_error_returns_400(self, client_logged_in):
         with patch(
             "learning.views.youtube.fetch_youtube_metadata",
-            side_effect=Exception("Video unavailable"),
+            side_effect=ValueError("Video not found or is private."),
         ):
             response = client_logged_in.post(
                 URL,
@@ -76,7 +76,35 @@ class TestYouTubePreviewView:
             )
 
         assert response.status_code == 400
-        assert response.json()["error"] == "Video unavailable"
+        assert response.json()["error"] == "Video not found or is private."
+
+    def test_network_error_returns_502(self, client_logged_in):
+        import requests as req
+
+        with patch(
+            "learning.views.youtube.fetch_youtube_metadata",
+            side_effect=req.ConnectionError("timeout"),
+        ):
+            response = client_logged_in.post(
+                URL,
+                content_type="application/json",
+                data=json.dumps({"url": "https://youtube.com/watch?v=abc"}),
+            )
+
+        assert response.status_code == 502
+        assert "error" in response.json()
+
+    def test_rate_limit_returns_429(self, client_logged_in):
+        with patch("learning.views.youtube.fetch_youtube_metadata", return_value={}):
+            with patch("django_ratelimit.decorators.is_ratelimited", return_value=True):
+                response = client_logged_in.post(
+                    URL,
+                    content_type="application/json",
+                    data=json.dumps({"url": "https://youtube.com/watch?v=abc"}),
+                )
+
+        assert response.status_code == 429
+        assert "error" in response.json()
 
 
 class TestResourceCreateWithYouTubeUnits:
