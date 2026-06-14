@@ -3,11 +3,10 @@
 # --------------------------------------------------------------------------- #
 
 import datetime
-import math
 from typing import List, Optional
 
-from django.db.models import Count, F, Max, Q, Sum
-from django.db.models.functions import TruncDate, TruncWeek
+from django.db.models import Case, Count, F, IntegerField, Max, Q, Sum, Value, When
+from django.db.models.functions import Coalesce, TruncDate, TruncWeek
 from django.utils import timezone
 
 from learning.models import LearningResource, LearningUnit, ResourceType
@@ -588,9 +587,8 @@ def _get_heatmap(unit_qs) -> HeatmapData:
 
 
 def _get_resources_table(resource_qs) -> List[ResourceTableRow]:
-    """Per-resource pace, last activity, and estimated finish for the table."""
+    """Per-resource progress and last activity for the table."""
     today = timezone.now().date()
-    since_28 = timezone.now() - datetime.timedelta(days=28)
 
     rows = (
         resource_qs.select_related("resource_type")
@@ -598,34 +596,38 @@ def _get_resources_table(resource_qs) -> List[ResourceTableRow]:
             total_u=Count("units"),
             done_u=Count("units", filter=Q(units__status="completed")),
             last_completed_at=Max("units__completed_at"),
+            total_duration=Sum("units__duration_minutes"),
+            time_done=Sum(
+                Case(
+                    When(
+                        units__status="completed",
+                        then=Coalesce(F("units__duration_minutes"), Value(0)),
+                    ),
+                    When(
+                        units__status="in_progress",
+                        then=Coalesce(F("units__video_progress_minutes"), Value(0)),
+                    ),
+                    default=Value(0),
+                    output_field=IntegerField(),
+                )
+            ),
         )
         .filter(total_u__gt=0)
         .exclude(total_u=F("done_u"))
         .order_by(F("last_completed_at").desc(nulls_last=True))
     )
 
-    pace_map = dict(
-        LearningUnit.objects.filter(
-            resource__in=rows,
-            status="completed",
-            completed_at__gte=since_28,
-        )
-        .values("resource_id")
-        .annotate(cnt=Count("id"))
-        .values_list("resource_id", "cnt")
-    )
-
     result = []
     for r in rows:
         total = r.total_u
         done = r.done_u
-        remaining = total - done
-        pct = calculate_percentage(done, total)
-
-        completed_28 = pace_map.get(r.id, 0)
-        pace_float = completed_28 / 4.0
-
-        pace_display = _pace_display(pace_float)
+        total_dur = r.total_duration or 0
+        time_done = r.time_done or 0
+        pct = (
+            calculate_percentage(time_done, total_dur)
+            if total_dur > 0
+            else calculate_percentage(done, total)
+        )
 
         if r.last_completed_at:
             idle_days = (today - r.last_completed_at.date()).days
@@ -641,17 +643,6 @@ def _get_resources_table(resource_qs) -> List[ResourceTableRow]:
 
         is_idle = idle_days is not None and idle_days >= 14
 
-        if pace_float == 0 or total == 0:
-            est = "no pace"
-        else:
-            weeks_left = remaining / pace_float
-            finish = today + datetime.timedelta(weeks=weeks_left)
-            months_out = (finish.year - today.year) * 12 + (finish.month - today.month)
-            if months_out <= 3:
-                est = f"≈ {finish.day} {finish.strftime('%b')}"
-            else:
-                est = f"≈ {finish.strftime('%b %Y')}"
-
         result.append(
             {
                 "id": r.id,
@@ -662,12 +653,9 @@ def _get_resources_table(resource_qs) -> List[ResourceTableRow]:
                 "total_units": total,
                 "completed_units": done,
                 "pct": pct,
-                "pace_display": pace_display,
-                "pace_float": pace_float,
                 "last_activity": last_act,
                 "idle_days": idle_days,
                 "is_idle": is_idle,
-                "est_finish": est,
                 "url": r.get_absolute_url(),
             }
         )
@@ -702,16 +690,3 @@ def _fmt_duration(minutes: int) -> str:
     if h:
         return f"{h}h"
     return f"{m}m"
-
-
-def _pace_display(pace_float: float) -> str:
-    """
-    Whole-number pace string per the README spec.
-
-    0 → "—"; >0 but <0.5 → "1 /wk"; else ceil → "N /wk".
-    """
-    if pace_float == 0:
-        return "—"
-    if pace_float < 0.5:
-        return "1 /wk"
-    return f"{math.ceil(pace_float)} /wk"

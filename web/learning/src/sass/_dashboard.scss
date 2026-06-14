@@ -716,7 +716,7 @@
 
   &__head {
     display: grid;
-    grid-template-columns: minmax(0, 2.4fr) 150px 80px 110px 110px;
+    grid-template-columns: minmax(0, 2.4fr) minmax(160px, 1fr) 120px;
     gap: 14px;
     padding: 0 10px 10px;
     border-bottom: 1px solid var(--line);
@@ -734,7 +734,7 @@
 
 .pace-row {
   display: grid;
-  grid-template-columns: minmax(0, 2.4fr) 150px 80px 110px 110px;
+  grid-template-columns: minmax(0, 2.4fr) minmax(160px, 1fr) 120px;
   gap: 14px;
   align-items: center;
   padding: 13px 10px;
@@ -756,6 +756,8 @@
     flex-direction: column;
     gap: 4px;
     min-width: 0;
+
+    .type-pill { align-self: flex-start; }
   }
 
   &__title {
@@ -778,13 +780,6 @@
     font-size: 0.7rem;
     color: var(--ink-faint);
     white-space: nowrap;
-  }
-
-  &__pace, &__est {
-    font-family: $font-mono;
-    font-size: 0.78rem;
-    font-weight: 600;
-    color: var(--ink);
   }
 
   &__last {
@@ -860,9 +855,9 @@
 
     // Hide desktop columns
     .pace-row__progress,
-    .pace-row__pace,
-    .pace-row__last,
-    .pace-row__est { display: none; }
+    .pace-row__last { display: none; }
+
+    .pace-row__title-cell .type-pill { align-self: stretch; }
 
     &__mobile {
       display: flex;
