@@ -293,7 +293,6 @@
   function updateSummary() {
     const completed = units.filter(u => u.status === 'completed').length;
     const total = units.length;
-    const pct = total ? Math.round(completed / total * 100) : 0;
     const remaining = total - completed;
 
     const doneMin = units
@@ -305,6 +304,9 @@
     const timeDone = doneMin + inProgMin;
     const totalMin = units.reduce((s, u) => s + (u.duration_minutes || 0), 0);
     const timeLeft = totalMin - timeDone;
+
+    // Use time-based percentage when durations exist; fall back to unit count
+    const pct = totalMin ? Math.round(timeDone / totalMin * 100) : (total ? Math.round(completed / total * 100) : 0);
 
     // Ring
     const circ = 351.86;

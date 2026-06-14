@@ -34,8 +34,30 @@ class LearningResourceQuerySet(models.QuerySet):
                 "units",
                 filter=Q(units__status="completed"),
             ),
+            total_duration=Sum("units__duration_minutes"),
+            time_done=Sum(
+                Case(
+                    When(
+                        units__status="completed",
+                        then=Coalesce(F("units__duration_minutes"), Value(0)),
+                    ),
+                    When(
+                        units__status="in_progress",
+                        then=Coalesce(F("units__video_progress_minutes"), Value(0)),
+                    ),
+                    default=Value(0),
+                    output_field=IntegerField(),
+                )
+            ),
         ).annotate(
             percentage=Case(
+                When(
+                    total_duration__gt=0,
+                    then=ExpressionWrapper(
+                        100.0 * F("time_done") / F("total_duration"),
+                        output_field=IntegerField(),
+                    ),
+                ),
                 When(total_units=0, then=Value(0)),
                 default=ExpressionWrapper(
                     100.0 * F("completed_units") / F("total_units"),
