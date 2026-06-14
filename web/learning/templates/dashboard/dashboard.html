@@ -292,15 +292,13 @@
     {# ── Row 4: Resources table ───────────────────────────────────────────── #}
 
     <div class="dcard dcard--span12">
-      <div class="dcard__kicker">Resources &mdash; progress, pace &amp; forecast</div>
+      <div class="dcard__kicker">Resources &mdash; progress</div>
       {% if resources_table %}
       <div class="pace-table">
         <div class="pace-table__head">
           <span>Resource</span>
           <span>Progress</span>
-          <span>Pace</span>
           <span>Last activity</span>
-          <span>Est. finish</span>
         </div>
         {% for r in resources_table %}
         <a href="{{ r.url }}" class="pace-row">
@@ -315,11 +313,9 @@
             </div>
             <span class="pace-row__pct">{{ r.pct }}%</span>
           </div>
-          <span class="pace-row__pace">{{ r.pace_display }}</span>
           <span class="pace-row__last {% if r.is_idle %}pace-row__last--idle{% endif %}">
             {{ r.last_activity }}{% if r.is_idle %} &mdash; {{ r.idle_days }}d idle{% endif %}
           </span>
-          <span class="pace-row__est">{{ r.est_finish }}</span>
 
           {# Mobile label/value pairs (hidden on desktop) #}
           <div class="pace-row__mobile">
@@ -331,18 +327,10 @@
               <span class="pace-row__pct">{{ r.pct }}%</span>
             </div>
             <div class="pace-row__mobile-pair">
-              <span class="pace-row__mobile-lbl">Pace</span>
-              <span>{{ r.pace_display }}</span>
-            </div>
-            <div class="pace-row__mobile-pair">
               <span class="pace-row__mobile-lbl">Last activity</span>
               <span class="{% if r.is_idle %}pace-row__last--idle{% endif %}">
                 {{ r.last_activity }}{% if r.is_idle %} &mdash; {{ r.idle_days }}d idle{% endif %}
               </span>
-            </div>
-            <div class="pace-row__mobile-pair">
-              <span class="pace-row__mobile-lbl">Est. finish</span>
-              <span>{{ r.est_finish }}</span>
             </div>
           </div>
         </a>

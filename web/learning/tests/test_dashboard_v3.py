@@ -19,12 +19,10 @@ from learning.services.dashboard import (
     _get_heatmap,
     _get_momentum,
     _get_month_stats,
-    _get_resources_table,
     _get_stale_resources,
     _get_study_streak,
     _get_time_invested,
     _get_weekly_activity,
-    _pace_display,
 )
 
 pytestmark = pytest.mark.django_db
@@ -92,38 +90,6 @@ def _weeks_ago(n):
 
 
 # ---------------------------------------------------------------------------
-# _pace_display — Forecast Methodology
-# ---------------------------------------------------------------------------
-
-
-class TestPaceDisplay:
-    def test_zero_pace_returns_dash(self):
-        assert _pace_display(0) == "—"
-
-    def test_exactly_zero_float_returns_dash(self):
-        assert _pace_display(0.0) == "—"
-
-    def test_below_half_rounds_up_to_one(self):
-        # Active but slow — must never show zero
-        assert _pace_display(0.1) == "1 /wk"
-        assert _pace_display(0.25) == "1 /wk"
-        assert _pace_display(0.49) == "1 /wk"
-
-    def test_exactly_half_rounds_up_to_one(self):
-        assert _pace_display(0.5) == "1 /wk"
-
-    def test_above_half_rounds_up(self):
-        assert _pace_display(0.51) == "1 /wk"
-        assert _pace_display(1.0) == "1 /wk"
-        assert _pace_display(1.5) == "2 /wk"
-        assert _pace_display(2.0) == "2 /wk"
-        assert _pace_display(3.75) == "4 /wk"
-
-    def test_whole_number_pace(self):
-        assert _pace_display(5.0) == "5 /wk"
-
-
-# ---------------------------------------------------------------------------
 # _fmt_duration
 # ---------------------------------------------------------------------------
 
@@ -143,79 +109,6 @@ class TestFmtDuration:
 
     def test_hours_and_minutes(self):
         assert _fmt_duration(130) == "2h 10m"
-
-
-# ---------------------------------------------------------------------------
-# Estimated finish date format (via _get_resources_table)
-# ---------------------------------------------------------------------------
-
-
-class TestEstFinishFormat:
-    """Tests that exercise date format branching through the table helper."""
-
-    def _resource_with_pace(self, user, rt, done, total, completed_28):
-        """
-        Build a resource with `done` out of `total` units, and `completed_28`
-        completions timestamped within the last 28 days.
-        """
-        r = baker.make(LearningResource, user=user, resource_type=rt, is_archived=False)
-        # completed units inside 28-day window
-        for _ in range(completed_28):
-            _completed(r, _days_ago(1))
-        # remaining not-started units
-        remaining = total - completed_28 - (done - completed_28)
-        if remaining > 0:
-            baker.make(
-                LearningUnit,
-                resource=r,
-                status="not_started",
-                _quantity=remaining,
-            )
-        return r
-
-    def test_within_3_months_uses_short_format(self, user, video_rt):
-        # 28 units remaining, pace 3.5/wk ≈ 8 weeks ≤ 3 months
-        r = baker.make(
-            LearningResource, user=user, resource_type=video_rt, is_archived=False
-        )
-        for _ in range(14):
-            _completed(r, _days_ago(1))
-        baker.make(LearningUnit, resource=r, status="not_started", _quantity=28)
-
-        rows = _get_resources_table(_user_resource_qs(user))
-        assert rows, "Expected at least one row"
-        est = rows[0]["est_finish"]
-        assert est.startswith("≈ ")
-        # short format: "≈ D Mon" (no year)
-        assert len(est.split()) == 3  # "≈", "14", "Jul"
-
-    def test_beyond_3_months_uses_long_format(self, user, video_rt):
-        # Very slow pace: 1 completion in 28 days, 200 remaining → > 3 months
-        r = baker.make(
-            LearningResource, user=user, resource_type=video_rt, is_archived=False
-        )
-        _completed(r, _days_ago(1))
-        baker.make(LearningUnit, resource=r, status="not_started", _quantity=200)
-
-        rows = _get_resources_table(_user_resource_qs(user))
-        assert rows
-        est = rows[0]["est_finish"]
-        assert est.startswith("≈ ")
-        # long format contains a 4-digit year
-        assert any(part.isdigit() and len(part) == 4 for part in est.split())
-
-    def test_zero_pace_shows_no_pace(self, user, video_rt):
-        r = baker.make(
-            LearningResource, user=user, resource_type=video_rt, is_archived=False
-        )
-        # No completions in last 28 days — use old timestamp
-        unit = baker.make(LearningUnit, resource=r, status="completed")
-        LearningUnit.objects.filter(pk=unit.pk).update(completed_at=_days_ago(60))
-        baker.make(LearningUnit, resource=r, status="not_started", _quantity=5)
-
-        rows = _get_resources_table(_user_resource_qs(user))
-        assert rows
-        assert rows[0]["est_finish"] == "no pace"
 
 
 # ---------------------------------------------------------------------------
