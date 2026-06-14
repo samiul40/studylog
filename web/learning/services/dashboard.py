@@ -305,14 +305,23 @@ def _get_backlog(unit_qs) -> BacklogStats:
 
 
 def _get_study_streak(unit_qs) -> int:
-    """Consecutive active days (≥1 unit completed), ending today or yesterday."""
+    """Consecutive active days, ending today or yesterday.
+
+    A day is active if ≥1 unit was completed OR had any video progress recorded.
+    """
     today = timezone.now().date()
 
-    active_days = set(
+    completed_days = set(
         unit_qs.filter(status="completed", completed_at__date__lte=today)
         .values_list("completed_at__date", flat=True)
         .distinct()
     )
+    progress_days = set(
+        unit_qs.filter(video_progress_minutes__gt=0, updated_at__date__lte=today)
+        .values_list("updated_at__date", flat=True)
+        .distinct()
+    )
+    active_days = completed_days | progress_days
 
     # Start from today; fall back to yesterday if today has no activity yet
     start = today if today in active_days else today - datetime.timedelta(days=1)
