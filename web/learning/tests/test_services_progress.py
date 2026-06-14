@@ -56,7 +56,7 @@ class TestGetResourceProgress:
         assert result["total_units"] == 2
         assert result["completed_units"] == 1
         assert result["remaining_units"] == 1
-        assert result["completion_percentage"] == 50
+        assert result["completion_percentage"] == 33  # time-based: 20min / 60min
         assert result["total_duration"] == 60
         assert result["completed_duration"] == 20
         assert result["remaining_duration"] == 40

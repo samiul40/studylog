@@ -15,8 +15,6 @@ def get_resource_progress(resource: LearningResource) -> dict[str, int]:
     completed_units = units.filter(status="completed").count()
     remaining_units = total_units - completed_units
 
-    completion_percentage = calculate_percentage(completed_units, total_units)
-
     total_duration = units.aggregate(total=Sum("duration_minutes"))["total"] or 0
 
     completed_duration = (
@@ -36,6 +34,12 @@ def get_resource_progress(resource: LearningResource) -> dict[str, int]:
 
     time_done = completed_duration + in_progress_duration
     remaining_duration = total_duration - time_done
+
+    # Use time-based percentage when durations are available; fall back to unit count
+    if total_duration > 0:
+        completion_percentage = calculate_percentage(time_done, total_duration)
+    else:
+        completion_percentage = calculate_percentage(completed_units, total_units)
 
     return {
         "units": units,

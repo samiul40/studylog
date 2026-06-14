@@ -366,20 +366,34 @@ def _get_time_invested(user) -> TimeInvested:
     )
     month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
 
-    video_units = LearningUnit.objects.filter(
+    video_completed = LearningUnit.objects.filter(
         resource__user=user,
         resource__is_archived=False,
         resource__resource_type__content_kind="video",
         status="completed",
         duration_minutes__isnull=False,
     )
+    video_in_progress = LearningUnit.objects.filter(
+        resource__user=user,
+        resource__is_archived=False,
+        resource__resource_type__content_kind="video",
+        status="in_progress",
+        video_progress_minutes__isnull=False,
+    )
 
-    def _sum(qs):
+    def _sum_done(qs):
         return qs.aggregate(t=Sum("duration_minutes"))["t"] or 0
 
-    this_week_min = _sum(video_units.filter(completed_at__gte=week_start))
-    this_month_min = _sum(video_units.filter(completed_at__gte=month_start))
-    all_time_min = _sum(video_units)
+    def _sum_prog(qs):
+        return qs.aggregate(t=Sum("video_progress_minutes"))["t"] or 0
+
+    this_week_min = _sum_done(
+        video_completed.filter(completed_at__gte=week_start)
+    ) + _sum_prog(video_in_progress.filter(updated_at__gte=week_start))
+    this_month_min = _sum_done(
+        video_completed.filter(completed_at__gte=month_start)
+    ) + _sum_prog(video_in_progress.filter(updated_at__gte=month_start))
+    all_time_min = _sum_done(video_completed) + _sum_prog(video_in_progress)
 
     return {
         "this_week": _fmt_duration(this_week_min),
@@ -445,8 +459,26 @@ def _get_momentum(unit_qs) -> MomentumStats:
 
     units_this = this_wk.count()
     units_last = last_wk.count()
-    time_this = this_wk.aggregate(t=Sum("duration_minutes"))["t"] or 0
-    time_last = last_wk.aggregate(t=Sum("duration_minutes"))["t"] or 0
+
+    in_prog_this = unit_qs.filter(
+        status="in_progress",
+        video_progress_minutes__isnull=False,
+        updated_at__gte=cur_start,
+        updated_at__lt=cur_end,
+    )
+    in_prog_last = unit_qs.filter(
+        status="in_progress",
+        video_progress_minutes__isnull=False,
+        updated_at__gte=prev_start,
+        updated_at__lt=cur_start,
+    )
+
+    time_this = (this_wk.aggregate(t=Sum("duration_minutes"))["t"] or 0) + (
+        in_prog_this.aggregate(t=Sum("video_progress_minutes"))["t"] or 0
+    )
+    time_last = (last_wk.aggregate(t=Sum("duration_minutes"))["t"] or 0) + (
+        in_prog_last.aggregate(t=Sum("video_progress_minutes"))["t"] or 0
+    )
 
     def _delta(this, last):
         if last == 0:
