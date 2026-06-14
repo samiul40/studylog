@@ -1,4 +1,5 @@
 import json
+from urllib.parse import urlencode
 
 from django.contrib import messages
 from django.db.models import F, Q
@@ -66,10 +67,22 @@ class ResourceListView(BaseUserResourceView, ListView):
         if type_slug:
             qs = qs.filter(resource_type__slug=type_slug)
 
+        # Save before the show filter so get_context_data can compute tab counts.
+        self._qs_before_show_filter = qs
+
+        show = self.request.GET.get("show", "active")
+        if show == "completed":
+            qs = qs.filter(percentage=100)
+        else:
+            qs = qs.filter(percentage__lt=100)
+
         return qs
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+
+        show = self.request.GET.get("show", "active")
+        show_completed = show == "completed"
 
         # self.object_list is the full (unpaginated) queryset — use it for
         # accurate stats across all matching resources, not just the current page.
@@ -82,13 +95,28 @@ class ResourceListView(BaseUserResourceView, ListView):
             ).count(),
         }
 
-        # Build a base query string (preserves search/type) for pagination links.
-        params = self.request.GET.copy()
-        params.pop("page", None)
-        context["base_query_string"] = params.urlencode()
+        # Tab counts — derived from the queryset before the show filter.
+        base_qs = self._qs_before_show_filter
+        context["active_count"] = base_qs.filter(percentage__lt=100).count()
+        context["completed_count"] = base_qs.filter(percentage=100).count()
+
+        # Tab URLs — preserve search + type params, swap show, drop page.
+        tab_params = {
+            k: v for k, v in self.request.GET.items() if k not in ("page", "show")
+        }
+        context["active_tab_url"] = "?" + urlencode({**tab_params, "show": "active"})
+        context["completed_tab_url"] = "?" + urlencode(
+            {**tab_params, "show": "completed"}
+        )
+
+        # Build a base query string (preserves all filters) for pagination links.
+        pag_params = self.request.GET.copy()
+        pag_params.pop("page", None)
+        context["base_query_string"] = pag_params.urlencode()
 
         context["search_query"] = self.request.GET.get("search", "")
         context["selected_type"] = self.request.GET.get("type", "")
+        context["show_completed"] = show_completed
         context["archived_count"] = (
             LearningResource.objects.for_user(self.request.user).archived().count()
         )

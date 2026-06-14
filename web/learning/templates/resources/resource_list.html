@@ -29,9 +29,13 @@
     <div>
       <h2 class="rl-header__title">Learning Resources</h2>
       <p class="rl-header__sub">
-        {{ page_stats.total }} resource{{ page_stats.total|pluralize }}
-        &middot; {{ page_stats.in_progress }} in progress
-        &middot; {{ page_stats.completed_this_week }} completed this week
+        {% if show_completed %}
+          {{ page_stats.total }} completed resource{{ page_stats.total|pluralize }}
+        {% else %}
+          {{ page_stats.total }} resource{{ page_stats.total|pluralize }}
+          &middot; {{ page_stats.in_progress }} in progress
+          &middot; {{ page_stats.completed_this_week }} completed this week
+        {% endif %}
       </p>
     </div>
     <div class="rl-header__actions">
@@ -59,8 +63,25 @@
     </div>
   </div>
 
+  {# ── Active / Completed tab toggle ────────────────────────────────────── #}
+  <div class="rl-tabs" role="tablist">
+    <a href="{{ active_tab_url }}"
+       class="rl-tab{% if not show_completed %} rl-tab--active{% endif %}"
+       role="tab" aria-selected="{% if not show_completed %}true{% else %}false{% endif %}">
+      Active
+      <span class="rl-tab__count">{{ active_count }}</span>
+    </a>
+    <a href="{{ completed_tab_url }}"
+       class="rl-tab{% if show_completed %} rl-tab--active{% endif %}"
+       role="tab" aria-selected="{% if show_completed %}true{% else %}false{% endif %}">
+      Completed
+      <span class="rl-tab__count">{{ completed_count }}</span>
+    </a>
+  </div>
+
   {# ── Search / filter toolbar ───────────────────────────────────────────── #}
   <form method="get" id="searchForm" class="rl-toolbar" role="search">
+    <input type="hidden" name="show" value="{% if show_completed %}completed{% else %}active{% endif %}">
     <div class="rl-search">
       <svg class="rl-search__icon" viewBox="0 0 24 24" fill="none"
            stroke="currentColor" stroke-width="2"
@@ -150,18 +171,26 @@
   {% else %}
   {# ── Empty state ───────────────────────────────────────────────────────── #}
   <div class="rl-empty">
-    <span class="rl-empty__icon">📚</span>
+    <span class="rl-empty__icon">{% if show_completed %}🎓{% else %}📚{% endif %}</span>
     <p class="rl-empty__title">
-      {% if search_query or selected_type %}No results found{% else %}No resources yet{% endif %}
+      {% if search_query or selected_type %}
+        No results found
+      {% elif show_completed %}
+        No completed resources
+      {% else %}
+        No resources yet
+      {% endif %}
     </p>
     <p class="rl-empty__text">
       {% if search_query or selected_type %}
         Try a different search term or filter.
+      {% elif show_completed %}
+        Resources you finish will appear here.
       {% else %}
         Start tracking your learning by adding your first resource.
       {% endif %}
     </p>
-    {% if not search_query and not selected_type %}
+    {% if not search_query and not selected_type and not show_completed %}
     {% if perms.learning.add_learningresource %}
     <a href="{% url 'learning:resource_create' %}" class="rl-btn rl-btn--primary">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
@@ -193,7 +222,10 @@
       clearTimeout(debounce);
       debounce = setTimeout(function () {
         if (searchInput.value.trim() === '') {
-          window.location.href = window.location.pathname;
+          var url = new URL(window.location.href);
+          url.searchParams.delete('search');
+          url.searchParams.delete('page');
+          window.location.href = url.toString();
         } else {
           searchForm.submit();
         }
