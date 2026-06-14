@@ -153,6 +153,57 @@ class TestStudyStreak:
         _completed(resource, future)
         assert _get_study_streak(_user_unit_qs(user)) == 0
 
+    def test_video_progress_today_counts_as_active(self, user, resource):
+        unit = baker.make(
+            LearningUnit,
+            resource=resource,
+            status="in_progress",
+            duration_minutes=60,
+        )
+        LearningUnit.objects.filter(pk=unit.pk).update(
+            video_progress_minutes=5, updated_at=timezone.now()
+        )
+        assert _get_study_streak(_user_unit_qs(user)) == 1
+
+    def test_video_progress_consecutive_days_builds_streak(self, user, resource):
+        for n in range(3):
+            unit = baker.make(
+                LearningUnit,
+                resource=resource,
+                status="in_progress",
+                duration_minutes=60,
+            )
+            LearningUnit.objects.filter(pk=unit.pk).update(
+                video_progress_minutes=10, updated_at=_days_ago(n)
+            )
+        assert _get_study_streak(_user_unit_qs(user)) == 3
+
+    def test_zero_progress_not_counted(self, user, resource):
+        unit = baker.make(
+            LearningUnit,
+            resource=resource,
+            status="not_started",
+            duration_minutes=60,
+        )
+        LearningUnit.objects.filter(pk=unit.pk).update(
+            video_progress_minutes=0, updated_at=timezone.now()
+        )
+        assert _get_study_streak(_user_unit_qs(user)) == 0
+
+    def test_progress_and_completion_on_different_days_union(self, user, resource):
+        # Completion 2 days ago, video progress yesterday — should give streak of 2
+        _completed(resource, _days_ago(2))
+        unit = baker.make(
+            LearningUnit,
+            resource=resource,
+            status="in_progress",
+            duration_minutes=60,
+        )
+        LearningUnit.objects.filter(pk=unit.pk).update(
+            video_progress_minutes=15, updated_at=_days_ago(1)
+        )
+        assert _get_study_streak(_user_unit_qs(user)) == 2
+
 
 # ---------------------------------------------------------------------------
 # _get_month_stats — started vs finished
