@@ -149,6 +149,63 @@
 }
 
 // ---------------------------------------------------------------------------
+// Active / Completed tab toggle
+// ---------------------------------------------------------------------------
+.rl-tabs {
+  display: inline-flex;
+  background: var(--field);
+  border: 1.5px solid var(--line);
+  border-radius: 14px;
+  padding: 4px;
+  gap: 2px;
+  margin-bottom: 22px;
+}
+
+.rl-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-family: $font-sans;
+  font-size: 0.90rem;
+  font-weight: 500;
+  color: var(--ink-soft);
+  padding: 8px 16px;
+  border-radius: 10px;
+  text-decoration: none;
+  transition: all 0.18s var(--ease);
+  white-space: nowrap;
+
+  &:hover { color: var(--ink); }
+
+  &--active {
+    background: var(--card);
+    color: var(--ink);
+    font-weight: 600;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  }
+
+  &__count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: 100px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    background: var(--ring-track);
+    color: var(--ink-soft);
+    line-height: 1;
+
+    .rl-tab--active & {
+      background: color-mix(in srgb, var(--emerald) 15%, var(--field));
+      color: var(--emerald-deep);
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Search / filter toolbar
 // ---------------------------------------------------------------------------
 .rl-toolbar {
