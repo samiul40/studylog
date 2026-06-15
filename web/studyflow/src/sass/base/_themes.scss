@@ -66,6 +66,22 @@
     }
   }
 
+  // login-card inputs (password_set, etc.) use dark green, not the blue-slate default
+  .login-card .form-control {
+    background-color: #0c1611;
+    border-color: rgba(243, 241, 232, 0.12);
+    color: #f3f1e8;
+
+    &::placeholder { color: rgba(243, 241, 232, 0.38); }
+
+    &:focus {
+      border-color: $emerald-400;
+      box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.15);
+      background-color: #0c1611;
+      color: #f3f1e8;
+    }
+  }
+
   .input-group-text {
     background: #1e293b;
     border-color: #334155;

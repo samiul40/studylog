@@ -559,6 +559,13 @@ $s-ease:           cubic-bezier(0.22, 1, 0.36, 1);
   }
 }
 
+// Dark mode: prevent the global `[data-theme="dark"] a { color: emerald-400 }`
+// rule from turning the button text green-on-green (it outspecifics .s-btn--primary)
+[data-theme="dark"] .s-btn--primary {
+  color: #042b1d;
+  &:hover { color: #042b1d; }
+}
+
 // ── Info note ──────────────────────────────────────────────────────────────────
 .s-note {
   display: flex;

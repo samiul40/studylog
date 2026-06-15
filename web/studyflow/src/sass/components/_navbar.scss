@@ -7,14 +7,21 @@
 // Appbar shell
 // ---------------------------------------------------------------------------
 .appbar {
-  position: sticky;
+  position: fixed;
   top: 0;
+  left: 0;
+  right: 0;
   z-index: 100;
   background: color-mix(in srgb, var(--paper) 82%, transparent);
   backdrop-filter: saturate(160%) blur(14px);
   -webkit-backdrop-filter: saturate(160%) blur(14px);
   border-bottom: 1px solid var(--line-soft);
   transition: background 0.4s var(--ease, cubic-bezier(0.22,1,0.36,1));
+}
+
+// Offset page content so it doesn't slide under the fixed bar
+body:has(.appbar) > main {
+  padding-top: 76px;
 }
 
 // 3-column grid: brand | nav (centred) | user menu (right-aligned)
@@ -272,15 +279,7 @@
 // Mobile: collapse nav links, strip usermenu border/name, fix to top
 // ---------------------------------------------------------------------------
 @media (max-width: 720px) {
-  // Fix to top so it stays visible when scrolling (sticky can break when
-  // overflow-x: hidden is set on html/body, common on iOS Safari)
-  .appbar {
-    position: fixed;
-    left: 0;
-    right: 0;
-  }
-
-  // Offset page content so it doesn't slide under the fixed bar
+  // Reduce bar and content offset for smaller screens
   body:has(.appbar) > main {
     padding-top: 68px;
   }
