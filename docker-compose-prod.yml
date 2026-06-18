@@ -19,9 +19,7 @@ services:
 
   web:
     container_name: studylog_web
-    build:
-      context: .
-      dockerfile: dockerfiles/backend/Dockerfile
+    image: ghcr.io/samiul40/studylog:latest
     restart: unless-stopped
     expose:
       - "8000"
