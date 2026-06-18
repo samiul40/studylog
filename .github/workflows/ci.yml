@@ -40,21 +40,62 @@ jobs:
         working-directory: web
         run: pytest -q
 
-  deploy:
+  build-and-push:
     needs: test
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4.2.2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: dockerfiles/backend/Dockerfile
+          push: true
+          tags: |
+            ghcr.io/samiul40/studylog:latest
+            ghcr.io/samiul40/studylog:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    permissions:
+      packages: read
 
     steps:
       - name: Deploy to DigitalOcean
         uses: appleboy/ssh-action@v1
+        env:
+          GHCR_USER: ${{ github.actor }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           host: ${{ secrets.DO_SSH_HOST }}
           username: ${{ secrets.DO_SSH_USER }}
           key: ${{ secrets.DO_SSH_KEY }}
+          envs: GHCR_USER,GHCR_TOKEN
           script: |
+            echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
             cd ${{ secrets.DO_APP_PATH }}
             git pull origin main
-            docker compose -f docker-compose-prod.yml build web
+            docker compose -f docker-compose-prod.yml pull web
             docker compose -f docker-compose-prod.yml up -d
             docker compose -f docker-compose-prod.yml exec nginx nginx -s reload
