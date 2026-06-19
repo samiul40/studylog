@@ -1,4 +1,5 @@
 import json
+import logging
 from urllib.parse import urlencode
 
 from django.contrib import messages
@@ -18,6 +19,8 @@ from learning.forms import LearningResourceForm
 from learning.mixins import UserPermissionMixin
 from learning.models import LearningResource, LearningUnit, ResourceType
 from learning.services import get_resource_progress
+
+logger = logging.getLogger(__name__)
 
 
 class BaseUserResourceView(UserPermissionMixin):
@@ -177,7 +180,12 @@ class ResourceCreateView(UserPermissionMixin, CreateView):
         if youtube_units_json:
             try:
                 units_data = json.loads(youtube_units_json)
-            except (json.JSONDecodeError, ValueError):
+            except (json.JSONDecodeError, ValueError) as exc:
+                logger.warning(
+                    "Failed to parse youtube_units JSON for resource %s: %s",
+                    self.object.pk,
+                    exc,
+                )
                 units_data = []
             units = []
             for i, u in enumerate(units_data):

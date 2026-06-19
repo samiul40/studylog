@@ -1,4 +1,5 @@
 import json
+import logging
 
 from django.contrib import messages
 from django.core.exceptions import ValidationError
@@ -12,6 +13,8 @@ from django.views.generic import CreateView, DeleteView, UpdateView
 from learning.forms import LearningUnitForm
 from learning.mixins import UserPermissionMixin
 from learning.models import LearningResource, LearningUnit
+
+logger = logging.getLogger(__name__)
 
 
 class UserResourceMixin:
@@ -150,7 +153,13 @@ class LearningUnitReorderView(UserPermissionMixin, UserResourceMixin, View):
         try:
             data = json.loads(request.body)
             order = data["order"]
-        except (json.JSONDecodeError, KeyError):
+        except (json.JSONDecodeError, KeyError) as exc:
+            logger.warning(
+                "Invalid reorder payload for resource %s from user %s: %s",
+                resource_pk,
+                request.user.pk,
+                exc,
+            )
             return JsonResponse({"status": "error"}, status=400)
 
         cases = []
@@ -206,7 +215,13 @@ class LearningUnitInlinePatchView(UserPermissionMixin, View):
 
         try:
             data = json.loads(request.body)
-        except (json.JSONDecodeError, ValueError):
+        except (json.JSONDecodeError, ValueError) as exc:
+            logger.warning(
+                "Invalid inline patch payload for unit %s from user %s: %s",
+                unit_pk,
+                request.user.pk,
+                exc,
+            )
             return JsonResponse({"ok": False, "error": "Invalid JSON"}, status=400)
 
         if "duration_minutes" in data:
