@@ -4,6 +4,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 from studyflow.logging import get_logging_config
+from studyflow.sentry import init_sentry
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -298,3 +299,14 @@ LOGGING = get_logging_config(
     log_level=os.environ.get("LOG_LEVEL", "DEBUG" if DEBUG else "INFO"),
     django_log_level=os.environ.get("DJANGO_LOG_LEVEL", "INFO"),
 )
+
+
+# Sentry — error tracking. Leave SENTRY_DSN unset to disable (default in dev/CI).
+
+SENTRY_DSN = os.environ.get("SENTRY_DSN", "")
+if SENTRY_DSN:
+    init_sentry(
+        dsn=SENTRY_DSN,
+        environment="production" if not DEBUG else "development",
+        traces_sample_rate=float(os.environ.get("SENTRY_TRACES_SAMPLE_RATE", "0.1")),
+    )
