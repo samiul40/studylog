@@ -3,6 +3,8 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
+from studyflow.logging import get_logging_config
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -287,3 +289,12 @@ ANYMAIL = {
 }
 
 YOUTUBE_API_KEY = os.environ.get("YOUTUBE_API_KEY", "")
+
+
+# Logging
+
+LOGGING = get_logging_config(
+    debug=DEBUG,
+    log_level=os.environ.get("LOG_LEVEL", "DEBUG" if DEBUG else "INFO"),
+    django_log_level=os.environ.get("DJANGO_LOG_LEVEL", "INFO"),
+)
