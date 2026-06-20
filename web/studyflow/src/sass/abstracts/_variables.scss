@@ -80,17 +80,17 @@ $color-border:    $grey-200;
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --paper:      #070d0a;
-    --paper-2:    #1d2c22;
-    --card:       #11201a;
-    --card-cv:    #14241a;
-    --field:      #0c1611;
-    --ink-soft:   rgba(243, 241, 232, 0.64);
-    --ink-faint:  rgba(243, 241, 232, 0.42);
-    --line:       rgba(243, 241, 232, 0.12);
-    --line-soft:  rgba(243, 241, 232, 0.07);
-    --line-light: rgba(243, 241, 232, 0.10);
-    --ring-track: rgba(243, 241, 232, 0.10);
+    --paper:      #0a0b0e;
+    --paper-2:    #101218;
+    --card:       #16181d;
+    --card-cv:    #16181d;
+    --field:      #101116;
+    --ink-soft:   rgba(238, 240, 243, 0.62);
+    --ink-faint:  rgba(238, 240, 243, 0.40);
+    --line:       rgba(238, 240, 243, 0.11);
+    --line-soft:  rgba(238, 240, 243, 0.06);
+    --line-light: rgba(238, 240, 243, 0.09);
+    --ring-track: rgba(238, 240, 243, 0.09);
     --emerald-deep: #1ed688;
   }
 }

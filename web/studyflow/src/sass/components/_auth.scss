@@ -482,7 +482,7 @@ body:has(.auth-layout) {
 @media (prefers-color-scheme: dark) {
   html:has(.auth-layout),
   body:has(.auth-layout) {
-    background: #070d0a;
+    background: #0a0b0e;
   }
 }
 
@@ -511,28 +511,28 @@ body:has(.auth-layout) > main {
     .auth-card__title { color: var(--bone); }
 
     .auth-field .auth-input {
-      background: #11201a;
+      background: #16181d;
       color: var(--bone);
-      border-color: rgba(243,241,232,0.14);
+      border-color: rgba(238,240,243,0.11);
 
-      &::placeholder { color: rgba(243,241,232,0.38); }
+      &::placeholder { color: rgba(238,240,243,0.38); }
     }
 
-    .auth-toggle:hover { background: rgba(243,241,232,0.08); color: var(--bone); }
+    .auth-toggle:hover { background: rgba(238,240,243,0.08); color: var(--bone); }
 
     .auth-btn--google {
-      background: #11201a;
+      background: #16181d;
       color: var(--bone);
-      border-color: rgba(243,241,232,0.14);
+      border-color: rgba(238,240,243,0.11);
 
-      &:hover { background: #16261c; border-color: rgba(243,241,232,0.32); }
+      &:hover { background: #1c1e24; border-color: rgba(238,240,243,0.32); }
     }
 
     .auth-btn--ghost {
       color: var(--bone);
-      border-color: rgba(243,241,232,0.14);
+      border-color: rgba(238,240,243,0.11);
 
-      &:hover { background: rgba(243,241,232,0.04); border-color: rgba(243,241,232,0.32); color: var(--bone); }
+      &:hover { background: rgba(238,240,243,0.04); border-color: rgba(238,240,243,0.32); color: var(--bone); }
     }
 
     .auth-legal a { color: var(--bone); }

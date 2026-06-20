@@ -16,7 +16,7 @@
 
 [data-theme="dark"] {
   --sky:        #6db4ec;
-  --ring-track: rgba(243, 241, 232, 0.10);
+  --ring-track: rgba(238, 240, 243, 0.09);
   --shadow-card: 0 30px 60px -36px rgba(0, 0, 0, 0.7);
 }
 
@@ -34,7 +34,7 @@
 // ---------------------------------------------------------------------------
 .rl-wrap {
   width: 100%;
-  max-width: 1080px;
+  max-width: 1280px;
   margin: 0 auto;
   padding: clamp(12px, 2vw, 20px) clamp(16px, 4vw, 24px) 40px;
   overflow-x: hidden;

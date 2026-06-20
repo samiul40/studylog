@@ -1,7 +1,7 @@
 // =============================================================================
 // _mobile_nav.scss — Mobile bottom navigation bar + avatar
 // Light mode → Option A (light pill)   bg: rgba(251,250,244,0.95)
-// Dark mode  → Option B (dark bar)     bg: --ink
+// Dark mode  → Option B (dark bar)     bg: --paper (neutral charcoal)
 // Dark mode driven by existing [data-theme="dark"] on <html>.
 // =============================================================================
 @use '../abstracts/variables' as *;
@@ -100,12 +100,12 @@
 [data-theme="dark"] {
   @media (max-width: 991px) {
     .mobile-bottom-nav {
-      background: #0d1812; // --ink
-      border-top-color: rgba(243, 241, 232, 0.12); // --line-dark
+      background: #0a0b0e; // --paper (neutral charcoal)
+      border-top-color: rgba(238, 240, 243, 0.11); // --line
     }
 
     .mobile-bottom-nav__item {
-      color: #b9c4ba; // --bone-dim
+      color: rgba(238, 240, 243, 0.62); // --ink-soft (neutral)
 
       &:hover,
       &.active {

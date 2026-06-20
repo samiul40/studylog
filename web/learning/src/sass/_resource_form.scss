@@ -21,16 +21,16 @@
 }
 
 [data-theme="dark"] {
-  --paper:       #070d0a;
-  --paper-2:     #0e1813;
-  --ink:         #f3f1e8;
-  --ink-soft:    rgba(243, 241, 232, 0.64);
-  --ink-faint:   rgba(243, 241, 232, 0.42);
-  --card:        #11201a;
-  --field:       #0c1611;
+  --paper:       #0a0b0e;
+  --paper-2:     #101218;
+  --ink:         #eef0f3;
+  --ink-soft:    rgba(238, 240, 243, 0.62);
+  --ink-faint:   rgba(238, 240, 243, 0.40);
+  --card:        #16181d;
+  --field:       #101116;
   --emerald-deep: #1ed688;
-  --line:        rgba(243, 241, 232, 0.12);
-  --line-soft:   rgba(243, 241, 232, 0.07);
+  --line:        rgba(238, 240, 243, 0.11);
+  --line-soft:   rgba(238, 240, 243, 0.06);
   --shadow-card: 0 40px 80px -40px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.02) inset;
 }
 
@@ -48,7 +48,7 @@
 // ---------------------------------------------------------------------------
 .rf-page {
   width: 100%;
-  max-width: 620px;
+  max-width: 750px;
   margin: 0 auto;
   padding: clamp(12px, 2vw, 20px) clamp(16px, 4vw, 24px) 40px;
 }
