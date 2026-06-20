@@ -8,18 +8,19 @@
 
 [data-theme="dark"] {
 
-  // ── Design-token CSS vars (resource detail + shared components) ───────────
-  --ink:         #f3f1e8;
-  --paper:       #070d0a;
-  --paper-2:     #0e1813;
-  --card:        #11201a;
-  --field:       #0c1611;
-  --ink-soft:    rgba(243, 241, 232, 0.64);
-  --ink-faint:   rgba(243, 241, 232, 0.42);
-  --line:        rgba(243, 241, 232, 0.12);
-  --line-soft:   rgba(243, 241, 232, 0.07);
-  --ring-track:  rgba(243, 241, 232, 0.10);
-  --week-bar:    rgba(243, 241, 232, 0.16);
+  // ── Design-token CSS vars — neutral charcoal (emerald is an accent only,
+  //    not a surface tint; resource detail + shared components) ────────────
+  --ink:         #eef0f3;
+  --paper:       #0a0b0e;
+  --paper-2:     #101218;
+  --card:        #16181d;
+  --field:       #101116;
+  --ink-soft:    rgba(238, 240, 243, 0.62);
+  --ink-faint:   rgba(238, 240, 243, 0.40);
+  --line:        rgba(238, 240, 243, 0.11);
+  --line-soft:   rgba(238, 240, 243, 0.06);
+  --ring-track:  rgba(238, 240, 243, 0.09);
+  --week-bar:    rgba(238, 240, 243, 0.15);
   --idle-ink:    #f2b138;
   --sky:         #6db4ec;
   --emerald-deep: #1ed688;
@@ -43,9 +44,8 @@
     box-shadow: 0 24px 48px -20px rgba(0, 0, 0, 0.6);
   }
 
-  .nav-avatar {
-    background: $emerald-500;
-    color: #fff;
+  .usermenu .nav-avatar {
+    background: rgba(238, 240, 243, 0.1);
   }
 
   // ── Form controls ────────────────────────────────────────────────────────────
@@ -66,19 +66,19 @@
     }
   }
 
-  // login-card inputs (password_set, etc.) use dark green, not the blue-slate default
+  // login-card inputs (password_set, etc.) use neutral charcoal, not the blue-slate default
   .login-card .form-control {
-    background-color: #0c1611;
-    border-color: rgba(243, 241, 232, 0.12);
-    color: #f3f1e8;
+    background-color: #101116;
+    border-color: rgba(238, 240, 243, 0.11);
+    color: #eef0f3;
 
-    &::placeholder { color: rgba(243, 241, 232, 0.38); }
+    &::placeholder { color: rgba(238, 240, 243, 0.38); }
 
     &:focus {
       border-color: $emerald-400;
       box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.15);
-      background-color: #0c1611;
-      color: #f3f1e8;
+      background-color: #101116;
+      color: #eef0f3;
     }
   }
 
@@ -136,17 +136,17 @@
     &__icon { background: rgba(52, 211, 153, 0.12); }
   }
 
-  .login-card { background: #11201a; border-color: rgba(243, 241, 232, 0.12); }
-  .login-brand { color: #f3f1e8; }
-  .login-subtitle { color: rgba(243, 241, 232, 0.64); }
+  .login-card { background: #16181d; border-color: rgba(238, 240, 243, 0.11); }
+  .login-brand { color: #eef0f3; }
+  .login-subtitle { color: rgba(238, 240, 243, 0.62); }
   .login-toggle-pass {
-    background: #0c1611;
-    border-color: rgba(243, 241, 232, 0.12);
-    color: rgba(243, 241, 232, 0.42);
-    &:hover { color: #f3f1e8; }
+    background: #101116;
+    border-color: rgba(238, 240, 243, 0.11);
+    color: rgba(238, 240, 243, 0.40);
+    &:hover { color: #eef0f3; }
   }
-  .login-divider { color: rgba(243, 241, 232, 0.42); &::before, &::after { background: rgba(243, 241, 232, 0.12); } }
-  .login-footer-links a, .login-footer-link-center a { color: rgba(243, 241, 232, 0.42); &:hover { color: $emerald-400; } }
+  .login-divider { color: rgba(238, 240, 243, 0.40); &::before, &::after { background: rgba(238, 240, 243, 0.11); } }
+  .login-footer-links a, .login-footer-link-center a { color: rgba(238, 240, 243, 0.40); &:hover { color: $emerald-400; } }
 
   // ── Settings sidebar ─────────────────────────────────────────────────────────
   .settings-sidebar { background: #1e293b; border-color: #334155; }

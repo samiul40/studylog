@@ -192,12 +192,12 @@
           </div>
           <div class="momentum-row__val">{{ momentum.units_this_week }}</div>
           <div class="momentum-bars">
-            <div class="momentum-bar momentum-bar--last"
-                 style="width: max({{ momentum.units_last_pct }}%, {% if momentum.units_last_week %}4px{% else %}0px{% endif %})">
+            <div class="momentum-bar momentum-bar--last">
+              <div class="momentum-bar__fill" style="width: {{ momentum.units_last_pct }}%"></div>
               {% if momentum.units_last_week %}<span>last wk &middot; {{ momentum.units_last_week }}</span>{% endif %}
             </div>
-            <div class="momentum-bar momentum-bar--this"
-                 style="width: max({{ momentum.units_this_pct }}%, 4px)">
+            <div class="momentum-bar momentum-bar--this">
+              <div class="momentum-bar__fill" style="width: {{ momentum.units_this_pct }}%"></div>
               <span>this wk &middot; {{ momentum.units_this_week }}</span>
             </div>
           </div>
@@ -217,12 +217,12 @@
           </div>
           <div class="momentum-row__val">{{ momentum.time_this_week_display }}</div>
           <div class="momentum-bars">
-            <div class="momentum-bar momentum-bar--last"
-                 style="width: max({{ momentum.time_last_pct }}%, {% if momentum.time_last_week %}4px{% else %}0px{% endif %})">
+            <div class="momentum-bar momentum-bar--last">
+              <div class="momentum-bar__fill" style="width: {{ momentum.time_last_pct }}%"></div>
               {% if momentum.time_last_week %}<span>last wk &middot; {{ momentum.time_last_week_display }}</span>{% endif %}
             </div>
-            <div class="momentum-bar momentum-bar--this"
-                 style="width: max({{ momentum.time_this_pct }}%, 4px)">
+            <div class="momentum-bar momentum-bar--this">
+              <div class="momentum-bar__fill" style="width: {{ momentum.time_this_pct }}%"></div>
               <span>this wk &middot; {{ momentum.time_this_week_display }}</span>
             </div>
           </div>

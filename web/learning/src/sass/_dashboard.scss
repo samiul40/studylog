@@ -14,7 +14,7 @@
 }
 
 .db-wrap {
-  max-width: 1080px;
+  max-width: 1280px;
   margin: 0 auto;
   padding: 65px clamp(16px, 4vw, 32px) 24px;
 }
@@ -500,37 +500,52 @@
 .momentum-bars {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
 }
 
+// Full-width track with a proportional fill behind an overlaid label, so the
+// label stays readable even when the value is too small to fit inside a
+// width-sized bar.
 .momentum-bar {
-  height: 19px;
-  border-radius: 5px;
-  min-width: 4px;
+  position: relative;
+  height: 24px;
+  border-radius: 6px;
+  background: var(--ring-track);
+  overflow: hidden;
   display: flex;
   align-items: center;
-  overflow: hidden; // prevent span text from forcing bar wider than its width
 
   span {
+    position: relative;
+    z-index: 1;
     font-family: $font-mono;
-    font-size: 0.6rem;
-    padding: 0 8px;
+    font-size: 0.62rem;
+    padding: 0 10px;
     white-space: nowrap;
-    overflow: hidden;
-    text-overflow: clip;
+    color: var(--ink-soft);
   }
 
-  &--last {
-    background: var(--ring-track);
-
-    span { color: var(--ink-soft); }
+  &--this span {
+    color: var(--ink);
+    font-weight: 600;
   }
+}
 
-  &--this {
-    background: var(--emerald);
+.momentum-bar__fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  min-width: 5px;
+  border-radius: 6px;
+}
 
-    span { color: #042b1d; font-weight: 600; }
-  }
+.momentum-bar--last .momentum-bar__fill {
+  background: color-mix(in srgb, var(--ink) 12%, transparent);
+}
+
+.momentum-bar--this .momentum-bar__fill {
+  background: color-mix(in srgb, var(--emerald) 42%, transparent);
 }
 
 // ---------------------------------------------------------------------------
@@ -838,6 +853,15 @@
 // ---------------------------------------------------------------------------
 @media (max-width: 760px) {
   .db-wrap { padding-bottom: 110px; }
+
+  // Date drops to its own line below the greeting instead of squeezing
+  // next to the title.
+  .greet {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .greet__date { margin-top: 2px; }
 
   .dcard--half-mid { grid-column: span 12; }
 

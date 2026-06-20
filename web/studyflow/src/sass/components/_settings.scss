@@ -16,14 +16,14 @@ $s-ink-faint-l:  rgba(13, 24, 18, 0.42);
 $s-line-l:       rgba(13, 24, 18, 0.12);
 $s-ring-track-l: rgba(13, 24, 18, 0.10);
 
-$s-paper-dark:   #070d0a;
-$s-card-dark:    #11201a;
-$s-field-dark:   #0c1611;
-$s-ink-dark:     #f3f1e8;
-$s-ink-soft-d:   rgba(243, 241, 232, 0.64);
-$s-ink-faint-d:  rgba(243, 241, 232, 0.42);
-$s-line-d:       rgba(243, 241, 232, 0.12);
-$s-ring-track-d: rgba(243, 241, 232, 0.10);
+$s-paper-dark:   #0a0b0e;
+$s-card-dark:    #16181d;
+$s-field-dark:   #101116;
+$s-ink-dark:     #eef0f3;
+$s-ink-soft-d:   rgba(238, 240, 243, 0.62);
+$s-ink-faint-d:  rgba(238, 240, 243, 0.40);
+$s-line-d:       rgba(238, 240, 243, 0.11);
+$s-ring-track-d: rgba(238, 240, 243, 0.09);
 
 $s-emerald-bright: #1ed688;
 $s-emerald-deep:   #0a7d57;
@@ -35,7 +35,7 @@ $s-ease:           cubic-bezier(0.22, 1, 0.36, 1);
 
 // ── Full-page background ───────────────────────────────────────────────────────
 .settings-main {
-  padding: 0 !important;
+  padding: 76px 0 0 !important;
   flex: 1 0 auto;
   background-color: $s-paper-light;
   overflow-x: clip;
@@ -201,7 +201,7 @@ $s-ease:           cubic-bezier(0.22, 1, 0.36, 1);
 [data-theme="dark"] .snav__item {
   color: $s-ink-soft-d;
 
-  &:hover { color: $s-ink-dark; background: rgba(243, 241, 232, 0.045); }
+  &:hover { color: $s-ink-dark; background: rgba(238, 240, 243, 0.045); }
 
   &.active {
     color: $s-emerald-bright;
@@ -266,8 +266,8 @@ $s-ease:           cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 [data-theme="dark"] .profile-strip {
-  background: rgba(243, 241, 232, 0.04);
-  border-color: rgba(243, 241, 232, 0.07);
+  background: rgba(238, 240, 243, 0.04);
+  border-color: rgba(238, 240, 243, 0.06);
 }
 
 .profile-strip__av {
@@ -286,7 +286,7 @@ $s-ease:           cubic-bezier(0.22, 1, 0.36, 1);
   user-select: none;
 }
 
-[data-theme="dark"] .profile-strip__av { background: rgba(243, 241, 232, 0.1); }
+[data-theme="dark"] .profile-strip__av { background: rgba(238, 240, 243, 0.1); }
 
 .profile-strip__meta { min-width: 0; flex: 1; }
 
@@ -465,7 +465,7 @@ $s-ease:           cubic-bezier(0.22, 1, 0.36, 1);
 
 [data-theme="dark"] .eye-btn {
   color: $s-ink-faint-d;
-  &:hover { color: $s-ink-dark; background: rgba(243, 241, 232, 0.07); }
+  &:hover { color: $s-ink-dark; background: rgba(238, 240, 243, 0.06); }
 }
 
 // ── Password strength meter ────────────────────────────────────────────────────
@@ -513,7 +513,7 @@ $s-ease:           cubic-bezier(0.22, 1, 0.36, 1);
   border-top: 1px solid rgba(13, 24, 18, 0.08);
 }
 
-[data-theme="dark"] .pactions { border-top-color: rgba(243, 241, 232, 0.07); }
+[data-theme="dark"] .pactions { border-top-color: rgba(238, 240, 243, 0.06); }
 
 .pactions__hint {
   margin-right: auto;
@@ -627,7 +627,7 @@ $s-ease:           cubic-bezier(0.22, 1, 0.36, 1);
 [data-theme="dark"] .theme-card {
   border-color: $s-line-d;
   background: $s-field-dark;
-  &:hover { border-color: rgba(243, 241, 232, 0.28); }
+  &:hover { border-color: rgba(238, 240, 243, 0.28); }
   &.sel   { border-color: $emerald-500; box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.18); }
 }
 
@@ -647,7 +647,7 @@ $s-ease:           cubic-bezier(0.22, 1, 0.36, 1);
   gap: 7px;
 
   &--light { background: #f3f1e8; }
-  &--dark  { background: #0b1410; }
+  &--dark  { background: #16181d; }
 }
 
 .pv__bar { height: 9px; border-radius: $radius-pill; background: $emerald-500; width: 58%; }
@@ -655,7 +655,7 @@ $s-ease:           cubic-bezier(0.22, 1, 0.36, 1);
   height: 7px;
   border-radius: $radius-pill;
   .pv--light & { background: rgba(13, 24, 18, 0.16); }
-  .pv--dark  & { background: rgba(243, 241, 232, 0.18); }
+  .pv--dark  & { background: rgba(238, 240, 243, 0.18); }
   &.s { width: 64%; }
 }
 
