@@ -7,7 +7,6 @@ from model_bakery import baker
 from learning.models import LearningResource, LearningUnit, ResourceType
 from learning.services.dashboard import (
     _get_resource_types_with_counts,
-    _get_weekly_completions,
     _get_weekly_summary,
     get_dashboard_stats,
 )
@@ -56,7 +55,6 @@ class TestGetDashboardStatsReturnShape:
             "recent_resources",
             "active_filter",
             "resource_types_with_counts",
-            "weekly_completions",
             "weekly_summary",
             # v3 keys
             "in_progress_count",
@@ -260,51 +258,6 @@ class TestGetResourceTypesWithCounts:
         result = _get_resource_types_with_counts(user=user)
 
         assert result == []
-
-
-# ---------------------------------------------------------------------------
-# _get_weekly_completions
-# ---------------------------------------------------------------------------
-
-
-class TestGetWeeklyCompletions:
-    def test_returns_8_entries(self, user, resource):
-        result = _get_weekly_completions(_user_unit_qs(user))
-        assert len(result) == 8
-
-    def test_all_zeros_when_no_completions(self, user, resource):
-        result = _get_weekly_completions(_user_unit_qs(user))
-        assert all(entry["count"] == 0 for entry in result)
-
-    def test_counts_completion_in_current_week(self, user, resource):
-        _make_completed(resource, completed_at=timezone.now())
-
-        result = _get_weekly_completions(_user_unit_qs(user))
-
-        assert result[-1]["count"] == 1
-
-    def test_oldest_entry_is_7_weeks_ago(self, user, resource):
-        now = timezone.now()
-        current_week_start = (now - datetime.timedelta(days=now.weekday())).replace(
-            hour=0, minute=0, second=0, microsecond=0
-        )
-        seven_weeks_ago = current_week_start - datetime.timedelta(weeks=7)
-
-        result = _get_weekly_completions(_user_unit_qs(user))
-
-        assert result[0]["label"] == seven_weeks_ago.strftime("%-d %b")
-
-    def test_ignores_completions_older_than_8_weeks(self, user, resource):
-        now = timezone.now()
-        current_week_start = (now - datetime.timedelta(days=now.weekday())).replace(
-            hour=0, minute=0, second=0, microsecond=0
-        )
-        old = current_week_start - datetime.timedelta(weeks=8, days=1)
-        _make_completed(resource, completed_at=old)
-
-        result = _get_weekly_completions(_user_unit_qs(user))
-
-        assert all(entry["count"] == 0 for entry in result)
 
 
 # ---------------------------------------------------------------------------
