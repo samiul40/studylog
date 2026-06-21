@@ -82,6 +82,7 @@
       </a>
       <nav class="lnav__actions">
         <a href="#features" class="lnav__link hide-sm">Features</a>
+        <a href="#dashboard" class="lnav__link hide-sm">Dashboard</a>
         <a href="#app" class="lnav__link hide-sm">Mobile app</a>
         <a href="#faq" class="lnav__link hide-sm">FAQ</a>
         <a href="{% url 'account_login' %}" class="lnav__link">Sign in</a>
@@ -256,6 +257,29 @@
           <div class="l-feature__bar"><span></span></div>
           <div class="l-feature__barcap"><span>Weekly streak</span><span>90%</span></div>
         </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ DASHBOARD SHOWCASE (new section) ============ -->
+  <section class="l-sec-pad showcase" id="dashboard" style="padding-top: clamp(40px, 5vw, 64px); padding-bottom: clamp(48px, 6vw, 80px);">
+    <div class="l-wrap">
+      <div class="showcase__panel">
+        <div class="showcase__head">
+          <div class="l-sec-head reveal">
+            <span class="l-kicker">The dashboard</span>
+            <h2>See your momentum,<br>not just your to-dos.</h2>
+            <p>Weekly pace, streaks, a full year of activity and an estimated finish date for every resource — StudyLog turns your ticked-off units into a picture of real progress.</p>
+          </div>
+        </div>
+        <div class="showcase__shots reveal d1" id="showcaseShots" aria-hidden="true">
+          <img class="showcase__img is-on" src="{% static 'img/showcase-dashboard.webp' %}" alt="" width="1675" height="1574" loading="lazy">
+          <img class="showcase__img" src="{% static 'img/showcase-resources.webp' %}" alt="" width="2221" height="1251" loading="lazy">
+        </div>
+        <div class="shotdots">
+          <button class="shotdot on" type="button" aria-label="Show dashboard screenshot"></button>
+          <button class="shotdot" type="button" aria-label="Show resources screenshot"></button>
+        </div>
       </div>
     </div>
   </section>
@@ -521,6 +545,7 @@
 {% endblock %}
 
 {% block scripts %}
+<script src="{% static 'js/landing-showcase.js' %}"></script>
 <script nonce="{{ request.csp_nonce }}">
   // hero draw-in
   requestAnimationFrame(() => document.getElementById('hero').classList.add('in'));

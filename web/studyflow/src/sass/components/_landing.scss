@@ -23,7 +23,7 @@
 // overflow space at the top or bottom of the page is seamless, not paper-white.
 html:has(.landing-page),
 body:has(.landing-page) {
-  background: #0d1812;
+  background: var(--ink);
 }
 
 // Remove shell padding and entrance animation from main — landing controls its own spacing and entrance
@@ -208,6 +208,12 @@ body:has(.landing-page) > main.flex-grow-1 {
     border-radius: 50%;
     top: -340px; right: -180px;
     background: radial-gradient(circle, rgba(16,185,129,0.28) 0%, rgba(16,185,129,0.06) 44%, transparent 68%);
+
+    @media (prefers-color-scheme: dark) {
+      width: 600px; height: 600px;
+      top: -300px; right: -210px;
+      background: radial-gradient(circle, rgba(30,214,136,0.16) 0%, rgba(30,214,136,0.05) 42%, transparent 68%);
+    }
   }
 
   &__grid {
@@ -220,6 +226,10 @@ body:has(.landing-page) > main.flex-grow-1 {
     mask-image: radial-gradient(ellipse 90% 80% at 70% 0%, #000 30%, transparent 78%);
     -webkit-mask-image: radial-gradient(ellipse 90% 80% at 70% 0%, #000 30%, transparent 78%);
     opacity: 0.5;
+
+    @media (prefers-color-scheme: dark) {
+      opacity: 0.32;
+    }
   }
 
   &__inner {
