@@ -78,7 +78,22 @@
       <input type="hidden" name="new_content_kind" id="id_new_content_kind"
              value="{{ form.new_content_kind.value|default:'' }}">
 
-      {# ── 1. Title ──────────────────────────────────────────────────────── #}
+      {# ── 1. URL ────────────────────────────────────────────────────────── #}
+      <div class="rf-field" id="rf-url-field">
+        <label class="rf-field__label" for="id_url">
+          URL <span class="rf-opt">Optional</span>
+        </label>
+        <input class="rf-control" id="id_url" type="url" name="url"
+               value="{{ form.url.value|default:'' }}"
+               placeholder="https://example.com">
+        <div class="rf-field__hint">
+          Optional link to the resource. Paste a YouTube, Udemy, Coursera, Skillshare or
+          LinkedIn Learning link and we'll detect the type for you — YouTube links also
+          prefill the title and let you import units automatically.
+        </div>
+      </div>
+
+      {# ── 2. Title ──────────────────────────────────────────────────────── #}
       <div class="rf-field {% if form.title.errors %}rf-field--invalid{% endif %}" id="rf-title-field">
         <label class="rf-field__label" for="id_title">Title</label>
         <input class="rf-control" id="id_title" type="text" name="title"
@@ -92,7 +107,7 @@
         </div>
       </div>
 
-      {# ── 2. Resource type — smart combobox ─────────────────────────────── #}
+      {# ── 3. Resource type — smart combobox ─────────────────────────────── #}
       <div class="rf-field {% if form.non_field_errors %}rf-field--invalid{% endif %}" id="rf-type-field">
         <label class="rf-field__label">Resource type</label>
 
@@ -132,19 +147,6 @@
           {% for err in form.non_field_errors %}{{ err }}{% endfor %}
         </div>
         {% endif %}
-      </div>
-
-      {# ── 3. URL ────────────────────────────────────────────────────────── #}
-      <div class="rf-field" id="rf-url-field">
-        <label class="rf-field__label" for="id_url">
-          URL <span class="rf-opt">Optional</span>
-        </label>
-        <input class="rf-control" id="id_url" type="url" name="url"
-               value="{{ form.url.value|default:'' }}"
-               placeholder="https://example.com">
-        <div class="rf-field__hint">
-          Optional link to the resource. Paste a YouTube playlist to import units automatically.
-        </div>
       </div>
 
       {% if not form.instance.pk %}
@@ -238,6 +240,8 @@
     { id: {{ rt.pk }}, name: "{{ rt.name|escapejs }}", slug: "{{ rt.slug|escapejs }}", kind: "{{ rt.content_kind }}" },
     {% endfor %}
   ];
+  // "Other" is the catch-all fallback — always show it last in the list.
+  RF_TYPES.sort((a, b) => (a.slug === 'other') - (b.slug === 'other'));
 
   /* ── Icon SVG strings ───────────────────────────────────────────────────── */
   const ICON = {
@@ -269,6 +273,7 @@
 
   /* ── State ──────────────────────────────────────────────────────────────── */
   let selectedType = null; // { id, name, slug, kind } | { isNew:true, name, kind }
+  let typeWasAutoDetected = false; // true while the current type came from the URL, not a manual pick
   let newKind = 'video';
   let updateBar = null; // assigned by the YouTube import block below
 
@@ -353,8 +358,9 @@
   }
 
   /* ── Select existing type ───────────────────────────────────────────────── */
-  function selectExistingType(t) {
+  function selectExistingType(t, { auto = false } = {}) {
     selectedType = { id: t.id, name: t.name, slug: t.slug, kind: t.kind };
+    typeWasAutoDetected = auto;
     comboInput.value = t.name;
     comboTag.textContent = t.kind === 'reading' ? 'Reading' : 'Video / Audio';
     comboTag.style.display = '';
@@ -371,6 +377,7 @@
   /* ── Create new type ────────────────────────────────────────────────────── */
   function selectCreateNew(name) {
     selectedType = { isNew: true, name, kind: newKind };
+    typeWasAutoDetected = false;
     comboInput.value = name;
     comboTag.textContent = 'New';
     comboTag.style.display = '';
@@ -397,6 +404,7 @@
     comboTag.style.display = 'none';
     newtypeBlock.style.display = 'none';
     selectedType = null;
+    typeWasAutoDetected = false;
     hiddenTypeId.value  = '';
     hiddenNewName.value = '';
     hiddenNewKind.value = '';
@@ -455,7 +463,7 @@
     }
   })();
 
-  /* ── YouTube import (add form only) ─────────────────────────────────────── */
+  /* ── URL platform auto-detect + YouTube import (add form only) ───────────── */
   (function () {
     const urlField   = document.getElementById('id_url');
     const ytBar      = document.getElementById('rf-yt-bar');
@@ -465,10 +473,83 @@
     const ytLabel    = document.getElementById('rf-yt-label');
     const ytRows     = document.getElementById('rf-yt-rows');
     const hiddenUnits = document.getElementById('id_youtube_units');
+    const titleEl    = document.getElementById('id_title');
 
     if (!ytBar || !urlField) return; // edit form — nothing to do
 
     const YT_RE = /youtube\.com|youtu\.be/;
+    // Requires a full video or playlist id, not just the bare domain — so we
+    // only hit the API once the URL is actually complete.
+    const YT_ID_RE = /[?&]v=[\w-]{11}|youtu\.be\/[\w-]{11}|[?&]list=[\w-]+/;
+
+    /* Maps a pasted URL to a known system resource-type slug. */
+    const PLATFORM_RULES = [
+      { re: YT_RE, slug: 'youtube' },
+      { re: /udemy\.com/, slug: 'udemy' },
+      { re: /coursera\.org/, slug: 'coursera' },
+      { re: /skillshare\.com/, slug: 'skillshare' },
+      { re: /linkedin\.com\/learning/, slug: 'linkedin-learning' },
+    ];
+
+    function detectPlatformSlug(url) {
+      const rule = PLATFORM_RULES.find(r => r.re.test(url));
+      return rule ? rule.slug : null;
+    }
+
+    /* Auto-pick the matching type, but never override a manual choice. */
+    function applyAutoType(slug) {
+      if (!slug) {
+        if (typeWasAutoDetected) clearAutoType();
+        return;
+      }
+      if (selectedType && !typeWasAutoDetected) return;
+      if (selectedType && selectedType.slug === slug) return;
+      const t = RF_TYPES.find(x => x.slug === slug);
+      if (t) selectExistingType(t, { auto: true });
+    }
+
+    function clearAutoType() {
+      selectedType = null;
+      typeWasAutoDetected = false;
+      comboInput.value = '';
+      comboTag.style.display = 'none';
+      newtypeBlock.style.display = 'none';
+      hiddenTypeId.value  = '';
+      hiddenNewName.value = '';
+      hiddenNewKind.value = '';
+      clearTypeError();
+      updateUnitLabel();
+    }
+
+    let lastAutoFetchedUrl = '';
+
+    /* Silently fetches just the title — no units, no preview table. */
+    async function autoFetchYouTubeTitle(url) {
+      if (lastAutoFetchedUrl === url) return;
+      if (titleEl && titleEl.value.trim()) return;
+      lastAutoFetchedUrl = url;
+      try {
+        const csrf = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        const resp = await fetch("{% url 'learning:youtube_preview' %}", {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf },
+          body: JSON.stringify({ url }),
+        });
+        const data = await resp.json();
+        if (!resp.ok || data.error) return; // fail quietly — the import button still works
+        if (titleEl && !titleEl.value.trim() && data.title) titleEl.value = data.title;
+      } catch (e) {
+        // network hiccup — ignore, the manual import button is still available
+      }
+    }
+
+    let detectTimer = null;
+    function runDetection() {
+      const url = urlField.value.trim();
+      applyAutoType(detectPlatformSlug(url));
+      if (YT_RE.test(url) && YT_ID_RE.test(url)) autoFetchYouTubeTitle(url);
+      updateBar();
+    }
 
     updateBar = function () {
       const isYouTubeType = selectedType && !selectedType.isNew && selectedType.slug === 'youtube';
@@ -477,8 +558,15 @@
       ytBar.classList.toggle('rf-yt-bar--visible', isYouTubeType && isYtUrl && !hasPreview);
     };
 
-    urlField.addEventListener('input', updateBar);
-    urlField.addEventListener('paste', () => setTimeout(updateBar, 0));
+    urlField.addEventListener('input', () => {
+      updateBar();
+      clearTimeout(detectTimer);
+      detectTimer = setTimeout(runDetection, 500);
+    });
+    urlField.addEventListener('paste', () => {
+      clearTimeout(detectTimer);
+      detectTimer = setTimeout(runDetection, 0);
+    });
 
     function fmtDuration(mins) {
       if (!mins) return '—';
@@ -523,14 +611,10 @@
         if (!resp.ok || data.error) throw new Error(data.error || 'Fetch failed.');
 
         // Auto-fill title
-        const titleEl = document.getElementById('id_title');
         if (titleEl && !titleEl.value.trim() && data.title) titleEl.value = data.title;
 
-        // Auto-select a video-kind type if none chosen yet
-        if (!selectedType) {
-          const videoType = RF_TYPES.find(t => t.kind === 'video');
-          if (videoType) selectExistingType(videoType);
-        }
+        // Auto-select the YouTube type if none chosen yet
+        applyAutoType('youtube');
 
         // Populate rows
         ytRows.innerHTML = '';
