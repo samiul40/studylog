@@ -64,9 +64,17 @@
     letter-spacing: 0.02em;
     transition: color 0.18s;
 
-    &:hover,
     &.active {
       color: #0a7d57; // emerald-deep
+    }
+
+    // Guard hover behind (hover: hover) — on iOS Safari a bare :hover rule
+    // with no JS click handler eats the first tap to simulate hover state,
+    // requiring a second tap to actually navigate.
+    @media (hover: hover) {
+      &:hover {
+        color: #0a7d57; // emerald-deep
+      }
     }
   }
 
@@ -107,9 +115,14 @@
     .mobile-bottom-nav__item {
       color: rgba(238, 240, 243, 0.62); // --ink-soft (neutral)
 
-      &:hover,
       &.active {
         color: #1ed688; // --emerald-bright
+      }
+
+      @media (hover: hover) {
+        &:hover {
+          color: #1ed688; // --emerald-bright
+        }
       }
     }
   }

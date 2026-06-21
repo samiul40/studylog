@@ -60,12 +60,12 @@ def get_dashboard_stats(user=None, resource_type=None) -> DashboardStats:
 
     weekly_activity = _get_weekly_activity(unit_qs)
     weekly_summary = _get_weekly_summary(unit_qs)
-    backlog = _get_backlog(unit_qs)
+    backlog = _get_backlog(unit_qs, total=total_units, completed=completed_units)
     study_streak = _get_study_streak(unit_qs)
     month_started, month_finished = _get_month_stats(resource_qs)
     time_invested = _get_time_invested(user)
     stale_resources = _get_stale_resources(resource_qs)
-    momentum = _get_momentum(unit_qs)
+    momentum = _get_momentum(unit_qs, units_this_week=weekly_summary["units_completed"])
     heatmap = _get_heatmap(unit_qs)
     resources_table = _get_resources_table(resource_qs)
     greeting_headline = _get_greeting_headline(unit_qs)
@@ -82,7 +82,6 @@ def get_dashboard_stats(user=None, resource_type=None) -> DashboardStats:
         "recent_resources": recent_resources,
         "active_filter": resource_type,
         "resource_types_with_counts": _get_resource_types_with_counts(user),
-        "weekly_completions": _get_weekly_completions(unit_qs),
         "weekly_summary": weekly_summary,
         "in_progress_count": in_progress_count,
         "study_streak": study_streak,
@@ -153,41 +152,6 @@ def _get_resource_types_with_counts(user) -> list:
         resources__user=user, resources__is_archived=False
     ).annotate(count=Count("resources"))
     return [{"type": rt, "count": rt.count} for rt in types]
-
-
-def _get_weekly_completions(unit_qs) -> list:
-    """
-    8 weeks (oldest→newest), completed-unit count per week.
-
-    Uses completed_at; falls back gracefully when field is null.
-    """
-    now = timezone.now()
-    current_week_start = (now - datetime.timedelta(days=now.weekday())).replace(
-        hour=0, minute=0, second=0, microsecond=0
-    )
-    eight_weeks_ago = current_week_start - datetime.timedelta(weeks=7)
-
-    raw = (
-        unit_qs.filter(
-            status="completed",
-            completed_at__gte=eight_weeks_ago,
-        )
-        .annotate(week=TruncWeek("completed_at"))
-        .values("week")
-        .annotate(count=Count("id"))
-    )
-    weekly_map = {entry["week"].date(): entry["count"] for entry in raw}
-
-    result = []
-    for i in range(8):
-        week_start = eight_weeks_ago + datetime.timedelta(weeks=i)
-        result.append(
-            {
-                "label": week_start.strftime("%-d %b"),
-                "count": weekly_map.get(week_start.date(), 0),
-            }
-        )
-    return result
 
 
 # --------------------------------------------------------------------------- #
@@ -280,10 +244,16 @@ def _get_weekly_summary(unit_qs) -> WeeklySummary:
     }
 
 
-def _get_backlog(unit_qs) -> BacklogStats:
-    """Completed / in-progress / not-started breakdown across all units."""
-    total = unit_qs.count()
-    completed = unit_qs.filter(status="completed").count()
+def _get_backlog(unit_qs, total=None, completed=None) -> BacklogStats:
+    """Completed / in-progress / not-started breakdown across all units.
+
+    total/completed may be passed in to reuse counts the caller already
+    has, avoiding a duplicate COUNT query for the same unit_qs.
+    """
+    if total is None:
+        total = unit_qs.count()
+    if completed is None:
+        completed = unit_qs.filter(status="completed").count()
     in_progress = unit_qs.filter(status="in_progress").count()
     not_started = total - completed - in_progress
     pct = calculate_percentage(completed, total)
@@ -445,8 +415,12 @@ def _get_stale_resources(resource_qs) -> List[StaleResource]:
     return result
 
 
-def _get_momentum(unit_qs) -> MomentumStats:
-    """This week vs last week: unit counts and time, with percentage deltas."""
+def _get_momentum(unit_qs, units_this_week=None) -> MomentumStats:
+    """This week vs last week: unit counts and time, with percentage deltas.
+
+    units_this_week may be passed in (e.g. from _get_weekly_summary, which
+    covers the same Mon-Sun window) to avoid a duplicate COUNT query.
+    """
     now = timezone.now()
     cur_start = (now - datetime.timedelta(days=now.weekday())).replace(
         hour=0, minute=0, second=0, microsecond=0
@@ -465,7 +439,7 @@ def _get_momentum(unit_qs) -> MomentumStats:
         completed_at__lt=cur_start,
     )
 
-    units_this = this_wk.count()
+    units_this = units_this_week if units_this_week is not None else this_wk.count()
     units_last = last_wk.count()
 
     in_prog_this = unit_qs.filter(
