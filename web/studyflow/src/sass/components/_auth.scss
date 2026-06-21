@@ -128,10 +128,15 @@
 
     svg { width: 14px; height: 14px; }
 
-    &:hover {
-      color: var(--bone);
-      border-color: rgba(243,241,232,0.35);
-      background: rgba(243,241,232,0.04);
+    // Guard hover behind (hover: hover) — on iOS Safari a bare :hover rule
+    // with no JS click handler eats the first tap to simulate hover state,
+    // requiring a second tap to actually navigate.
+    @media (hover: hover) {
+      &:hover {
+        color: var(--bone);
+        border-color: rgba(243,241,232,0.35);
+        background: rgba(243,241,232,0.04);
+      }
     }
   }
 
@@ -228,7 +233,9 @@
         color: var(--emerald-deep);
         font-weight: 600;
 
-        &:hover { text-decoration: underline; }
+        @media (hover: hover) {
+          &:hover { text-decoration: underline; }
+        }
       }
     }
   }
@@ -318,7 +325,9 @@
 
     svg { width: 18px; height: 18px; }
 
-    &:hover { background: var(--paper-2); color: var(--ink); }
+    @media (hover: hover) {
+      &:hover { background: var(--paper-2); color: var(--ink); }
+    }
   }
 
   .auth-link-sm {
@@ -326,7 +335,9 @@
     font-weight: 600;
     color: var(--emerald-deep);
 
-    &:hover { text-decoration: underline; }
+    @media (hover: hover) {
+      &:hover { text-decoration: underline; }
+    }
   }
 
   // ── Auth buttons ──────────────────────────────────────────────────────────────
@@ -354,11 +365,18 @@
       color: #042b1d;
       box-shadow: 0 8px 22px -12px rgba(16,185,129,0.85);
 
-      &:hover {
-        background: var(--emerald-bright);
-        transform: translateY(-1px);
-        box-shadow: 0 14px 28px -12px rgba(16,185,129,0.9);
-        color: #042b1d;
+      // Guard hover behind (hover: hover) — on iOS Safari a bare :hover rule
+      // with no JS click handler eats the first tap to simulate hover state,
+      // requiring a second tap to actually submit. The double tap can land
+      // as two form submits: the first logs in and rotates the CSRF token,
+      // the second then fails CSRF verification with the stale token.
+      @media (hover: hover) {
+        &:hover {
+          background: var(--emerald-bright);
+          transform: translateY(-1px);
+          box-shadow: 0 14px 28px -12px rgba(16,185,129,0.9);
+          color: #042b1d;
+        }
       }
     }
 
@@ -368,7 +386,9 @@
       border-color: var(--line-light);
       margin-top: 2px;
 
-      &:hover { border-color: rgba(13,24,18,0.3); background: var(--card-cv); color: var(--ink); }
+      @media (hover: hover) {
+        &:hover { border-color: rgba(13,24,18,0.3); background: var(--card-cv); color: var(--ink); }
+      }
     }
 
     &--ghost {
@@ -376,7 +396,9 @@
       color: var(--ink);
       border-color: var(--line-light);
 
-      &:hover { border-color: rgba(13,24,18,0.3); background: var(--card-cv); color: var(--ink); }
+      @media (hover: hover) {
+        &:hover { border-color: rgba(13,24,18,0.3); background: var(--card-cv); color: var(--ink); }
+      }
     }
   }
 
@@ -412,7 +434,9 @@
       color: var(--emerald-deep);
       font-weight: 600;
 
-      &:hover { text-decoration: underline; }
+      @media (hover: hover) {
+        &:hover { text-decoration: underline; }
+      }
     }
   }
 
@@ -522,21 +546,27 @@ body:has(.auth-layout) > main {
       &::placeholder { color: rgba(238,240,243,0.38); }
     }
 
-    .auth-toggle:hover { background: rgba(238,240,243,0.08); color: var(--bone); }
+    @media (hover: hover) {
+      .auth-toggle:hover { background: rgba(238,240,243,0.08); color: var(--bone); }
+    }
 
     .auth-btn--google {
       background: #14161b;
       color: var(--bone);
       border-color: rgba(238,240,243,0.14);
 
-      &:hover { background: #191c22; border-color: rgba(238,240,243,0.32); }
+      @media (hover: hover) {
+        &:hover { background: #191c22; border-color: rgba(238,240,243,0.32); }
+      }
     }
 
     .auth-btn--ghost {
       color: var(--bone);
       border-color: rgba(238,240,243,0.14);
 
-      &:hover { background: rgba(238,240,243,0.04); border-color: rgba(238,240,243,0.32); color: var(--bone); }
+      @media (hover: hover) {
+        &:hover { background: rgba(238,240,243,0.04); border-color: rgba(238,240,243,0.32); color: var(--bone); }
+      }
     }
 
     .auth-legal a { color: var(--bone); }

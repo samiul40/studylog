@@ -5,8 +5,18 @@
   border-color: $emerald-500 !important;
   color: #fff !important;
 
-  &:hover, &:focus {
+  &:focus {
     background-color: $emerald-600 !important;
     border-color: $emerald-600 !important;
+  }
+
+  // Guard hover behind (hover: hover) — on iOS Safari a bare :hover rule
+  // with no JS click handler eats the first tap to simulate hover state,
+  // requiring a second tap to actually submit.
+  @media (hover: hover) {
+    &:hover {
+      background-color: $emerald-600 !important;
+      border-color: $emerald-600 !important;
+    }
   }
 }
