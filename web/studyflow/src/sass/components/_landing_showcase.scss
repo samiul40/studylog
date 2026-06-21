@@ -1,0 +1,73 @@
+// =============================================================================
+// _landing_showcase.scss — Landing page "Dashboard showcase" section
+// New section (id="dashboard"): a crossfading pair of static, decorative
+// product screenshots (Dashboard / Resources list) with manual dot toggles.
+// The screenshots already bake in their own browser-window chrome and the
+// neutral-dark theme — no extra frame markup, no mock-building JS.
+// Sample data is baked into the images; illustrative only, no real user data.
+// Regenerate the WebPs only if the real screens change materially.
+// =============================================================================
+@use '../abstracts/variables' as *;
+
+.showcase__panel { border-radius: var(--r-lg); }
+
+.showcase__head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+// Container's aspect-ratio tracks whichever image is on (via :has()) so it
+// always hugs the visible screenshot — no gap, no JS height measuring.
+.showcase__shots {
+  position: relative;
+  margin-top: clamp(28px, 4vw, 44px);
+  aspect-ratio: 1675 / 1574;
+  transition: aspect-ratio 0.4s ease;
+  filter: drop-shadow(0 60px 120px rgba(0, 0, 0, 0.45));
+
+  &:has(.showcase__img:nth-child(2).is-on) {
+    aspect-ratio: 2221 / 1251;
+  }
+}
+
+.showcase__img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 14px;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+
+  &.is-on { opacity: 1; pointer-events: auto; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .showcase__shots, .showcase__img { transition: none; }
+}
+
+// rotating screen dots
+.shotdots { display: flex; justify-content: center; gap: 8px; margin-top: 20px; }
+
+.shotdot {
+  width: 28px; height: 6px;
+  border-radius: 100px;
+  border: none;
+  padding: 0;
+  background: var(--line-light);
+  cursor: pointer;
+  transition: background 0.3s;
+
+  &:hover { background: rgba(13, 24, 18, 0.3); }
+  &.on { background: var(--emerald); }
+  &.on:hover { background: var(--emerald); }
+}
+
+@media (prefers-color-scheme: dark) {
+  .shotdot:hover { background: rgba(238, 240, 243, 0.3); }
+}
