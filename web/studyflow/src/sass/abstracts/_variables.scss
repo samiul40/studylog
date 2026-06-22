@@ -79,7 +79,11 @@ $color-border:    $grey-200;
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
+  // App pages always carry an explicit data-theme ("dark" or "light"), set by
+  // base.html's boot script — [data-theme="dark"] in _themes.scss is the sole
+  // authority there. Only public pages (no data-theme attribute) should pick
+  // up OS-driven dark colors here.
+  :root:not([data-theme]) {
     --paper:      #0a0b0e;
     --paper-2:    #101218;
     --card:       #16181d;

@@ -106,6 +106,20 @@ body:has(.landing-page) > main.flex-grow-1 {
   }
 }
 
+// --ink is kept intentionally dark in OS dark mode for decorative "ink"
+// surfaces elsewhere on the landing page, so give the nav text its own
+// light color here instead of inheriting that token.
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme]) .lnav__link {
+    color: var(--bone);
+
+    &:hover {
+      color: var(--bone);
+      background: color-mix(in srgb, var(--bone) 8%, transparent);
+    }
+  }
+}
+
 @media (max-width: 560px) {
   .lnav__link.hide-sm { display: none; }
 }

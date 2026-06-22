@@ -37,9 +37,8 @@
     (function () {
       try {
         var t = localStorage.getItem('sf-theme') || 'system';
-        if (t === 'dark' || (t === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-          document.documentElement.setAttribute('data-theme', 'dark');
-        }
+        var isDark = t === 'dark' || (t === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
       } catch (e) {}
       // Wait until the DOM is ready and CSS is applied, then allow one more
       // frame for the browser to paint before re-enabling transitions.
