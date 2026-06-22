@@ -479,6 +479,11 @@
 
   &:hover:not(.open) .u__main { background: color-mix(in srgb, var(--ink) 2%, transparent); }
 
+  &.open .u__main {
+    background: color-mix(in srgb, var(--accent) 9%, transparent);
+    box-shadow: inset 3px 0 0 var(--accent);
+  }
+
   &__main {
     display: flex;
     align-items: flex-start;
@@ -936,6 +941,7 @@
   display: flex;
   align-items: flex-start;
   gap: 8px;
+  width: 100%;
   padding: 10px 13px;
   background: color-mix(in srgb, var(--accent) 7%, transparent);
   border: 1px solid color-mix(in srgb, var(--accent) 22%, transparent);
@@ -943,10 +949,19 @@
   font-size: 0.84rem;
   color: var(--ink-soft);
   line-height: 1.5;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+
+  &:hover {
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+    border-color: color-mix(in srgb, var(--accent) 32%, transparent);
+  }
 
   svg { width: 14px; height: 14px; color: var(--accent); flex-shrink: 0; margin-top: 2px; }
 
   .b__note-body {
+    display: block;
     flex: 1;
     min-width: 0;
     overflow-wrap: break-word;
@@ -955,19 +970,15 @@
     overflow-y: auto;
   }
 
-  .b__note-more {
-    display: inline;
-    background: none;
-    border: none;
-    padding: 0;
-    margin-left: 4px;
-    font-size: 0.78rem;
-    color: var(--accent);
-    cursor: pointer;
-    font-weight: 600;
-    text-decoration: underline;
-    text-underline-offset: 2px;
+  .b__note-edit {
+    display: inline-flex;
+    flex-shrink: 0;
+    margin-top: 2px;
+    opacity: 0.55;
+    transition: opacity 0.15s;
   }
+
+  &:hover .b__note-edit { opacity: 1; }
 }
 
 // Expanded panel footer
@@ -997,6 +1008,7 @@
 
   &--danger {
     color: color-mix(in srgb, var(--rose) 80%, transparent);
+    margin-left: auto;
     &:hover { color: var(--rose); }
   }
 }
@@ -1185,6 +1197,8 @@
   }
 
   textarea.modal-input { resize: vertical; min-height: 110px; }
+
+  .modal-input--note { min-height: 420px; }
 
   // Duration picker — two boxes side by side
   .modal-dur-row {
