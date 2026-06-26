@@ -237,6 +237,11 @@ class LearningUnitInlinePatchView(UserPermissionMixin, View):
             if val in dict(LearningUnit.StatusChoices.choices):
                 unit.status = val
 
+        if "title" in data:
+            val = str(data["title"]).strip()
+            if val:
+                unit.title = val
+
         if "notes" in data:
             unit.notes = str(data["notes"])
 

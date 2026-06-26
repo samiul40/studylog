@@ -139,6 +139,7 @@ class LearningUnit(models.Model):
         """Compact dict for AJAX responses on the resource detail page."""
         return {
             "id": self.id,
+            "title": self.title,
             "status": self.status,
             "duration_minutes": self.duration_minutes,
             "video_progress_minutes": self.video_progress_minutes,
