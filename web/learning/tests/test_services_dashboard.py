@@ -298,7 +298,7 @@ class TestGetWeeklySummary:
         assert result["resources_worked_on"] == 1
 
     def test_excludes_completions_from_last_week(self, user, resource):
-        now = timezone.now()
+        now = timezone.localtime()
         current_week_start = (now - datetime.timedelta(days=now.weekday())).replace(
             hour=0, minute=0, second=0, microsecond=0
         )
