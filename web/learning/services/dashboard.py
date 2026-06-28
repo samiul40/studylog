@@ -165,7 +165,7 @@ def _get_weekly_activity(unit_qs) -> List[WeekActivity]:
 
     Includes is_current flag and proportional bar heights for the chart.
     """
-    now = timezone.now()
+    now = timezone.localtime()
     current_week_start = (now - datetime.timedelta(days=now.weekday())).replace(
         hour=0, minute=0, second=0, microsecond=0
     )
@@ -202,7 +202,7 @@ def _get_weekly_activity(unit_qs) -> List[WeekActivity]:
 
 def _get_weekly_summary(unit_qs) -> WeeklySummary:
     """Return stats for the current Monday–Sunday week."""
-    now = timezone.now()
+    now = timezone.localtime()
     week_start = (now - datetime.timedelta(days=now.weekday())).replace(
         hour=0, minute=0, second=0, microsecond=0
     )
@@ -279,7 +279,7 @@ def _get_study_streak(unit_qs) -> int:
 
     A day is active if ≥1 unit was completed OR had any video progress recorded.
     """
-    today = timezone.now().date()
+    today = timezone.localdate()
 
     completed_days = set(
         unit_qs.filter(status="completed", completed_at__date__lte=today)
@@ -306,7 +306,7 @@ def _get_study_streak(unit_qs) -> int:
 
 def _get_month_stats(resource_qs) -> tuple:
     """(started, finished) resource counts for the current calendar month."""
-    now = timezone.now()
+    now = timezone.localtime()
     month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
 
     started = resource_qs.filter(created_at__gte=month_start).count()
@@ -338,7 +338,7 @@ def _get_time_invested(user) -> TimeInvested:
             "all_time": "—",
         }
 
-    now = timezone.now()
+    now = timezone.localtime()
     week_start = (now - datetime.timedelta(days=now.weekday())).replace(
         hour=0, minute=0, second=0, microsecond=0
     )
@@ -383,7 +383,7 @@ def _get_time_invested(user) -> TimeInvested:
 
 def _get_stale_resources(resource_qs) -> List[StaleResource]:
     """In-progress resources idle ≥ 14 days, most idle first (max 3)."""
-    today = timezone.now().date()
+    today = timezone.localdate()
     stale_cutoff = today - datetime.timedelta(days=14)
 
     rows = (
@@ -421,7 +421,7 @@ def _get_momentum(unit_qs, units_this_week=None) -> MomentumStats:
     units_this_week may be passed in (e.g. from _get_weekly_summary, which
     covers the same Mon-Sun window) to avoid a duplicate COUNT query.
     """
-    now = timezone.now()
+    now = timezone.localtime()
     cur_start = (now - datetime.timedelta(days=now.weekday())).replace(
         hour=0, minute=0, second=0, microsecond=0
     )
@@ -494,8 +494,8 @@ def _get_momentum(unit_qs, units_this_week=None) -> MomentumStats:
 
 def _get_heatmap(unit_qs) -> HeatmapData:
     """Full-year activity heatmap data (Jan–Dec, Monday-start columns)."""
-    year = timezone.now().year
-    today = timezone.now().date()
+    today = timezone.localdate()
+    year = today.year
     jan1 = datetime.date(year, 1, 1)
     dec31 = datetime.date(year, 12, 31)
 
@@ -571,7 +571,7 @@ def _get_heatmap(unit_qs) -> HeatmapData:
 
 def _get_resources_table(resource_qs) -> List[ResourceTableRow]:
     """Per-resource progress and last activity for the table."""
-    today = timezone.now().date()
+    today = timezone.localdate()
 
     rows = (
         resource_qs.select_related("resource_type")
@@ -647,7 +647,7 @@ def _get_resources_table(resource_qs) -> List[ResourceTableRow]:
 
 def _get_greeting_headline(unit_qs) -> Optional[str]:
     """Units-completed headline for this week, or None if no activity."""
-    now = timezone.now()
+    now = timezone.localtime()
     week_start = (now - datetime.timedelta(days=now.weekday())).replace(
         hour=0, minute=0, second=0, microsecond=0
     )

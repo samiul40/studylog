@@ -223,7 +223,7 @@ class TestMonthStats:
         assert s == 1
 
     def test_resource_created_last_month_not_started(self, user, video_rt):
-        now = timezone.now()
+        now = timezone.localtime()
         last_month = now.replace(day=1) - datetime.timedelta(days=1)
         r = baker.make(
             LearningResource, user=user, resource_type=video_rt, is_archived=False
@@ -255,7 +255,7 @@ class TestMonthStats:
             LearningResource, user=user, resource_type=video_rt, is_archived=False
         )
         unit = baker.make(LearningUnit, resource=r, status="completed")
-        last_month = timezone.now().replace(day=1) - datetime.timedelta(days=1)
+        last_month = timezone.localtime().replace(day=1) - datetime.timedelta(days=1)
         LearningUnit.objects.filter(pk=unit.pk).update(completed_at=last_month)
         _, f = _get_month_stats(_user_resource_qs(user))
         assert f == 0
@@ -423,7 +423,7 @@ class TestWeeklyActivity:
 class TestHeatmap:
     def test_has_correct_year(self, user, resource):
         h = _get_heatmap(_user_unit_qs(user))
-        assert h["year"] == timezone.now().year
+        assert h["year"] == timezone.localdate().year
 
     def test_has_12_month_labels(self, user, resource):
         h = _get_heatmap(_user_unit_qs(user))
@@ -440,7 +440,7 @@ class TestHeatmap:
         assert total == 1
 
     def test_level_buckets(self, user, resource):
-        today = timezone.now()
+        today = timezone.localtime()
         for _ in range(4):
             _completed(resource, today)
         h = _get_heatmap(_user_unit_qs(user))
@@ -453,7 +453,7 @@ class TestHeatmap:
         assert todays_cell["level"] == 4
 
     def test_future_cells_are_level_zero(self, user, resource):
-        future = timezone.now() + datetime.timedelta(days=5)
+        future = timezone.localtime() + datetime.timedelta(days=5)
         _completed(resource, future)
         h = _get_heatmap(_user_unit_qs(user))
         for week in h["weeks"]:
@@ -469,7 +469,7 @@ class TestHeatmap:
 
 class TestMomentum:
     def _week_start(self):
-        now = timezone.now()
+        now = timezone.localtime()
         return (now - datetime.timedelta(days=now.weekday())).replace(
             hour=0, minute=0, second=0, microsecond=0
         )
