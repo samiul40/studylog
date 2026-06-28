@@ -139,6 +139,29 @@
           </form>
 
         </div>
+
+        <div class="scard spcard">
+          <div class="phead">
+            <h3>Timezone</h3>
+            <p>Used to display your activity on the correct day. Auto-detected from your browser when you first sign in.</p>
+          </div>
+          <form method="post" novalidate>
+            {% csrf_token %}
+            <input type="hidden" name="form_type" value="timezone">
+            {% include "partials/_form_field.html" with field=timezone_form.timezone %}
+            <div class="pactions">
+              <span class="pactions__hint">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M5 12l5 5L20 7"></path>
+                </svg>
+                Affects how your dashboard dates are shown
+              </span>
+              <button type="submit" class="s-btn s-btn--primary">Save timezone</button>
+            </div>
+          </form>
+        </div>
+
       </section>
 
       <section class="s-panel {% if password_form.errors %}active{% endif %}"

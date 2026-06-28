@@ -411,7 +411,8 @@ $s-ease:           cubic-bezier(0.22, 1, 0.36, 1);
 [data-theme="dark"] .settings-wrap {
   .form-label { color: $s-ink-soft-d !important; }
 
-  .form-control {
+  .form-control,
+  .form-select {
     border-color: $s-line-d !important;
     background-color: $s-field-dark !important;
     color: $s-ink-dark !important;

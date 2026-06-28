@@ -112,6 +112,24 @@
   <script src="{% static 'js/main.js' %}"></script>
   {% endblock app_scripts %}
   {% block scripts %}{% endblock %}
+  {% if user.is_authenticated %}
+  <script nonce="{{ request.csp_nonce }}">
+  (function () {
+    var detected = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    var stored = "{{ request.user.profile.timezone|default:'UTC' }}";
+    if (detected && stored === 'UTC') {
+      fetch("{% url 'set_timezone' %}", {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify({ timezone: detected })
+      });
+    }
+  }());
+  </script>
+  {% endif %}
 </body>
 
 </html>
