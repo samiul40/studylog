@@ -134,6 +134,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "accounts.middleware.TimezoneMiddleware",
     # axes must come after AuthenticationMiddleware
     "axes.middleware.AxesMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
@@ -231,7 +232,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalisation
 
 LANGUAGE_CODE = "en-gb"
-TIME_ZONE = "Europe/London"
+TIME_ZONE = "UTC"
 USE_I18N = True
 USE_TZ = True
 
