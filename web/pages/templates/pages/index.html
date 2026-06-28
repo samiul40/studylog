@@ -1,12 +1,12 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}StudyLog — Track your learning, actually finish things{% endblock %}
-{% block meta_description %}StudyLog helps you organise videos, books, and courses — and keeps you honest about your progress. Free to use.{% endblock %}
-{% block og_title %}StudyLog — Track your learning, actually finish things{% endblock %}
-{% block og_description %}StudyLog helps you organise videos, books, and courses — and keeps you honest about your progress. Free to use.{% endblock %}
-{% block twitter_title %}StudyLog — Track your learning, actually finish things{% endblock %}
-{% block twitter_description %}StudyLog helps you organise videos, books, and courses — and keeps you honest about your progress. Free to use.{% endblock %}
+{% block title %}StudyLog — Free Study Log &amp; Learning Tracker for Courses, Books and Videos{% endblock %}
+{% block meta_description %}StudyLog is a free study log and learning tracker. Organise your courses, books and videos, break them into units, track your progress and actually finish things. No credit card needed.{% endblock %}
+{% block og_title %}StudyLog — Free Study Log &amp; Learning Tracker{% endblock %}
+{% block og_description %}StudyLog is a free study log and learning tracker. Organise your courses, books and videos, track progress and actually finish what you start.{% endblock %}
+{% block twitter_title %}StudyLog — Free Study Log &amp; Learning Tracker{% endblock %}
+{% block twitter_description %}StudyLog is a free study log and learning tracker. Organise your courses, books and videos, track progress and actually finish what you start.{% endblock %}
 
 {% block extra_head %}
 <meta name="color-scheme" content="light dark">
@@ -16,12 +16,23 @@
 <script type="application/ld+json" nonce="{{ request.csp_nonce }}">
 {
   "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "StudyLog",
+  "url": "https://www.studylog.co.uk/",
+  "logo": "https://www.studylog.co.uk{% static 'img/favicon-512.png' %}",
+  "description": "Free learning tracker to organise courses, books and videos and track your progress.",
+  "sameAs": []
+}
+</script>
+<script type="application/ld+json" nonce="{{ request.csp_nonce }}">
+{
+  "@context": "https://schema.org",
   "@type": "WebApplication",
   "name": "StudyLog",
   "url": "https://www.studylog.co.uk/",
   "applicationCategory": "EducationalApplication",
   "operatingSystem": "Web",
-  "description": "StudyLog is a free learning tracker that helps you organise courses, books, videos and learning resources in one place, track your progress and finish what you start.",
+  "description": "StudyLog is a free study tracker and learning log that helps you organise online courses, books, videos and learning resources in one place, track your progress and finish what you start.",
   "offers": { "@type": "Offer", "price": "0", "priceCurrency": "GBP" }
 }
 </script>
@@ -49,6 +60,16 @@
       "@type": "Question",
       "name": "How is StudyLog different from a todo list?",
       "acceptedAnswer": { "@type": "Answer", "text": "Unlike a normal todo list, StudyLog focuses on long-term learning progress. You can organise resources into units, track completion and see how your learning improves over time." }
+    },
+    {
+      "@type": "Question",
+      "name": "Is StudyLog a study tracker?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Yes. StudyLog is a free study tracker and learning log — it lets you log your study sessions, mark units complete and watch your progress grow over time. Think of it as a study planner that actually keeps you accountable." }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I use StudyLog to track online courses?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Yes — StudyLog works as a course tracker for Udemy, Coursera, YouTube playlists, or any online course. Add the course, break it into lectures or sections, and tick them off as you go." }
     },
     {
       "@type": "Question",
@@ -108,7 +129,7 @@
           Actually <span class="hl">finish<svg viewBox="0 0 200 20" preserveAspectRatio="none" aria-hidden="true"><path d="M3 14 Q 50 4, 100 11 T 197 8"></path></svg></span> things.
         </h1>
         <p class="l-hero__sub">
-          StudyLog is a free learning tracker that turns scattered videos, books and courses into one organised plan — helping you track progress, stay consistent and finish what you start.
+          StudyLog is a free study tracker and learning log that turns scattered videos, books and courses into one organised plan — helping you track progress, stay consistent and finish what you start.
         </p>
         <div class="l-hero__cta">
           <a href="{% url 'account_signup' %}" class="l-btn l-btn--primary l-btn--lg">
@@ -194,14 +215,14 @@
     <div class="l-wrap l-about__inner">
       <div class="l-sec-head reveal">
         <span class="l-kicker">What is StudyLog</span>
-        <h2>Your personal learning tracker.</h2>
-        <p>StudyLog is a free learning tracker that helps you organise everything you are learning in one place.</p>
-        <p style="margin-top: 14px;">Save your courses, books, videos and learning resources, break them into smaller steps, track your progress and stay consistent until you finish.</p>
+        <h2>Your personal study tracker and learning log.</h2>
+        <p>StudyLog is a free study tracker that helps you organise everything you are learning in one place — your personal learning log for courses, books and videos.</p>
+        <p style="margin-top: 14px;">Save your online courses, books, videos and learning resources, break them into smaller steps, track your progress and stay consistent until you finish.</p>
       </div>
       <div class="l-about__points reveal d1">
         <div class="l-apoint">
           <span class="l-apoint__ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg></span>
-          Track courses and tutorials
+          Track online courses and tutorials
         </div>
         <div class="l-apoint">
           <span class="l-apoint__ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg></span>
@@ -480,6 +501,14 @@
           <p>Unlike a normal todo list, StudyLog focuses on long-term learning progress. You can organise resources into units, track completion and see how your learning improves over time.</p>
         </details>
         <details class="l-faq__item">
+          <summary>Is StudyLog a study tracker?<span class="l-faq__chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg></span></summary>
+          <p>Yes. StudyLog is a free study tracker and learning log — it lets you log your study sessions, mark units complete and watch your progress grow over time. Think of it as a study planner that actually keeps you accountable.</p>
+        </details>
+        <details class="l-faq__item">
+          <summary>Can I use StudyLog to track online courses?<span class="l-faq__chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg></span></summary>
+          <p>Yes — StudyLog works as a course tracker for Udemy, Coursera, YouTube playlists, or any online course. Add the course, break it into lectures or sections, and tick them off as you go.</p>
+        </details>
+        <details class="l-faq__item">
           <summary>Is StudyLog available as an app?<span class="l-faq__chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg></span></summary>
           <p>StudyLog works directly in your browser and can be added to your phone home screen like an app — full-screen, on iOS and Android, with no app store download.</p>
         </details>
@@ -514,7 +543,7 @@
           <div class="l-foot__brand">
             <img src="{% static 'img/studylog-lockup-dark.webp' %}" alt="StudyLog" height="28" class="l-foot__lockup">
           </div>
-          <p class="l-foot__tag">The free learning tracker to organise your resources, monitor progress, and finish what you start.</p>
+          <p class="l-foot__tag">The free study tracker and learning log to organise your courses, monitor progress, and finish what you start.</p>
         </div>
         <div class="l-foot__links">
           <div class="l-foot__col">
@@ -566,7 +595,7 @@
     'Videos', 'Books', 'Online courses', 'Udemy courses', 'YouTube playlists',
     'Programming tutorials', 'PDFs', 'Lecture notes', 'Certifications',
     'Progress tracking', 'Learning goals', 'Study planner', 'Weekly streaks',
-    'Revision tracker', 'Completion stats'
+    'Study tracker', 'Course tracker', 'Learning log', 'Revision tracker', 'Completion stats'
   ];
   const mq = document.getElementById('lmq');
   const buildSet = () => items.map(t =>
