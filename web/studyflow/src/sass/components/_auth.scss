@@ -471,6 +471,14 @@
     margin-bottom: 20px;
 
     svg { width: 16px; height: 16px; flex: 0 0 auto; margin-top: 2px; }
+
+    &--info {
+      background: rgba(47, 128, 194, 0.09);
+      border-color: rgba(47, 128, 194, 0.26);
+      color: #1d5f96;
+      svg { color: #2f80c2; }
+      strong { color: inherit; font-weight: 600; }
+    }
   }
 
   // ── Responsive ────────────────────────────────────────────────────────────────
@@ -575,6 +583,13 @@ body:has(.auth-layout) > main {
       color: #f0a39e;
       background: rgba(214,69,61,0.12);
       border-color: rgba(214,69,61,0.3);
+
+      &--info {
+        color: #7ec8f5;
+        background: rgba(109, 180, 236, 0.09);
+        border-color: rgba(109, 180, 236, 0.26);
+        svg { color: #6db4ec; }
+      }
     }
   }
 }

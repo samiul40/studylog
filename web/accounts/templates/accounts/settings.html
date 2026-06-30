@@ -74,6 +74,23 @@
           </svg>
         </button>
 
+        <button type="button"
+                class="snav__item snav__item--danger"
+                data-panel="danger" aria-controls="panel-danger">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="3 6 5 6 21 6"></polyline>
+            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
+            <path d="M10 11v6M14 11v6"></path>
+            <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path>
+          </svg>
+          Delete Account
+          <svg class="snav__chev" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M9 6l6 6-6 6"></path>
+          </svg>
+        </button>
+
       </div>
     </aside>
 
@@ -335,6 +352,75 @@
         </div>
       </section>
 
+      <section class="s-panel" id="panel-danger" aria-label="Delete Account">
+
+        <div class="scard spcard">
+          <div class="phead">
+            <h3>Delete Account</h3>
+            <p>Permanently remove your account and all associated data.</p>
+          </div>
+
+          <div class="s-note">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="M12 16v-4M12 8h.01"></path>
+            </svg>
+            <div>
+              <b>Your data is retained for 30 days.</b>
+              If you change your mind within that window you can reactivate
+              your account and pick up right where you left off. After 30 days
+              your account, resources, and progress are permanently erased and
+              cannot be recovered.
+            </div>
+          </div>
+
+          <div class="danger-zone">
+            <h4 class="danger-zone__title">Danger zone</h4>
+            <p class="danger-zone__body">
+              Deleting your account will sign you out immediately. Your learning
+              resources and progress will be retained for <strong>30 days</strong>
+              in case you return. After that, everything is permanently deleted.
+            </p>
+
+            <form method="post" action="{% url 'delete_account' %}" id="deleteAccountForm">
+              {% csrf_token %}
+
+              <div class="danger-confirm-row">
+                <label class="danger-confirm-label" for="deleteConfirm">
+                  Type <strong>DELETE</strong> to confirm
+                </label>
+                <input type="text"
+                       id="deleteConfirm"
+                       class="form-control danger-confirm-input"
+                       placeholder="DELETE"
+                       autocomplete="off"
+                       spellcheck="false">
+              </div>
+
+              <div class="pactions">
+                <span class="pactions__hint">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                       stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                    <line x1="12" y1="9" x2="12" y2="13"></line>
+                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                  </svg>
+                  This action cannot be undone after 30 days
+                </span>
+                <button type="submit"
+                        id="deleteAccountBtn"
+                        class="s-btn s-btn--danger"
+                        disabled>
+                  Delete my account
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+      </section>
+
     </div>{# /panels #}
   </div>{# /settings-grid #}
 </div>{# /settings-wrap #}
@@ -400,6 +486,15 @@
   });
 
   syncThemeUI();
+
+  // Delete account — enable submit only when user types "DELETE" exactly
+  var deleteConfirm = document.getElementById('deleteConfirm');
+  var deleteBtn     = document.getElementById('deleteAccountBtn');
+  if (deleteConfirm && deleteBtn) {
+    deleteConfirm.addEventListener('input', function () {
+      deleteBtn.disabled = deleteConfirm.value !== 'DELETE';
+    });
+  }
 
   // Password eye toggle
   document.querySelectorAll('#panel-security input[type="password"]').forEach(function (input) {

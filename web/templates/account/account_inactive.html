@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Account Inactive · StudyLog{% endblock %}
+
+{% block extra_head %}
+<meta name="color-scheme" content="light dark">
+<script nonce="{{ request.csp_nonce }}">document.documentElement.removeAttribute('data-theme');</script>
+{% endblock %}
+{% block navbar %}{% endblock %}
+{% block footer %}{% endblock %}
+{% block mobile_nav %}{% endblock %}
+{% block main_class %}{% endblock %}
+{% block alerts %}{% endblock %}
+
+{% block content %}
+<div class="auth-layout">
+
+  <aside class="auth-brand">
+    <div class="auth-brand__grid"></div>
+    <div class="auth-brand__glow"></div>
+
+    <div class="auth-brand__head">
+      <a href="{% url 'index' %}" class="auth-logo">
+        <img src="{% static 'img/studylog-lockup-dark.webp' %}" alt="StudyLog" height="30">
+      </a>
+      <a href="{% url 'account_login' %}" class="auth-back">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+             stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 12H5M11 18l-6-6 6-6"></path>
+        </svg>
+        Back to sign in
+      </a>
+    </div>
+
+    <div class="auth-brand__mid">
+      <span class="auth-brand__eyebrow">
+        <span class="blip"></span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:0.68rem;letter-spacing:0.06em;text-transform:uppercase;">Account pending deletion</span>
+      </span>
+      <h1>Still within the window.</h1>
+      <p class="auth-brand__sub">
+        Your data is kept safe for 30 days after a deletion request.
+        Reactivate now and everything will be exactly as you left it.
+      </p>
+    </div>
+
+    <div class="auth-brand__foot">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+           stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="11" width="18" height="11" rx="2"></rect>
+        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+      </svg>
+      Data retained for 30 days · No data lost
+    </div>
+  </aside>
+
+  <div class="auth-main">
+    <div class="auth-card">
+      <div class="auth-card__head">
+        <h1 class="auth-card__title">Account scheduled for deletion</h1>
+        <p class="auth-card__sub">
+          This account is currently deactivated but your data is still safe.
+        </p>
+      </div>
+
+      <div class="auth-alert auth-alert--info" role="status">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="10"></circle>
+          <path d="M12 16v-4M12 8h.01"></path>
+        </svg>
+        <span>
+          You requested account deletion. Your resources and progress are still
+          intact and will remain so for <strong>30 days</strong> from the
+          deletion request.
+        </span>
+      </div>
+
+      <a href="{% url 'reactivate_account' %}" class="auth-btn auth-btn--primary"
+         style="margin-top: 8px; display: flex;">
+        Reactivate my account
+      </a>
+
+      <p class="auth-legal" style="margin-top: 20px;">
+        Don't want to reactivate?
+        Your account will be permanently deleted after the 30-day window.
+      </p>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
