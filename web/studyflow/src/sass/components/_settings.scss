@@ -740,6 +740,41 @@ $s-ease:           cubic-bezier(0.22, 1, 0.36, 1);
   }
 }
 
+// Switch to a 2×2 grid when 4 items no longer fit in a single row
+@media (max-width: 560px) {
+  .snav__list {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+  }
+
+  .snav__item {
+    flex: unset;
+    white-space: normal;
+    text-align: center;
+    font-size: 0.78rem;
+    padding: 10px 6px;
+    line-height: 1.2;
+  }
+
+  // Remove the top margin set for desktop — grid handles spacing
+  .snav__item--danger { margin-top: 0; }
+
+  // Stack hint above button on narrow screens
+  .pactions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+  }
+
+  .pactions__hint { margin-right: 0; }
+
+  // Full-width confirm input and button in danger zone
+  .danger-confirm-input { max-width: 100%; }
+
+  .s-btn--danger { width: 100%; justify-content: center; }
+}
+
 @media (max-width: 520px) {
   .fldgrid { grid-template-columns: 1fr; > .mb-4 { margin-bottom: 16px !important; } }
   .themes  { grid-template-columns: 1fr; }
