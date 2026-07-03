@@ -6,6 +6,10 @@
 {% block breadcrumbs %}{% endblock %}
 {% block alerts %}{% endblock %}
 
+{% block extra_head %}
+<script nonce="{{ request.csp_nonce }}">try{var __dv=localStorage.getItem('sf-dash-view')||'simple';document.documentElement.setAttribute('data-dash',__dv);}catch(e){document.documentElement.setAttribute('data-dash','simple');}</script>
+{% endblock %}
+
 {% block content %}
 <div class="db-wrap">
 
@@ -17,11 +21,84 @@
       <p class="greet__sub">{{ greeting_headline }}</p>
       {% endif %}
     </div>
-    <time class="greet__date">{{ today_label }}</time>
+    <div class="greet__right">
+      <div class="viewtoggle" role="tablist" aria-label="Dashboard detail level">
+        <button class="viewtoggle__btn" data-view="simple" role="tab">Simple</button>
+        <button class="viewtoggle__btn" data-view="deep" role="tab">Deep analytics</button>
+      </div>
+      <time class="greet__date">{{ today_label }}</time>
+    </div>
   </header>
 
+  {# ═══════════════════════════════════════════════════════════════════════ #}
+  {# SIMPLE VIEW                                                             #}
+  {# ═══════════════════════════════════════════════════════════════════════ #}
+  <section class="simpleview simple-only">
+
+    {# ── 4 stat cards ──────────────────────────────────────────────────── #}
+    <div class="sstats">
+
+      <div class="sstat">
+        <span class="sstat__value">{{ total_resources }}</span>
+        <span class="sstat__label">Started</span>
+        <span class="sstat__sub">resources you've begun</span>
+      </div>
+
+      <div class="sstat">
+        <span class="sstat__value">{{ completed_resources_count }}</span>
+        <span class="sstat__label">Completed</span>
+        <span class="sstat__sub">resources finished</span>
+      </div>
+
+      <div class="sstat">
+        {% with t=time_invested.all_time %}
+        <span class="sstat__value">{% if t == "—" %}—{% else %}{{ t }}{% endif %}</span>
+        {% endwith %}
+        <span class="sstat__label">Hours spent</span>
+        <span class="sstat__sub">total time logged</span>
+      </div>
+
+      <div class="sstat">
+        <span class="sstat__value">{{ completion_rate }}<small>%</small></span>
+        <span class="sstat__label">Completion</span>
+        <span class="sstat__sub">{{ completed_units }} of {{ total_units }} units done</span>
+      </div>
+
+    </div>{# /sstats #}
+
+    {# ── Resume card ───────────────────────────────────────────────────── #}
+    {% if resume_resource %}
+    <div class="scontinue">
+      <div class="scontinue__body">
+        <span class="scontinue__kick">Pick up where you left off</span>
+        <span class="scontinue__title">{{ resume_resource.title }}</span>
+        <div class="scontinue__meta">
+          <span class="type-pill type-pill--{{ resume_resource.content_kind }}">{{ resume_resource.type_name }}</span>
+          <span class="scontinue__pct">{{ resume_resource.pct }}% complete &middot; {{ resume_resource.completed_units }} of {{ resume_resource.total_units }} units</span>
+        </div>
+        <div class="scontinue__track">
+          <div class="scontinue__fill" style="width: {{ resume_resource.pct }}%;"></div>
+        </div>
+      </div>
+      <a class="scontinue__cta" href="{{ resume_resource.url }}">Resume &rarr;</a>
+    </div>
+    {% else %}
+    <div class="scontinue scontinue--empty">
+      <div class="scontinue__body">
+        <span class="scontinue__kick">Pick up where you left off</span>
+        <p class="scontinue__empty-msg">No in-progress resources yet. Start one to see it here.</p>
+      </div>
+    </div>
+    {% endif %}
+
+  </section>{# /simpleview #}
+
+  {# ═══════════════════════════════════════════════════════════════════════ #}
+  {# DEEP VIEW                                                               #}
+  {# ═══════════════════════════════════════════════════════════════════════ #}
+
   {# ─── KPI strip ────────────────────────────────────────────────────────── #}
-  <div class="kpis">
+  <div class="kpis deep-only">
 
     <div class="kpi-card">
       <div class="kpi-card__value">{{ total_resources }}</div>
@@ -56,126 +133,50 @@
   </div>{# /kpis #}
 
   {# ─── Card grid ────────────────────────────────────────────────────────── #}
-  <div class="dgrid">
+  <div class="dgrid deep-only">
 
-    {# ── Row 1: Weekly activity + Backlog ─────────────────────────────────── #}
+    {# ── Band 1: This week ─────────────────────────────────────────────── #}
+    <div class="dlead">
+      <span class="dlead__t">This week</span>
+      <span class="dlead__d">Your recent activity and pace</span>
+    </div>
 
+    {# Weekly area chart #}
     <div class="dcard dcard--span8">
-      <div class="dcard__kicker">Units completed per week</div>
-      {% if weekly_activity %}
-      <div class="week-chart" aria-label="Units completed per week bar chart">
-        {% for wk in weekly_activity %}
-        <div class="week-col">
-          <div class="week-col__track">
-            <div class="week-col__bar-group" style="height: max({{ wk.height_pct }}%, 5px)">
-              {% if wk.count %}<span class="week-col__count">{{ wk.count }}</span>{% endif %}
-              <div class="week-col__bar {% if wk.is_current %}week-col__bar--current{% endif %}"></div>
-            </div>
-          </div>
-          <span class="week-col__label">{{ wk.label }}</span>
-        </div>
-        {% endfor %}
+      <div class="dcard__kicker kick">Units completed per week</div>
+      {% if area_chart and area_chart.has_data %}
+      <div class="wchart">
+        <svg viewBox="0 0 800 205" role="img"
+             aria-label="Units completed per week area chart">
+          <defs>
+            <linearGradient id="wcFill" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" style="stop-color: var(--emerald); stop-opacity: .28"></stop>
+              <stop offset="100%" style="stop-color: var(--emerald); stop-opacity: 0"></stop>
+            </linearGradient>
+          </defs>
+          <line class="wc-base" x1="20" y1="{{ area_chart.y_base }}" x2="780" y2="{{ area_chart.y_base }}"></line>
+          <path class="wc-area" d="{{ area_chart.area_d }}"></path>
+          <path class="wc-line" d="{{ area_chart.line_d }}"></path>
+          {% for pt in area_chart.points %}
+          {% if pt.count %}
+          <circle class="wc-dot" cx="{{ pt.x }}" cy="{{ pt.y }}" r="5"></circle>
+          <text class="wc-val" x="{{ pt.x }}" y="{{ pt.val_y }}" text-anchor="middle">{{ pt.count }}</text>
+          {% endif %}
+          {% endfor %}
+          {% for pt in area_chart.points %}
+          <text class="wc-cap" x="{{ pt.x }}" y="196"
+                text-anchor="{% if forloop.first %}start{% elif forloop.last %}end{% else %}middle{% endif %}">{{ pt.label }}</text>
+          {% endfor %}
+        </svg>
       </div>
       {% else %}
       <p class="dcard__empty">No completed units in the last 8 weeks.</p>
       {% endif %}
     </div>
 
+    {# Momentum #}
     <div class="dcard dcard--span4">
-      <div class="dcard__kicker">Backlog</div>
-      {% if backlog.total > 0 %}
-      <div class="backlog-hero">
-        <span class="backlog-hero__pct">{{ backlog.pct }}%</span>
-        <span class="backlog-hero__sub">of {{ backlog.total }} units completed</span>
-      </div>
-      <div class="seg-bar" aria-label="Completion breakdown">
-        <div class="seg-bar__fill seg-bar__fill--done"
-             style="width: {{ backlog.completed_pct }}%"></div>
-        <div class="seg-bar__fill seg-bar__fill--inprog"
-             style="width: {{ backlog.in_progress_pct }}%"></div>
-        <div class="seg-bar__fill seg-bar__fill--todo"
-             style="width: {{ backlog.not_started_pct }}%"></div>
-      </div>
-      <div class="seg-legend">
-        <span class="seg-legend__item">
-          <span class="seg-legend__swatch seg-legend__swatch--done"></span>
-          <span class="seg-legend__label">Completed</span>
-          <span class="seg-legend__count">{{ backlog.completed }}</span>
-        </span>
-        <span class="seg-legend__item">
-          <span class="seg-legend__swatch seg-legend__swatch--inprog"></span>
-          <span class="seg-legend__label">In progress</span>
-          <span class="seg-legend__count">{{ backlog.in_progress }}</span>
-        </span>
-        <span class="seg-legend__item">
-          <span class="seg-legend__swatch seg-legend__swatch--todo"></span>
-          <span class="seg-legend__label">Not started</span>
-          <span class="seg-legend__count">{{ backlog.not_started }}</span>
-        </span>
-      </div>
-      {% else %}
-      <p class="dcard__empty">No units yet — add some to track progress.</p>
-      {% endif %}
-      <p class="dcard__footnote">Across all active resources</p>
-    </div>
-
-    {# ── Row 2: Time invested + Needs attention + Momentum ─────────────────── #}
-
-    <div class="dcard dcard--span4 dcard--half-mid">
-      <div class="dcard__kicker">Time invested &mdash; video &amp; audio</div>
-      <div class="time-hero">
-        <div class="time-hero__left">
-          <span class="time-hero__val">{{ time_invested.this_week }}</span>
-          <span class="time-hero__period">this week</span>
-        </div>
-        <div class="time-hero__icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="10"></circle>
-            <polyline points="12 6 12 12 16 14"></polyline>
-          </svg>
-        </div>
-      </div>
-      <div class="time-cells">
-        <div class="time-cell">
-          <span class="time-cell__label">This month</span>
-          <span class="time-cell__val">{{ time_invested.this_month }}</span>
-        </div>
-        <div class="time-cell">
-          <span class="time-cell__label">All time</span>
-          <span class="time-cell__val">{{ time_invested.all_time }}</span>
-        </div>
-      </div>
-      <p class="dcard__footnote">Watch / listen time across video &amp; audio resources</p>
-    </div>
-
-    <div class="dcard dcard--span4 dcard--half-mid">
-      <div class="dcard__kicker">Needs attention</div>
-      {% if stale_resources %}
-      <div class="attn-list">
-        {% for r in stale_resources %}
-        <div class="attn-row">
-          <div class="attn-row__info">
-            <div class="attn-row__title">{{ r.title }}</div>
-            <div class="attn-row__meta">
-              <span class="type-pill type-pill--{{ r.content_kind }}">{{ r.type_name }}</span>
-              <span class="idle-pill">{{ r.idle_days }}d idle</span>
-            </div>
-          </div>
-          <a href="{{ r.url }}" class="attn-row__resume">Resume &rarr;</a>
-        </div>
-        {% endfor %}
-      </div>
-      {% else %}
-      <p class="dcard__footnote dcard__footnote--center">
-        Nothing idle &mdash; all resources active in the last 2 weeks
-      </p>
-      {% endif %}
-      <p class="dcard__footnote">Untouched for 14+ days</p>
-    </div>
-
-    <div class="dcard dcard--span4">
-      <div class="dcard__kicker">Momentum &mdash; vs last week</div>
+      <div class="dcard__kicker kick">Momentum &mdash; vs last week</div>
       <div class="momentum-rows">
 
         <div class="momentum-row">
@@ -231,10 +232,89 @@
       </div>
     </div>
 
-    {# ── Row 3: Year activity heatmap ─────────────────────────────────────── #}
+    {# ── Band 2: Where things stand ────────────────────────────────────── #}
+    <div class="dlead">
+      <span class="dlead__t">Where things stand</span>
+      <span class="dlead__d">Overall progress and time invested</span>
+    </div>
 
+    {# Backlog #}
+    <div class="dcard dcard--span8">
+      <div class="dcard__kicker kick">Backlog</div>
+      {% if backlog.total > 0 %}
+      <div class="backlog-hero">
+        <span class="backlog-hero__pct">{{ backlog.pct }}%</span>
+        <span class="backlog-hero__sub">of {{ backlog.total }} units completed</span>
+      </div>
+      <div class="seg-bar" aria-label="Completion breakdown">
+        <div class="seg-bar__fill seg-bar__fill--done"
+             style="width: {{ backlog.completed_pct }}%"></div>
+        <div class="seg-bar__fill seg-bar__fill--inprog"
+             style="width: {{ backlog.in_progress_pct }}%"></div>
+        <div class="seg-bar__fill seg-bar__fill--todo"
+             style="width: {{ backlog.not_started_pct }}%"></div>
+      </div>
+      <div class="seg-legend">
+        <span class="seg-legend__item">
+          <span class="seg-legend__swatch seg-legend__swatch--done"></span>
+          <span class="seg-legend__label">Completed</span>
+          <span class="seg-legend__count">{{ backlog.completed }}</span>
+        </span>
+        <span class="seg-legend__item">
+          <span class="seg-legend__swatch seg-legend__swatch--inprog"></span>
+          <span class="seg-legend__label">In progress</span>
+          <span class="seg-legend__count">{{ backlog.in_progress }}</span>
+        </span>
+        <span class="seg-legend__item">
+          <span class="seg-legend__swatch seg-legend__swatch--todo"></span>
+          <span class="seg-legend__label">Not started</span>
+          <span class="seg-legend__count">{{ backlog.not_started }}</span>
+        </span>
+      </div>
+      {% else %}
+      <p class="dcard__empty">No units yet — add some to track progress.</p>
+      {% endif %}
+      <p class="dcard__footnote">Across all active resources</p>
+    </div>
+
+    {# Time invested #}
+    <div class="dcard dcard--span4">
+      <div class="dcard__kicker kick">Time invested &mdash; video &amp; audio</div>
+      <div class="time-hero">
+        <div class="time-hero__left">
+          <span class="time-hero__val">{{ time_invested.this_week }}</span>
+          <span class="time-hero__period">this week</span>
+        </div>
+        <div class="time-hero__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+        </div>
+      </div>
+      <div class="time-cells">
+        <div class="time-cell">
+          <span class="time-cell__label">This month</span>
+          <span class="time-cell__val">{{ time_invested.this_month }}</span>
+        </div>
+        <div class="time-cell">
+          <span class="time-cell__label">All time</span>
+          <span class="time-cell__val">{{ time_invested.all_time }}</span>
+        </div>
+      </div>
+      <p class="dcard__footnote">Watch / listen time across video &amp; audio resources</p>
+    </div>
+
+    {# ── Band 3: History ───────────────────────────────────────────────── #}
+    <div class="dlead">
+      <span class="dlead__t">History</span>
+      <span class="dlead__d">Your full activity record</span>
+    </div>
+
+    {# Year heatmap #}
     <div class="dcard dcard--span12">
-      <div class="dcard__kicker">Activity &mdash; {{ heatmap.year }}</div>
+      <div class="dcard__kicker kick">Activity &mdash; {{ heatmap.year }}</div>
       <div class="heat-scroll">
         <div class="heat-inner">
           <div class="heat-months-row">
@@ -289,10 +369,9 @@
       </div>
     </div>
 
-    {# ── Row 4: Resources table ───────────────────────────────────────────── #}
-
+    {# Resources table #}
     <div class="dcard dcard--span12">
-      <div class="dcard__kicker">Resources &mdash; progress</div>
+      <div class="dcard__kicker kick">Resources &mdash; progress</div>
       {% if resources_table %}
       <div class="pace-table">
         <div class="pace-table__head">
@@ -349,5 +428,30 @@
   </div>{# /dgrid #}
 
 </div>{# /db-wrap #}
-{% endblock %}
 
+{# ── View toggle JS ──────────────────────────────────────────────────────── #}
+<script nonce="{{ request.csp_nonce }}">
+(function () {
+  var STORE_KEY = 'sf-dash-view';
+
+  function applyView(v) {
+    document.documentElement.setAttribute('data-dash', v);
+    document.querySelectorAll('.viewtoggle__btn').forEach(function (btn) {
+      btn.classList.toggle('on', btn.dataset.view === v);
+      btn.setAttribute('aria-selected', btn.dataset.view === v ? 'true' : 'false');
+    });
+  }
+
+  var saved = localStorage.getItem(STORE_KEY) || 'simple';
+  applyView(saved);
+
+  document.querySelectorAll('.viewtoggle__btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var v = btn.dataset.view;
+      applyView(v);
+      try { localStorage.setItem(STORE_KEY, v); } catch(e) {}
+    });
+  });
+}());
+</script>
+{% endblock %}

@@ -69,6 +69,8 @@ def get_dashboard_stats(user=None, resource_type=None) -> DashboardStats:
     heatmap = _get_heatmap(unit_qs)
     resources_table = _get_resources_table(resource_qs)
     greeting_headline = _get_greeting_headline(unit_qs)
+    completed_resources_count = _get_completed_resources_count(resource_qs)
+    resume_resource = _get_resume_resource(resource_qs)
 
     return {
         "total_resources": total_resources,
@@ -95,6 +97,8 @@ def get_dashboard_stats(user=None, resource_type=None) -> DashboardStats:
         "heatmap": heatmap,
         "resources_table": resources_table,
         "greeting_headline": greeting_headline,
+        "completed_resources_count": completed_resources_count,
+        "resume_resource": resume_resource,
     }
 
 
@@ -656,6 +660,47 @@ def _get_greeting_headline(unit_qs) -> Optional[str]:
         label = "unit" if n == 1 else "units"
         return f"You completed {n} {label} this week."
     return None
+
+
+def _get_completed_resources_count(resource_qs) -> int:
+    """Count resources where every unit is completed (pct = 100%)."""
+    return (
+        resource_qs.annotate(
+            total_u=Count("units"),
+            done_u=Count("units", filter=Q(units__status="completed")),
+        )
+        .filter(total_u__gt=0, total_u=F("done_u"))
+        .count()
+    )
+
+
+def _get_resume_resource(resource_qs):
+    """Most recently active in-progress resource, or None."""
+    row = (
+        resource_qs.select_related("resource_type")
+        .annotate(
+            total_u=Count("units"),
+            done_u=Count("units", filter=Q(units__status="completed")),
+            last_completed_at=Max("units__completed_at"),
+        )
+        .filter(total_u__gt=0, done_u__gt=0)
+        .exclude(total_u=F("done_u"))
+        .order_by(F("last_completed_at").desc(nulls_last=True))
+        .first()
+    )
+    if row is None:
+        return None
+    pct = calculate_percentage(row.done_u, row.total_u)
+    return {
+        "title": row.title,
+        "type_name": row.resource_type.name,
+        "type_slug": row.resource_type.slug,
+        "content_kind": row.resource_type.content_kind,
+        "pct": pct,
+        "completed_units": row.done_u,
+        "total_units": row.total_u,
+        "url": row.get_absolute_url(),
+    }
 
 
 # --------------------------------------------------------------------------- #
