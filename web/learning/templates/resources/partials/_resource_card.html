@@ -1,85 +1,43 @@
 {% load learning_filters %}
 {% with pct=resource.percentage %}
 
-<article class="rcard rcard--{{ resource.resource_type.slug }}"
-         aria-label="{{ resource.title }}">
+<a class="bcard bcard--{{ resource.resource_type.slug }}"
+   href="{{ resource.get_absolute_url }}"
+   aria-label="{{ resource.title }}">
 
-  {# ── Head ─────────────────────────────────────────────────────────────── #}
-  <div class="rcard__head">
-    <div class="rcard__head-left">
-      <div class="rcard__eyebrow">
-        <span class="rcard__eyebrow-prefix">Resource &middot;&nbsp;</span>
-        <b>{{ resource.resource_type.name }}</b>
-      </div>
-      <h3 class="rcard__title">{{ resource.title }}</h3>
-    </div>
-
+  {# ── Top row: type chip + status label ────────────────────────────────── #}
+  <div class="bcard__top">
+    <span class="bcard__chip">
+      <span class="bcard__chip-dot" aria-hidden="true"></span>
+      {{ resource.resource_type.name }}
+    </span>
     {% if pct >= 100 %}
-      <span class="rcard__badge rcard__badge--done">Completed</span>
+      <span class="bcard__status bcard__status--done">Completed</span>
     {% elif pct > 0 %}
-      <span class="rcard__badge rcard__badge--prog">In progress</span>
+      <span class="bcard__status bcard__status--prog">In progress</span>
     {% else %}
-      <span class="rcard__badge rcard__badge--new">Not started</span>
+      <span class="bcard__status bcard__status--none">Not started</span>
     {% endif %}
   </div>
 
-  {# ── Ring row ──────────────────────────────────────────────────────────── #}
-  <div class="rcard__ringrow">
+  {# ── Title ─────────────────────────────────────────────────────────────── #}
+  <h3 class="bcard__title">{{ resource.title }}</h3>
 
-    {# Stroked SVG progress ring — r=43, C≈270.2, animated via CSS #}
-    <div class="rcard__ring" aria-hidden="true">
-      <svg viewBox="0 0 100 100">
-        <circle class="ring__track"
-                cx="50" cy="50" r="43" stroke-width="8"></circle>
-        <circle class="ring__val"
-                cx="50" cy="50" r="43" stroke-width="8"
-                stroke-dasharray="270.2"
-                style="--ring-offset: {{ pct|ring_dashoffset }}"></circle>
-      </svg>
-      <div class="ring__txt">
-        <div class="ring__num">{{ pct }}%</div>
-        <div class="ring__cap">Done</div>
-      </div>
+  {# ── Progress block ────────────────────────────────────────────────────── #}
+  <div class="bcard__bar">
+    <div class="bcard__bar-meta">
+      <span class="bcard__pct">{{ pct }}%</span>
+      <span class="bcard__units">{{ resource.completed_units }} / {{ resource.total_units }} units</span>
     </div>
-
-    {# Stat rows #}
-    <div class="rcard__stats">
-      <div class="rcard__stat">
-        <span class="rcard__stat-key">Units complete</span>
-        <span class="rcard__stat-val">
-          {{ resource.completed_units }} / {{ resource.total_units }}
-        </span>
-      </div>
-      <div class="rcard__stat">
-        <span class="rcard__stat-key">This week</span>
-        <span class="rcard__stat-val">
-          <span class="rcard__stat-accent">+{{ resource.units_this_week }}</span>
-          <small>units</small>
-        </span>
-      </div>
-      <div class="rcard__stat">
-        <span class="rcard__stat-key">Time logged</span>
-        <span class="rcard__stat-val">
-          {{ resource.time_logged_minutes|format_duration }}
-        </span>
-      </div>
+    <div class="bcard__track">
+      <div class="bcard__fill" data-fill="{{ pct }}"></div>
     </div>
   </div>
 
-  {# ── Footer ───────────────────────────────────────────────────────────── #}
-  <div class="rcard__foot">
-    <span class="rcard__date">Added {{ resource.created_at|date:"j M Y" }}</span>
-    {% if perms.learning.view_learningresource %}
-    <a href="{{ resource.get_absolute_url }}" class="rcard__cta">
-      View details
-      <svg class="rcard__cta-arrow" viewBox="0 0 24 24" fill="none"
-           stroke="currentColor" stroke-width="2.4"
-           stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M5 12h14M13 6l6 6-6 6"></path>
-      </svg>
-    </a>
-    {% endif %}
+  {# ── Footer strip ──────────────────────────────────────────────────────── #}
+  <div class="bcard__strip">
+    <span><b>{{ resource.time_logged_minutes|format_duration }}</b> logged</span>
   </div>
 
-</article>
+</a>
 {% endwith %}

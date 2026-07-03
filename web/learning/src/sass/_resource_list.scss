@@ -9,9 +9,10 @@
 // Additive design tokens not yet in :root (matches _resource_form.scss pattern)
 // ---------------------------------------------------------------------------
 :root {
-  --sky:        #2f80c2;
-  --ring-track: rgba(13, 24, 18, 0.10);
-  --r-card:     18px;
+  --sky:         #2f80c2;
+  --ring-track:  rgba(13, 24, 18, 0.10);
+  --r-card:      18px;
+  --shadow-card: 0 22px 48px -34px rgba(13, 24, 18, 0.4);
 }
 
 [data-theme="dark"] {
@@ -290,19 +291,20 @@
 }
 
 // ---------------------------------------------------------------------------
-// Card grid — 3 cols desktop, 2 at ≤980px, 1 at ≤720px
+// Card grid — 3 cols desktop, 2 at ≤980px, 1 at ≤640px
 // ---------------------------------------------------------------------------
 .rl-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 18px;
+  gap: 16px;
   align-items: stretch;
+  margin-bottom: clamp(40px, 6vw, 72px);
 
   @media (max-width: 980px) {
     grid-template-columns: repeat(2, 1fr);
   }
 
-  @media (max-width: 720px) {
+  @media (max-width: 640px) {
     grid-template-columns: 1fr;
   }
 }
