@@ -69,6 +69,9 @@ class TestGetDashboardStatsReturnShape:
             "heatmap",
             "resources_table",
             "greeting_headline",
+            # v4 keys (simple/deep)
+            "completed_resources_count",
+            "resume_resource",
         }
         assert expected_keys == set(result.keys())
 
