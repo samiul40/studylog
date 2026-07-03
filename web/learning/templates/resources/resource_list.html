@@ -34,7 +34,6 @@
         {% else %}
           {{ page_stats.total }} resource{{ page_stats.total|pluralize }}
           &middot; {{ page_stats.in_progress }} in progress
-          &middot; {{ page_stats.completed_this_week }} completed this week
         {% endif %}
       </p>
     </div>
@@ -211,6 +210,14 @@
 <script nonce="{{ request.csp_nonce }}">
 (function () {
   'use strict';
+
+  // ── Progress bar animation — 60ms delay avoids bars stuck at 0% in
+  //    background tabs where rAF is throttled
+  setTimeout(function () {
+    document.querySelectorAll('.bcard__fill[data-fill]').forEach(function (el) {
+      el.style.width = el.dataset.fill + '%';
+    });
+  }, 60);
 
   // ── Search — debounced 400 ms ──────────────────────────────────────────
   var searchInput = document.getElementById('searchInput');

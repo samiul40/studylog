@@ -1,5 +1,3 @@
-import datetime
-
 from django.db import models
 from django.db.models import (
     Case,
@@ -14,7 +12,6 @@ from django.db.models import (
     When,
 )
 from django.db.models.functions import Coalesce
-from django.utils import timezone
 
 
 class LearningResourceQuerySet(models.QuerySet):
@@ -62,19 +59,6 @@ class LearningResourceQuerySet(models.QuerySet):
                 default=ExpressionWrapper(
                     100.0 * F("completed_units") / F("total_units"),
                     output_field=IntegerField(),
-                ),
-            )
-        )
-
-    def with_weekly_units(self):
-        """Annotate each resource with units completed in the last 7 days."""
-        seven_days_ago = timezone.now() - datetime.timedelta(days=7)
-        return self.annotate(
-            units_this_week=Count(
-                "units",
-                filter=Q(
-                    units__status="completed",
-                    units__updated_at__gte=seven_days_ago,
                 ),
             )
         )

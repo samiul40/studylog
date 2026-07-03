@@ -54,11 +54,13 @@ class ResourceListView(BaseUserResourceView, ListView):
             super()
             .get_queryset()
             .with_progress()
-            .with_weekly_units()
             .with_time_logged()
             .with_status_order()
             .select_related("resource_type")
-            .order_by("status_order", F("last_unit_activity").desc(nulls_first=True))
+            .order_by(
+                "status_order",
+                F("last_unit_activity").desc(nulls_first=True),
+            )
         )
 
         search_query = self.request.GET.get("search", "").strip()
@@ -87,18 +89,13 @@ class ResourceListView(BaseUserResourceView, ListView):
         show = self.request.GET.get("show", "active")
         show_completed = show == "completed"
 
-        # self.object_list is the full (unpaginated) queryset — use it for
-        # accurate stats across all matching resources, not just the current page.
         full_qs = self.object_list
         context["page_stats"] = {
             "total": full_qs.count(),
             "in_progress": full_qs.filter(percentage__gt=0, percentage__lt=100).count(),
-            "completed_this_week": full_qs.filter(
-                percentage=100, units_this_week__gt=0
-            ).count(),
         }
 
-        # Tab counts — derived from the queryset before the show filter.
+        # Tab counts derived from the queryset before the show filter.
         base_qs = self._qs_before_show_filter
         context["active_count"] = base_qs.filter(percentage__lt=100).count()
         context["completed_count"] = base_qs.filter(percentage=100).count()
@@ -112,7 +109,6 @@ class ResourceListView(BaseUserResourceView, ListView):
             {**tab_params, "show": "completed"}
         )
 
-        # Build a base query string (preserves all filters) for pagination links.
         pag_params = self.request.GET.copy()
         pag_params.pop("page", None)
         context["base_query_string"] = pag_params.urlencode()
