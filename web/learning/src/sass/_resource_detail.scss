@@ -40,7 +40,7 @@
 
   --accent: var(--emerald);
   &--book                        { --accent: var(--amber); }
-  &--video, &--youtube, &--vimeo { --accent: var(--rose); }
+  &--video, &--youtube, &--vimeo { --accent: #2f80c2; }
   &--podcast                     { --accent: #a855a8; }
 }
 
