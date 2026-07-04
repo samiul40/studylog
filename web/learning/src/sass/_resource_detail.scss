@@ -698,6 +698,10 @@
     display: flex;
     align-items: center;
     gap: 14px;
+
+    @media (max-width: 640px) {
+      align-items: flex-start;
+    }
   }
 
   &__name {
@@ -711,6 +715,13 @@
     text-overflow: ellipsis;
     line-height: 1.35;
     transition: color 0.15s;
+
+    @media (max-width: 640px) {
+      white-space: normal;
+      overflow: visible;
+      text-overflow: unset;
+      word-break: break-word;
+    }
   }
 
   &.is-done &__name { color: var(--ink-soft); }
