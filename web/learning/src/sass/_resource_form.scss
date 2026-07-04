@@ -8,30 +8,18 @@
 // Design tokens (additive — only tokens not already in :root)
 // ---------------------------------------------------------------------------
 :root {
-  --card:        #fbfaf4;
-  --field:       #ffffff;
-  --emerald:     #10b981;
-  --rose:        #e5484d;
-  --ink-faint:   rgba(13, 24, 18, 0.42);
-  --line:        rgba(13, 24, 18, 0.12);
-  --line-soft:   rgba(13, 24, 18, 0.08);
-  --ease:        cubic-bezier(0.22, 1, 0.36, 1);
-  --shadow-card: 0 30px 60px -38px rgba(13, 24, 18, 0.45), 0 2px 0 rgba(255, 255, 255, 0.5) inset;
-  --focus:       0 0 0 4px rgba(16, 185, 129, 0.18);
+  // global uses --ease-cv; establish --ease as a shorter local alias
+  --ease:           cubic-bezier(0.22, 1, 0.36, 1);
+  --shadow-card:    0 30px 60px -38px rgba(13, 24, 18, 0.45), 0 2px 0 rgba(255, 255, 255, 0.5) inset;
+  --focus:          0 0 0 4px rgba(16, 185, 129, 0.18);
+  --rf-hint:        rgba(13, 24, 18, 0.66);
+  --rf-placeholder: rgba(13, 24, 18, 0.32);
 }
 
 [data-theme="dark"] {
-  --paper:       #0a0b0e;
-  --paper-2:     #101218;
-  --ink:         #eef0f3;
-  --ink-soft:    rgba(238, 240, 243, 0.62);
-  --ink-faint:   rgba(238, 240, 243, 0.40);
-  --card:        #16181d;
-  --field:       #101116;
-  --emerald-deep: #1ed688;
-  --line:        rgba(238, 240, 243, 0.11);
-  --line-soft:   rgba(238, 240, 243, 0.06);
-  --shadow-card: 0 40px 80px -40px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.02) inset;
+  --shadow-card:    0 40px 80px -40px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.02) inset;
+  --rf-hint:        rgba(238, 240, 243, 0.66);
+  --rf-placeholder: rgba(238, 240, 243, 0.28);
 }
 
 // ---------------------------------------------------------------------------
@@ -194,8 +182,9 @@
 
 .rf-field__hint {
   font-size: 0.82rem;
-  color: var(--ink-faint);
+  color: var(--rf-hint);
   margin-top: 8px;
+  max-width: 60ch;
 }
 
 .rf-field__err {
@@ -234,7 +223,7 @@
   color: var(--ink);
   transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
 
-  &::placeholder { color: var(--ink-faint); }
+  &::placeholder { color: var(--rf-placeholder); }
 
   &:focus {
     outline: none;
@@ -283,7 +272,7 @@ textarea.rf-control {
     min-width: 0;
 
     &:focus { outline: none; }
-    &::placeholder { color: var(--ink-faint); }
+    &::placeholder { color: var(--rf-placeholder); }
   }
 
   &:hover { border-color: color-mix(in srgb, var(--ink) 22%, transparent); }
@@ -753,6 +742,44 @@ textarea.rf-control {
       border-color: color-mix(in srgb, var(--ink) 30%, transparent);
     }
   }
+}
+
+// ---------------------------------------------------------------------------
+// Form column — constrains field width without narrowing the card
+// ---------------------------------------------------------------------------
+.rf-form-col {
+  max-width: 620px;
+}
+
+// ---------------------------------------------------------------------------
+// Form sections (Link / Details)
+// ---------------------------------------------------------------------------
+.rf-fsection + .rf-fsection {
+  padding-top: 24px;
+  border-top: 1px solid var(--line-soft);
+}
+
+.rf-fsection__head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.rf-fsection__kicker {
+  font-family: $font-mono;
+  font-size: 0.64rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--emerald-deep);
+
+  [data-theme="dark"] & { color: var(--emerald-bright); }
+}
+
+.rf-fsection__note {
+  font-size: 0.8rem;
+  color: var(--rf-hint);
 }
 
 // ---------------------------------------------------------------------------

@@ -78,27 +78,42 @@
       <input type="hidden" name="new_content_kind" id="id_new_content_kind"
              value="{{ form.new_content_kind.value|default:'' }}">
 
-      {# ── 1. URL ────────────────────────────────────────────────────────── #}
-      <div class="rf-field" id="rf-url-field">
-        <label class="rf-field__label" for="id_url">
-          URL <span class="rf-opt">Optional</span>
-        </label>
-        <input class="rf-control" id="id_url" type="url" name="url"
-               value="{{ form.url.value|default:'' }}"
-               placeholder="https://example.com">
-        <div class="rf-field__hint">
-          Optional link to the resource. Paste a YouTube, Udemy, Coursera, Skillshare or
-          LinkedIn Learning link and we'll detect the type for you — YouTube links also
-          prefill the title and let you import units automatically.
+      <div class="rf-form-col">
+
+      {# ── Section: Link ─────────────────────────────────────────────────── #}
+      <div class="rf-fsection">
+        <div class="rf-fsection__head">
+          <span class="rf-fsection__kicker">Link</span>
+          <span class="rf-fsection__note">Paste a URL and we'll do the rest</span>
         </div>
-      </div>
+
+        {# ── 1. URL ──────────────────────────────────────────────────────── #}
+        <div class="rf-field" id="rf-url-field">
+          <label class="rf-field__label" for="id_url">
+            URL <span class="rf-opt">Optional</span>
+          </label>
+          <input class="rf-control" id="id_url" type="url" name="url"
+                 value="{{ form.url.value|default:'' }}"
+                 placeholder="https://example.com">
+          <div class="rf-field__hint">
+            Paste a YouTube, Udemy or Coursera link — we'll detect the type, and YouTube lets you import units automatically.
+          </div>
+        </div>
+      </div>{# /rf-fsection: Link #}
+
+      {# ── Section: Details ──────────────────────────────────────────────── #}
+      <div class="rf-fsection">
+        <div class="rf-fsection__head">
+          <span class="rf-fsection__kicker">Details</span>
+          <span class="rf-fsection__note">What you're tracking</span>
+        </div>
 
       {# ── 2. Title ──────────────────────────────────────────────────────── #}
       <div class="rf-field {% if form.title.errors %}rf-field--invalid{% endif %}" id="rf-title-field">
         <label class="rf-field__label" for="id_title">Title</label>
         <input class="rf-control" id="id_title" type="text" name="title"
                value="{{ form.title.value|default:'' }}"
-               placeholder="e.g. The Complete React Developer Course">
+               placeholder="e.g. Introduction to Psychology">
         <div class="rf-field__err">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round">
             <circle cx="12" cy="12" r="10"></circle><path d="M12 8v5M12 16h.01"></path>
@@ -207,6 +222,9 @@
         <textarea class="rf-control" id="id_description" name="description"
                   placeholder="What is this resource about? Add any notes for future-you.">{{ form.description.value|default:'' }}</textarea>
       </div>
+
+      </div>{# /rf-fsection: Details #}
+      </div>{# /rf-form-col #}
 
       {# ── Actions ───────────────────────────────────────────────────────── #}
       <div class="rf-fcard__actions">
