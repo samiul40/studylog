@@ -13,7 +13,12 @@
   background: #eceadf;                   // v2 warmer desk (light)
   --card:        #ffffff;                 // pure white cards
   --track:       rgba(13, 24, 18, 0.10); // ring track + bar bg
-  --shadow-card: 0 1px 2px rgba(13, 24, 18, 0.04), 0 18px 40px -30px rgba(13, 24, 18, 0.35);
+  --line:        rgba(13, 24, 18, 0.09);
+  --line-soft:   rgba(13, 24, 18, 0.06);
+  --stack:       24px;
+  --shadow-card: 0 1px 2px rgba(13, 24, 18, 0.04),
+                 0 12px 28px -14px rgba(13, 24, 18, 0.14),
+                 0 40px 64px -40px rgba(13, 24, 18, 0.20);
   color: var(--ink);
   transition: background 0.4s cubic-bezier(0.22, 1, 0.36, 1), color 0.4s cubic-bezier(0.22, 1, 0.36, 1);
 }
@@ -31,7 +36,7 @@
   padding: clamp(20px, 4vw, 32px) clamp(16px, 4vw, 32px) 120px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--stack);
 
   --accent: var(--emerald);
   &--book                        { --accent: var(--amber); }
