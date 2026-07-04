@@ -1,6 +1,8 @@
 {% extends "base.html" %}
 {% load learning_filters %}
 
+{% block title %}{{ resource.title }} — StudyLog{% endblock %}
+
 {% block main_class %}rd-main{% endblock %}
 {% block breadcrumbs %}{% endblock %}
 {% block alerts %}{% endblock %}
@@ -29,8 +31,10 @@
   {# ── 1. Resource header card ─────────────────────────────────────────── #}
   <div class="rd-card rhead">
     <div class="rhead__top">
-      <div class="rhead__info">
-        <div class="rhead__badges">
+      <div class="rhead__col">
+
+        {# Meta row: type badge + status badge + dot + date #}
+        <div class="rhead__meta">
           <span class="tbadge">{{ resource.resource_type.name|upper }}</span>
           <span class="stbadge
             {% if completion_percentage == 0 %}stbadge--new
@@ -40,10 +44,24 @@
             {% elif completion_percentage == 100 %}Completed
             {% else %}In progress{% endif %}
           </span>
+          <span class="rhead__dot"></span>
+          <span class="rhead__date">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="4" width="18" height="18" rx="2"></rect>
+              <path d="M16 2v4M8 2v4M3 10h18"></path>
+            </svg>
+            Added {{ resource.created_at|date:"d M Y" }}
+          </span>
         </div>
-        <h2 class="rhead__title">{{ resource.title }}</h2>
+
+        <h1 class="rhead__title">{{ resource.title }}</h1>
+
+        {% if resource.description %}
+        <p class="rhead__desc" id="rdesc" data-full="{{ resource.description }}">{{ resource.description }}</p>
+        {% endif %}
       </div>
 
+      {# Actions: Open + Edit + ⋯ overflow (Archive / Delete) #}
       <div class="rhead__actions">
         {% if resource.url %}
         <a href="{{ resource.url }}" target="_blank" rel="noopener noreferrer" class="rdbtn rdbtn--primary">
@@ -62,61 +80,53 @@
           </svg>
           Edit
         </a>
-        <form method="post" action="{% url 'learning:resource_archive' resource.pk %}" class="d-inline">
-          {% csrf_token %}
-          {% if resource.is_archived %}
-          <button type="submit" class="rdbtn rdbtn--ghost">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="3" y="4" width="18" height="4" rx="1"></rect>
-              <path d="M5 8v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8M10 12h4"></path>
-            </svg>
-            Unarchive
-          </button>
-          {% else %}
-          <button type="submit" class="rdbtn rdbtn--ghost">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="3" y="4" width="18" height="4" rx="1"></rect>
-              <path d="M5 8v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8M10 12h4"></path>
-            </svg>
-            Archive
-          </button>
-          {% endif %}
-        </form>
         {% endif %}
-        {% if perms.learning.delete_learningresource %}
-        <button class="rdbtn rdbtn--danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
-          </svg>
-          Delete
-        </button>
+        {% if perms.learning.change_learningresource or perms.learning.delete_learningresource %}
+        <div class="menu-wrap" id="moreWrap">
+          <button class="iconbtn" id="moreBtn" aria-label="More actions" type="button">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <circle cx="12" cy="5" r="1.8"></circle>
+              <circle cx="12" cy="12" r="1.8"></circle>
+              <circle cx="12" cy="19" r="1.8"></circle>
+            </svg>
+          </button>
+          <div class="menu" id="moreMenu">
+            {% if perms.learning.change_learningresource %}
+            <form method="post" action="{% url 'learning:resource_archive' resource.pk %}">
+              {% csrf_token %}
+              <button type="submit">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="4" width="18" height="4" rx="1"></rect>
+                  <path d="M5 8v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8M10 12h4"></path>
+                </svg>
+                {% if resource.is_archived %}Unarchive{% else %}Archive{% endif %}
+              </button>
+            </form>
+            {% endif %}
+            {% if perms.learning.delete_learningresource %}
+            <div class="menu__sep"></div>
+            <button type="button" class="danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m2 0v14a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V6"></path>
+              </svg>
+              Delete
+            </button>
+            {% endif %}
+          </div>
+        </div>
         {% endif %}
       </div>
     </div>
-
-    {% if resource.description %}
-    <div class="rhead__desc-wrap">
-      <p class="rhead__desc" id="rdesc" data-full="{{ resource.description }}">{{ resource.description }}</p>
-    </div>
-    {% endif %}
-
-    <div class="rhead__foot">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <rect x="3" y="4" width="18" height="18" rx="2"></rect>
-        <path d="M16 2v4M8 2v4M3 10h18"></path>
-      </svg>
-      Added {{ resource.created_at|date:"d M Y" }}
-    </div>
   </div>
 
-  {# ── 2. Summary card (ring + stats) ─────────────────────────────────── #}
-  {% with R=56 circumference=351.86 %}
+  {# ── 2. Summary card (ring + 2 stat pairs) ──────────────────────────── #}
+  {% with circumference=326.7 %}
   {% with offset=completion_percentage|ring_offset:circumference %}
   <div class="rd-card summary-card">
     <div class="prog-ring" role="img" aria-label="{{ completion_percentage }}% complete">
-      <svg viewBox="0 0 140 140">
-        <circle class="prog-ring__track" cx="70" cy="70" r="{{ R }}" stroke-width="11"></circle>
-        <circle class="prog-ring__val" cx="70" cy="70" r="{{ R }}" stroke-width="11"
+      <svg viewBox="0 0 120 120">
+        <circle class="prog-ring__track" cx="60" cy="60" r="52" stroke-width="11"></circle>
+        <circle class="prog-ring__val" cx="60" cy="60" r="52" stroke-width="11"
           stroke-dasharray="{{ circumference }}"
           stroke-dashoffset="{{ circumference }}"
           data-target-offset="{{ offset }}"></circle>
@@ -127,48 +137,40 @@
       </div>
     </div>
 
-    <div class="statgrid">
-      <div class="stat stat--em">
-        <div class="stat__k">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12l5 5 9-11" stroke-linecap="round" stroke-linejoin="round"></path></svg>
-          Completed
-        </div>
-        <div class="stat__v">{{ completed_units }}</div>
+    <div class="pairs">
+      <div class="pair" id="pairUnits">
+        <span class="pair__k">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 11l3 3 8-8"></path>
+            <path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9"></path>
+          </svg>
+          Units done
+        </span>
+        <span class="pair__v">
+          <span class="num" id="pairUnitsNum">{{ completed_units }}</span>
+          <span class="sep">/</span>
+          <span class="tot" id="pairUnitsTot">{{ total_units }}</span>
+        </span>
+        <span class="pair__sub" id="pairUnitsSub">{{ remaining_units }} unit{{ remaining_units|pluralize }} remaining</span>
+        <div class="pair__bar"><i id="pairUnitsBar" style="width:{{ completion_percentage }}%"></i></div>
       </div>
-      <div class="stat">
-        <div class="stat__k">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 22h14M5 2h14M6 2c0 5 4 6 6 8 2-2 6-3 6-8M6 22c0-5 4-6 6-8 2 2 6 3 6 8" stroke-linecap="round" stroke-linejoin="round"></path></svg>
-          Remaining
-        </div>
-        <div class="stat__v">{{ remaining_units }}</div>
-      </div>
-      <div class="stat">
-        <div class="stat__k">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"></path></svg>
-          Total units
-        </div>
-        <div class="stat__v">{{ total_units }}</div>
-      </div>
-      <div class="stat stat--em">
-        <div class="stat__k">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
-          Time done
-        </div>
-        <div class="stat__v">{{ completed_duration|format_duration }}</div>
-      </div>
-      <div class="stat">
-        <div class="stat__k">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
-          Time left
-        </div>
-        <div class="stat__v">{{ remaining_duration|format_duration }}</div>
-      </div>
-      <div class="stat">
-        <div class="stat__k">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
-          Total time
-        </div>
-        <div class="stat__v">{{ total_duration|format_duration }}</div>
+      <div class="pair" id="pairTime">
+        <span class="pair__k">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="9"></circle>
+            <path d="M12 7v5l3 2"></path>
+          </svg>
+          Time watched
+        </span>
+        <span class="pair__v">
+          <span class="num" id="pairTimeNum">{{ completed_duration|format_duration }}</span>
+          <span class="sep">/</span>
+          <span class="tot" id="pairTimeTot">{{ total_duration|format_duration }}</span>
+        </span>
+        <span class="pair__sub" id="pairTimeSub">{{ remaining_duration|format_duration }} left to watch</span>
+        {% with time_pct=completed_duration|ring_offset_pct:total_duration %}
+        <div class="pair__bar"><i id="pairTimeBar" style="width:{{ time_pct }}%"></i></div>
+        {% endwith %}
       </div>
     </div>
   </div>
@@ -177,7 +179,6 @@
 
   {# ── 3. Learning units card ──────────────────────────────────────────── #}
   {% include "resources/partials/_learning_unit_list.html" with resource=resource %}
-
 
 </div>{# /.rd-page #}
 
@@ -232,7 +233,6 @@
   const REORDER_URL = '{% url "learning:unit_reorder" resource.pk %}';
   const INLINE_URL_TPL = '{% url "learning:unit_inline_update" resource.pk 0 %}'.replace('/0/', '/__ID__/');
   const DEL_UNIT_URL_TPL = '{% url "learning:unit_delete" resource.pk 0 %}'.replace('/0/', '/__ID__/');
-  const NOTE_LIMIT = 120;
   const QUICK = [15, 30, 45, 60];
 
   function inlineUrl(id) { return INLINE_URL_TPL.replace('__ID__', id); }
@@ -260,6 +260,7 @@
   ];
 
   let openId = null;
+  let renamingId = null;
 
   // ── AJAX helper ────────────────────────────────────────────────────────
   function patch(unitId, data) {
@@ -270,7 +271,6 @@
     }).then(r => r.json());
   }
 
-  // ── Apply a server response back to local state ────────────────────────
   function applyResponse(resp) {
     if (!resp.ok) return;
     const u = units.find(x => x.id === resp.unit.id);
@@ -278,7 +278,7 @@
     Object.assign(u, resp.unit);
   }
 
-  // ── Progress ring animation on load ───────────────────────────────────
+  // ── Ring animation on load ─────────────────────────────────────────────
   (function animateRing() {
     const circle = document.querySelector('.prog-ring__val');
     if (!circle) return;
@@ -288,37 +288,44 @@
     });
   })();
 
-  // ── Summary tiles re-render ────────────────────────────────────────────
+  // ── Summary pairs re-render ────────────────────────────────────────────
   function updateSummary() {
     const completed = units.filter(u => u.status === 'completed').length;
     const total = units.length;
     const remaining = total - completed;
 
-    const doneMin = units
-      .filter(u => u.status === 'completed')
-      .reduce((s, u) => s + (u.duration_minutes || 0), 0);
-    const inProgMin = units
-      .filter(u => u.status === 'in_progress')
-      .reduce((s, u) => s + (u.video_progress_minutes || 0), 0);
+    const doneMin = units.filter(u => u.status === 'completed').reduce((s, u) => s + (u.duration_minutes || 0), 0);
+    const inProgMin = units.filter(u => u.status === 'in_progress').reduce((s, u) => s + (u.video_progress_minutes || 0), 0);
     const timeDone = doneMin + inProgMin;
     const totalMin = units.reduce((s, u) => s + (u.duration_minutes || 0), 0);
     const timeLeft = totalMin - timeDone;
 
-    // Use time-based percentage when durations exist; fall back to unit count
-    const pct = totalMin ? Math.round(timeDone / totalMin * 100) : (total ? Math.round(completed / total * 100) : 0);
+    const pct = totalMin
+      ? Math.round(timeDone / totalMin * 100)
+      : (total ? Math.round(completed / total * 100) : 0);
+    const timePct = totalMin ? Math.round(timeDone / totalMin * 100) : 0;
 
     // Ring
-    const circ = 351.86;
+    const circ = 326.7;
     const ring = document.querySelector('.prog-ring__val');
     if (ring) ring.style.strokeDashoffset = (circ * (1 - pct / 100)).toFixed(1);
     const numEl = document.querySelector('.prog-ring__num');
     if (numEl) numEl.innerHTML = pct + '<small>%</small>';
 
-    // Stat tiles
-    const vals = [completed, remaining, total, fmtDur(timeDone), fmtDur(timeLeft), fmtDur(totalMin)];
-    document.querySelectorAll('.statgrid .stat__v').forEach((el, i) => {
-      if (vals[i] !== undefined) el.textContent = vals[i];
-    });
+    // Pair 1 — units
+    const setEl = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+    setEl('pairUnitsNum', completed);
+    setEl('pairUnitsTot', total);
+    setEl('pairUnitsSub', remaining + ' unit' + (remaining !== 1 ? 's' : '') + ' remaining');
+    const barU = document.getElementById('pairUnitsBar');
+    if (barU) barU.style.width = pct + '%';
+
+    // Pair 2 — time
+    setEl('pairTimeNum', fmtDur(timeDone));
+    setEl('pairTimeTot', fmtDur(totalMin));
+    setEl('pairTimeSub', fmtDur(timeLeft) + ' left to watch');
+    const barT = document.getElementById('pairTimeBar');
+    if (barT) barT.style.width = timePct + '%';
 
     // Status badge
     const sbadge = document.querySelector('.stbadge');
@@ -328,25 +335,23 @@
     }
   }
 
-  // ── Build a single unit row ────────────────────────────────────────────
+  // ── SVG icon library ───────────────────────────────────────────────────
   const ICON = {
-    grip: `<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/></svg>`,
+    grip:  `<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg>`,
     check: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12l5 5 9-11" stroke-linecap="round" stroke-linejoin="round"></path></svg>`,
-    chev: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg>`,
+    chev:  `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg>`,
     clock: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2" stroke-linecap="round" stroke-linejoin="round"></path></svg>`,
-    warn: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.3 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.3a2 2 0 0 0-3.4 0z"></path><path d="M12 9v4M12 17h.01"></path></svg>`,
-    note: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7z"></path><path d="M15 2v5h5M8.5 12.5h7M8.5 16.5h5"></path></svg>`,
-    edit: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"></path></svg>`,
+    warn:  `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.3 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.3a2 2 0 0 0-3.4 0z"></path><path d="M12 9v4M12 17h.01"></path></svg>`,
+    note:  `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7z"></path><path d="M15 2v5h5M8.5 12.5h7M8.5 16.5h5"></path></svg>`,
+    edit:  `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"></path></svg>`,
     trash: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path></svg>`,
-    save: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-11"></path></svg>`,
-    x: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"></path></svg>`,
   };
-
-  let renamingId = null;
 
   function esc(s) {
     return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
   }
+
+  function escNl(s) { return esc(s).replace(/\n/g, '<br>'); }
 
   function pctOf(u) {
     const dur = u.duration_minutes, vid = u.video_progress_minutes;
@@ -359,59 +364,43 @@
     return u.status === 'completed' ? 'done' : u.status === 'in_progress' ? 'prog' : '';
   }
 
-  function summaryHtml(u) {
-    const dur = u.duration_minutes, vid = u.video_progress_minutes;
-    if (!dur) return {% if resource.resource_type.content_kind != "reading" %}`<span class="b__summary empty">${ICON.warn} Set duration</span>`{% else %}''{% endif %};
-    if (u.status === 'in_progress') {
-      return `<span class="b__summary">${ICON.clock}${fmtDur(vid||0)} / ${fmtDur(dur)}</span>`;
-    }
-    return `<span class="b__summary">${ICON.clock}${fmtDur(dur)}</span>`;
-  }
-
-  function metaHtml(u) {
-    const dur = u.duration_minutes, vid = u.video_progress_minutes;
-    const items = [];
-    if (dur) {
-      const durText = u.status === 'in_progress'
-        ? `${fmtDur(vid || 0)} / ${fmtDur(dur)}`
-        : fmtDur(dur);
-      items.push(`<span class="u__meta-item">${ICON.clock}${durText}</span>`);
-    }{% if resource.resource_type.content_kind != "reading" %} else {
-      items.push(`<span class="u__meta-item u__meta-warn">${ICON.warn}Set duration</span>`);
-    }{% endif %}
-    if (u.notes) {
-      items.push(`<span class="u__meta-item u__noteflag">${ICON.note}note</span>`);
-    }
-    return items.length ? `<div class="u__meta">${items.join('')}</div>` : '';
-  }
-
-  function escNl(s) {
-    return esc(s).replace(/\n/g, '<br>');
-  }
-
   function notePreviewHtml(u) {
+    const NOTE_LIMIT = 120;
     const full = u.notes || '';
     if (full.length <= NOTE_LIMIT) return escNl(full);
     const cut = full.slice(0, NOTE_LIMIT).replace(/\s+\S*$/, '');
     return escNl(cut) + '…';
   }
 
+  // ── Build a single unit row ────────────────────────────────────────────
   function buildRow(u, idx) {
     const dur = u.duration_minutes || 0;
     const vid = u.video_progress_minutes || 0;
     const vidClamped = Math.min(vid, dur);
+    const idxStr = String(idx + 1).padStart(2, '0');
 
+    // Time display in collapsed row
+    const timeHtml = dur > 0
+      ? `<span class="u__time">${ICON.clock}${
+          u.status === 'in_progress' ? `${fmtDur(vidClamped)} / ${fmtDur(dur)}` : fmtDur(dur)
+        }</span>`
+      : '';
+
+    // ── Duration chips (preset + Custom with inline field) ──────────────
     {% if resource.resource_type.content_kind != "reading" %}
-    const chips = QUICK.map(q =>
+    const customSel = dur > 0 && !QUICK.includes(dur);
+    const chipsClass = 'chips' + (customSel ? ' show-custom' : '');
+    const chipBtns = QUICK.map(q =>
       `<button class="chip${dur === q ? ' sel' : ''}" data-act="set-dur" data-id="${u.id}" data-v="${q}">${fmtDur(q)}</button>`
     ).join('');
-    const customSel = dur > 0 && !QUICK.includes(dur);
     const durationSection = `<div>
       <div class="ctl__lbl">Duration</div>
-      <div class="chips">
-        ${chips}
-        <span class="chip-in">
-          <input type="number" min="0" placeholder="––" value="${customSel ? dur : ''}" data-act="dur-custom" data-id="${u.id}" aria-label="Custom duration in minutes">
+      <div class="${chipsClass}">
+        ${chipBtns}
+        <button class="chip chip--custom${customSel ? ' sel' : ''}" data-act="dur-custom-chip" data-id="${u.id}">Custom</button>
+        <span class="chip-input">
+          <input type="number" value="${customSel ? dur : ''}" min="1" max="600"
+                 data-act="dur-custom" data-id="${u.id}" aria-label="Custom duration in minutes">
           <span>min</span>
         </span>
       </div>
@@ -420,79 +409,92 @@
     const durationSection = '';
     {% endif %}
 
-
-    const watchedHtml = dur > 0
-      ? `<div class="slider-row">
-           <input type="range" class="srange" min="0" max="${dur}" value="${vidClamped}" data-act="slide" data-id="${u.id}" aria-label="Video progress">
+    // ── Video watched (slider + input) ──────────────────────────────────
+    {% if resource.resource_type.content_kind != "reading" %}
+    const fillPct = dur > 0 ? Math.round(vidClamped / dur * 100) : 0;
+    const videoSection = dur > 0
+      ? `<div>
+           <div class="watch__top">
+             <span class="ctl__lbl" style="margin:0">Video watched</span>
+             <span class="watch__pct" id="wPct-${u.id}">${pctOf(u)}%</span>
+           </div>
+           <input type="range" class="srange" min="0" max="${dur}" step="0.5"
+                  value="${vidClamped}" style="--fill:${fillPct}%"
+                  data-act="slide" data-id="${u.id}" aria-label="Video progress">
            <div class="watch__entry">
              <span class="vin">
-               <input type="number" min="0" max="${dur}" value="${vidClamped}" data-act="vid-num" data-id="${u.id}" aria-label="Minutes watched">
+               <input type="number" min="0" max="${dur}" value="${vidClamped}"
+                      data-act="vid-num" data-id="${u.id}" aria-label="Minutes watched">
                <span class="vin__u">min</span>
              </span>
              <span class="watch__of">of ${fmtDur(dur)}</span>
-             <span class="watch__pct${pctOf(u) > 0 ? ' watch__pct--hi' : ''}">${pctOf(u)}%</span>
            </div>
          </div>`
       : `<div class="b__hint">${ICON.warn} Pick a duration first to log how much you've watched.</div>`;
+    {% else %}
+    const videoSection = '';
+    {% endif %}
 
-    const completeBtn = dur > 0 && u.status !== 'completed'
-      ? `<button class="b__complete" data-act="complete" data-id="${u.id}">${ICON.check} Mark complete</button>`
+    // ── Note preview (shown when note exists) ───────────────────────────
+    const notePrev = u.notes
+      ? `<button type="button" class="b__note-preview" data-act="note" data-id="${u.id}" title="View / edit note">
+           ${ICON.note}<span class="b__note-body">${notePreviewHtml(u)}</span>
+           <span class="b__note-edit">${ICON.edit}</span>
+         </button>`
       : '';
 
-    // Only show video-watched section for non-reading resources
-    const videoSection = CONTENT_KIND !== 'reading'
-      ? `<div>
-           <div class="ctl__lbl"><span>Video watched</span>${completeBtn}</div>
-           ${watchedHtml}
+    // ── Inline rename ────────────────────────────────────────────────────
+    const renameHtml = renamingId === u.id
+      ? `<div class="u__edithead">
+           <input class="u__nameinput" type="text" value="${esc(u.title)}"
+                  data-act="rename-input" data-id="${u.id}" maxlength="255" autofocus>
          </div>`
-      : '';
+      : `<div class="u__edithead">
+           <h4 class="u__editname" data-act="rename-edit" data-id="${u.id}">${esc(u.title)}</h4>
+           <button class="u__editbtn" data-act="rename-edit" data-id="${u.id}"
+                   title="Edit name" type="button">${ICON.edit}</button>
+         </div>`;
 
-    const noteSection = u.notes
-      ? `<button type="button" class="b__note-preview" data-act="note" data-id="${u.id}" title="Click to view, edit or delete this note">${ICON.note}<span class="b__note-body">${notePreviewHtml(u)}</span><span class="b__note-edit">${ICON.edit}</span></button>`
+    // ── Footer: Add note (left, only when no note) + Mark complete + Delete (right) ──
+    const completeBtn = u.status !== 'completed'
+      ? `<button class="u__act u__act--go" data-act="complete" data-id="${u.id}">${ICON.check} Mark complete</button>`
       : '';
-
-    const idxStr = String(idx + 1).padStart(2, '0');
+    const noteBtn = !u.notes
+      ? `<button class="u__act" data-act="note" data-id="${u.id}" type="button">${ICON.note} Add note</button>`
+      : '';
+    const footerHtml = `<div class="u__foot">
+      ${noteBtn}
+      ${completeBtn}
+      <button class="u__act u__act--danger" data-act="del" data-id="${u.id}" type="button">
+        ${ICON.trash} Delete
+      </button>
+    </div>`;
 
     return `<li class="u${u.status === 'completed' ? ' is-done' : ''}${openId === u.id ? ' open' : ''}" data-id="${u.id}">
       <div class="u__main" data-act="open" data-id="${u.id}">
         <span class="u__grip" data-grip="${u.id}" title="Drag to reorder" tabindex="-1">${ICON.grip}</span>
         <button class="u__check ${checkCls(u)}" data-act="toggle" data-id="${u.id}"
-          aria-label="Toggle complete" title="Mark complete / clear">${ICON.check}</button>
+          aria-label="Toggle complete" type="button">${ICON.check}</button>
         <span class="u__idx">${idxStr}</span>
         <div class="u__body">
           <span class="u__name">${esc(u.title)}</span>
-          ${metaHtml(u)}
+          ${timeHtml}
         </div>
         <span class="u__chev">${ICON.chev}</span>
       </div>
       <div class="b__panel">
         <div class="b__inner">
-          <div class="b__rename">
-            ${renamingId === u.id
-              ? `<div class="b__rename-edit">
-                   <input class="b__rename-input" type="text" value="${esc(u.title)}" data-act="rename-input" data-id="${u.id}" aria-label="Unit name" maxlength="255" autofocus>
-                   <button class="b__rename-btn b__rename-btn--save" data-act="rename-save" data-id="${u.id}" title="Save">${ICON.save}</button>
-                   <button class="b__rename-btn b__rename-btn--cancel" data-act="rename-cancel" data-id="${u.id}" title="Cancel">${ICON.x}</button>
-                 </div>`
-              : `<div class="b__rename-display">
-                   <span class="b__rename-name">${esc(u.title)}</span>
-                   <button class="b__rename-btn b__rename-btn--edit" data-act="rename-edit" data-id="${u.id}" title="Edit name">${ICON.edit}</button>
-                 </div>`
-            }
-          </div>
+          ${renameHtml}
           ${durationSection}
           ${videoSection}
-          ${noteSection}
-          <div class="b__foot">
-            ${u.notes ? '' : `<button class="b__act" data-act="note" data-id="${u.id}">${ICON.note} Add note</button>`}
-            <button class="b__act b__act--danger" data-act="del" data-id="${u.id}">${ICON.trash} Delete unit</button>
-          </div>
+          ${notePrev}
+          ${footerHtml}
         </div>
       </div>
     </li>`;
   }
 
-  // ── Full units list re-render ─────────────────────────────────────────
+  // ── Full units list re-render ──────────────────────────────────────────
   function renderUnits() {
     const list = document.getElementById('unit-list');
     if (!list) return;
@@ -501,9 +503,9 @@
         <div class="u-empty__icon">${ICON.note}</div>
         <p class="u-empty__text">No units yet — add your first unit to start tracking.</p>
       </li>`;
-      return;
+    } else {
+      list.innerHTML = units.map((u, i) => buildRow(u, i)).join('');
     }
-    list.innerHTML = units.map((u, i) => buildRow(u, i)).join('');
 
     // Count badge
     const countEl = document.querySelector('.units-card__count');
@@ -515,40 +517,34 @@
     wireUnitEvents();
   }
 
-  // ── Unit interactions ─────────────────────────────────────────────────
+  // ── Unit interactions ──────────────────────────────────────────────────
   function wireUnitEvents() {
     const list = document.getElementById('unit-list');
     if (!list) return;
-    // Only click uses once:true (re-attaches immediately in handleUnitClick).
-    // input/change are wired once globally below — they survive DOM re-renders
-    // via event delegation and must NOT be re-added here.
     list.addEventListener('click', handleUnitClick, { once: true });
   }
 
-  // Permanent input/change delegation — added once, survive renderUnits() DOM swaps
   (function wireListInputs() {
     const list = document.getElementById('unit-list');
     if (!list) return;
 
-    // Live-update number input + pct while dragging slider (no AJAX)
+    // Live slider fill + number update (no AJAX)
     list.addEventListener('input', function(e) {
       const sl = e.target.closest('[data-act="slide"]');
       if (!sl) return;
       const u = units.find(x => x.id === +sl.dataset.id);
       if (!u) return;
       const v = +sl.value;
+      const p = u.duration_minutes ? Math.round(v / u.duration_minutes * 100) : 0;
+      sl.style.setProperty('--fill', p + '%');
       const li = sl.closest('.u');
       const num = li && li.querySelector('[data-act="vid-num"]');
       if (num) num.value = v;
-      const pctEl = li && li.querySelector('.watch__pct');
-      if (pctEl) {
-        const p = u.duration_minutes ? Math.round(v / u.duration_minutes * 100) : 0;
-        pctEl.textContent = p + '%';
-        pctEl.classList.toggle('watch__pct--hi', p > 0);
-      }
+      const pctEl = document.getElementById('wPct-' + u.id);
+      if (pctEl) pctEl.textContent = p + '%';
     });
 
-    // Commit to server on release / blur
+    // Commit on release / blur
     list.addEventListener('change', function(e) {
       const sl = e.target.closest('[data-act="slide"]');
       if (sl) {
@@ -576,6 +572,7 @@
       }
     });
 
+    // Rename input: Enter = save, Esc = cancel
     list.addEventListener('keydown', function(e) {
       const inp = e.target.closest('[data-act="rename-input"]');
       if (!inp) return;
@@ -585,54 +582,51 @@
         if (!u) return;
         const val = inp.value.trim();
         if (val && val !== u.title) {
-          patch(u.id, { title: val }).then(r => {
-            applyResponse(r);
-            renamingId = null;
-            renderUnits();
-          });
+          patch(u.id, { title: val }).then(r => { applyResponse(r); renamingId = null; renderUnits(); });
         } else {
-          renamingId = null;
-          renderUnits();
+          renamingId = null; renderUnits();
         }
       } else if (e.key === 'Escape') {
-        renamingId = null;
-        renderUnits();
+        renamingId = null; renderUnits();
+      }
+    });
+
+    // Rename input blur = save
+    list.addEventListener('focusout', function(e) {
+      const inp = e.target.closest('[data-act="rename-input"]');
+      if (!inp) return;
+      const u = units.find(x => x.id === +inp.dataset.id);
+      if (!u) return;
+      const val = inp.value.trim();
+      if (val && val !== u.title) {
+        patch(u.id, { title: val }).then(r => { applyResponse(r); renamingId = null; renderUnits(); });
+      } else {
+        renamingId = null; renderUnits();
       }
     });
   })();
 
   function handleUnitClick(e) {
-    const t = e.target.closest('[data-act]');
     const list = document.getElementById('unit-list');
-
-    // Re-wire for next interaction (event-delegation pattern with once:true)
     if (list) list.addEventListener('click', handleUnitClick, { once: true });
 
+    const t = e.target.closest('[data-act]');
     if (!t) return;
     const act = t.dataset.act;
     const id = +t.dataset.id;
     const u = units.find(x => x.id === id);
-    if (!u) return;
+    if (!u && act !== 'dur-custom-chip') return;
 
     if (act === 'toggle') {
       {% if resource.resource_type.content_kind == "reading" %}
       const newStatus = u.status === 'completed' ? 'not_started' : 'completed';
       patch(id, { status: newStatus }).then(r => { applyResponse(r); renderUnits(); });
-      return;
       {% else %}
-      if (!u.duration_minutes) {
-        // No duration — expand row instead
-        openId = id;
-        renderUnits();
-        return;
-      }
+      if (!u.duration_minutes) { openId = id; renderUnits(); return; }
       const newVid = u.status === 'completed' ? 0 : u.duration_minutes;
-      patch(id, { video_progress_minutes: newVid }).then(r => {
-        applyResponse(r);
-        renderUnits();
-      });
-      return;
+      patch(id, { video_progress_minutes: newVid }).then(r => { applyResponse(r); renderUnits(); });
       {% endif %}
+      return;
     }
 
     if (act === 'open') {
@@ -646,40 +640,29 @@
 
     if (act === 'rename-edit') {
       renamingId = id;
+      openId = id;
       renderUnits();
       const inp = document.querySelector(`[data-act="rename-input"][data-id="${id}"]`);
       if (inp) { inp.focus(); inp.select(); }
       return;
     }
 
-    if (act === 'rename-save') {
-      const inp = document.querySelector(`[data-act="rename-input"][data-id="${id}"]`);
-      const val = inp ? inp.value.trim() : '';
-      if (val && val !== u.title) {
-        patch(id, { title: val }).then(r => {
-          applyResponse(r);
-          renamingId = null;
-          renderUnits();
-        });
-      } else {
-        renamingId = null;
-        renderUnits();
-      }
-      return;
-    }
-
-    if (act === 'rename-cancel') {
-      renamingId = null;
-      renderUnits();
-      return;
-    }
-
     if (act === 'set-dur') {
       const val = +t.dataset.v;
-      patch(id, { duration_minutes: val }).then(r => {
-        applyResponse(r);
-        renderUnits();
-      });
+      patch(id, { duration_minutes: val }).then(r => { applyResponse(r); renderUnits(); });
+      return;
+    }
+
+    // Custom chip: toggle show-custom class, no AJAX yet
+    if (act === 'dur-custom-chip') {
+      const li = t.closest('.u');
+      const chips = li && li.querySelector('.chips');
+      if (!chips) return;
+      chips.querySelectorAll('.chip').forEach(c => c.classList.remove('sel'));
+      t.classList.add('sel');
+      chips.classList.add('show-custom');
+      const customInput = chips.querySelector('[data-act="dur-custom"]');
+      if (customInput) { customInput.focus(); customInput.select(); }
       return;
     }
 
@@ -687,28 +670,25 @@
       {% if resource.resource_type.content_kind == "reading" %}
       patch(id, { status: 'completed' }).then(r => { applyResponse(r); renderUnits(); });
       {% else %}
-      patch(id, { video_progress_minutes: u.duration_minutes }).then(r => {
-        applyResponse(r);
-        renderUnits();
-      });
+      patch(id, { video_progress_minutes: u.duration_minutes || 0 }).then(r => { applyResponse(r); renderUnits(); });
       {% endif %}
       return;
     }
 
     if (act === 'note') { openNoteModal(u); return; }
-    if (act === 'del') { openDelModal(u); return; }
+    if (act === 'del')  { openDelModal(u); return; }
   }
 
-  // ── Note modal ────────────────────────────────────────────────────────
+  // ── Note modal ─────────────────────────────────────────────────────────
   let noteTargetId = null;
   function openNoteModal(u) {
     noteTargetId = u.id;
-    document.getElementById('noteUnitName').textContent = u.title.toUpperCase();
+    const ctx = document.getElementById('noteUnitCtx');
+    if (ctx) ctx.textContent = '· ' + u.title;
     document.getElementById('noteText').value = u.notes || '';
     const removeBtn = document.getElementById('noteRemove');
     if (removeBtn) removeBtn.style.display = u.notes ? '' : 'none';
-    const bsModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('noteModal'));
-    bsModal.show();
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('noteModal')).show();
   }
 
   document.getElementById('noteSave')?.addEventListener('click', function() {
@@ -732,27 +712,27 @@
     });
   });
 
-  // ── Delete unit modal ─────────────────────────────────────────────────
-  let delTargetId = null;
+  // ── Delete unit modal ──────────────────────────────────────────────────
   function openDelModal(u) {
-    delTargetId = u.id;
     const nameEl = document.getElementById('delUnitName');
     if (nameEl) nameEl.textContent = u.title;
     const form = document.getElementById('delUnitForm');
     if (form) form.action = DEL_UNIT_URL_TPL.replace('__ID__', u.id);
-    const bsModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('delUnitModal'));
-    bsModal.show();
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('delUnitModal')).show();
   }
 
-  // ── Add unit: auto-expand after creation ──────────────────────────────
-  // When the add-unit form posts and the page reloads, we need to know
-  // which unit was just added so we can expand it. The server-redirect
-  // doesn't give us that, so instead we listen for the form submit,
-  // store the order intent, and let the page reload naturally.
-  // The "auto-expand" behaviour from the prototype is a nice-to-have;
-  // the page reload will show the new unit.
+  // ── Overflow menu toggle ───────────────────────────────────────────────
+  const moreBtn  = document.getElementById('moreBtn');
+  const moreMenu = document.getElementById('moreMenu');
+  if (moreBtn && moreMenu) {
+    moreBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      moreMenu.classList.toggle('open');
+    });
+    document.addEventListener('click', function() { moreMenu.classList.remove('open'); });
+  }
 
-  // ── Drag-to-reorder (pointer events) ─────────────────────────────────
+  // ── Drag-to-reorder (pointer events) ──────────────────────────────────
   let drag = null;
 
   document.addEventListener('pointerdown', function(e) {
@@ -804,21 +784,16 @@
 
     const list = document.getElementById('unit-list');
     if (!list) return;
-    const order = [...list.querySelectorAll('.u')].map((r, i) => ({
-      id: +r.dataset.id, order: i + 1,
-    }));
-    // Reorder local state
+    const order = [...list.querySelectorAll('.u')].map((r, i) => ({ id: +r.dataset.id, order: i + 1 }));
     const map = {};
     order.forEach(o => { map[o.id] = o.order; });
     units.sort((a, b) => (map[a.id] || 99) - (map[b.id] || 99));
 
-    // Persist to server
     fetch(REORDER_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF },
       body: JSON.stringify({ order }),
     });
-
     renderUnits();
   });
 
@@ -826,7 +801,7 @@
   renderUnits();
 })();
 
-// Description read-more toggle (mirrors the notes notePreviewHtml pattern)
+// Description read-more toggle
 (function() {
   const DESC_LIMIT = 280;
   const p = document.getElementById('rdesc');
@@ -842,12 +817,10 @@
 
   function renderDesc(expanded) {
     if (expanded) {
-      p.innerHTML = escDesc(full) +
-        ' <button class="rhead__desc-toggle" id="rdescToggle">Show less</button>';
+      p.innerHTML = escDesc(full) + ' <button class="rhead__desc-toggle" id="rdescToggle">Show less</button>';
     } else {
       const cut = full.slice(0, DESC_LIMIT).replace(/\s+\S*$/, '');
-      p.innerHTML = escDesc(cut) + '… ' +
-        '<button class="rhead__desc-toggle" id="rdescToggle">Read more</button>';
+      p.innerHTML = escDesc(cut) + '… <button class="rhead__desc-toggle" id="rdescToggle">Read more</button>';
     }
     document.getElementById('rdescToggle').addEventListener('click', function() {
       renderDesc(this.textContent === 'Read more');

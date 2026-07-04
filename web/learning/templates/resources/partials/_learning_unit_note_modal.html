@@ -1,6 +1,6 @@
 {# Note modal — wired by resource_detail.html JS #}
 <div class="modal fade modal--rd" id="noteModal" tabindex="-1">
-  <div class="modal-dialog modal-dialog-centered modal-lg">
+  <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title">
@@ -13,8 +13,8 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
-        <p id="noteUnitName" class="modal-unit-label"></p>
-        <textarea id="noteText" class="modal-input modal-input--note" rows="16"
+        <span id="noteUnitCtx" class="modal-unit-ctx"></span>
+        <textarea id="noteText" class="modal-input" rows="10"
           placeholder="Jot a takeaway, a timestamp to revisit, or where you got stuck…"></textarea>
       </div>
       <div class="modal-footer">

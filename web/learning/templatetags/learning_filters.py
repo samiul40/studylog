@@ -57,6 +57,17 @@ def ring_offset(pct, circumference):
 
 
 @register.filter
+def ring_offset_pct(done, total):
+    """Return a 0-100 integer percentage given done/total minute values."""
+    try:
+        t = int(total or 0)
+        d = int(done or 0)
+        return min(100, round(d / t * 100)) if t else 0
+    except (TypeError, ValueError, ZeroDivisionError):
+        return 0
+
+
+@register.filter
 def tojson(value):
     """Serialize a Python value to a JSON literal, safe for inline <script>."""
     return mark_safe(json.dumps(value, ensure_ascii=False))
