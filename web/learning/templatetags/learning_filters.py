@@ -1,5 +1,4 @@
 import json
-import math
 
 from django import template
 from django.utils.safestring import mark_safe
@@ -37,15 +36,6 @@ def remaining_mins(minutes):
     if not minutes:
         return 0
     return int(minutes) % 60
-
-
-@register.filter
-def ring_dashoffset(pct):
-    """SVG stroke-dashoffset for a stroked ring with r=43 (C≈270.2)."""
-    r = 43
-    circumference = 2 * math.pi * r
-    offset = circumference * (1 - (int(pct) if pct else 0) / 100)
-    return f"{offset:.1f}"
 
 
 @register.filter
