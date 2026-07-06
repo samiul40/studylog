@@ -1,6 +1,7 @@
 from django.urls import path
 
 from .views import (
+    LearningUnitCompleteReadingView,
     LearningUnitCreateView,
     LearningUnitDeleteView,
     LearningUnitInlinePatchView,
@@ -65,6 +66,11 @@ urlpatterns = [
         name="unit_update_status",
     ),
     path("youtube-preview/", YouTubePreviewView.as_view(), name="youtube_preview"),
+    path(
+        "units/<int:pk>/complete-reading/",
+        LearningUnitCompleteReadingView.as_view(),
+        name="unit_complete_reading",
+    ),
     path("dashboard/", dashboard_view, name="dashboard"),
     path(
         "<int:pk>/archive/",
