@@ -1,3 +1,4 @@
+import datetime
 import json
 import logging
 
@@ -12,7 +13,8 @@ from django.views.generic import CreateView, DeleteView, UpdateView
 
 from learning.forms import LearningUnitForm
 from learning.mixins import UserPermissionMixin
-from learning.models import LearningResource, LearningUnit
+from learning.models import LearningResource, LearningUnit, StudySession
+from learning.services.sessions import upsert_resource_session
 
 logger = logging.getLogger(__name__)
 
@@ -224,6 +226,9 @@ class LearningUnitInlinePatchView(UserPermissionMixin, View):
             )
             return JsonResponse({"ok": False, "error": "Invalid JSON"}, status=400)
 
+        # Capture before patching so we can compute the delta after save.
+        old_progress = unit.video_progress_minutes
+
         if "duration_minutes" in data:
             val = data["duration_minutes"]
             unit.duration_minutes = int(val) if val not in (None, "") else None
@@ -249,5 +254,52 @@ class LearningUnitInlinePatchView(UserPermissionMixin, View):
             unit.save()
         except ValidationError as e:
             return JsonResponse({"ok": False, "error": str(e)}, status=400)
+
+        # Auto-log a VIDEO_WATCH session when progress changes.
+        if "video_progress_minutes" in data and unit.video_progress_minutes is not None:
+            delta = unit.video_progress_minutes - (old_progress or 0)
+            if delta != 0:
+                upsert_resource_session(
+                    user=request.user,
+                    resource=unit.resource,
+                    date=datetime.date.today(),
+                    activity_type=StudySession.ActivityType.VIDEO_WATCH,
+                    delta_minutes=delta,
+                )
+
+        return JsonResponse({"ok": True, "unit": unit.to_inline_dict()})
+
+
+class LearningUnitCompleteReadingView(UserPermissionMixin, UserUnitMixin, View):
+    """
+    Combined endpoint for reading chapter completion.
+    Marks the unit as COMPLETED and logs a READING session.
+    Accepts JSON: {"duration_minutes": <int>}
+    Returns the updated unit state (same shape as inline patch).
+    duration_minutes=0 is valid — session is logged even without a timed duration.
+    """
+
+    permission_required = "learning.change_learningunit"
+
+    def post(self, request, pk):
+        unit = self.get_unit()
+
+        try:
+            data = json.loads(request.body)
+            duration = int(data.get("duration_minutes", 0))
+        except (json.JSONDecodeError, ValueError):
+            return JsonResponse({"ok": False, "error": "Invalid JSON"}, status=400)
+
+        if unit.status != LearningUnit.StatusChoices.COMPLETED:
+            unit.status = LearningUnit.StatusChoices.COMPLETED
+            unit.save()
+
+        upsert_resource_session(
+            user=request.user,
+            resource=unit.resource,
+            date=datetime.date.today(),
+            activity_type=StudySession.ActivityType.READING,
+            delta_minutes=duration,
+        )
 
         return JsonResponse({"ok": True, "unit": unit.to_inline_dict()})
