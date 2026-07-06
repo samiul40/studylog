@@ -1,3 +1,5 @@
+import datetime
+
 from django import forms
 from django.db.models import Q
 from django.utils.text import slugify
@@ -5,6 +7,7 @@ from django.utils.text import slugify
 from .models.learning_resource import LearningResource
 from .models.learning_unit import LearningUnit
 from .models.resource_type import ResourceType
+from .models.study_session import StudySession
 
 
 class LearningResourceForm(forms.ModelForm):
@@ -100,6 +103,66 @@ class LearningResourceForm(forms.ModelForm):
             )
             self.instance.resource_type = rt
         return super().save(commit=commit)
+
+
+class StudySessionForm(forms.ModelForm):
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._user = user
+        if not self.instance.pk:
+            self.fields["date"].initial = datetime.date.today()
+        if user is not None:
+            self.fields["resource"].queryset = (
+                LearningResource.objects.for_user(user).active().order_by("title")
+            )
+        else:
+            self.fields["resource"].queryset = LearningResource.objects.none()
+
+    class Meta:
+        model = StudySession
+        fields = [
+            "status",
+            "activity_type",
+            "resource",
+            "date",
+            "duration_minutes",
+            "topic",
+            "notes",
+        ]
+        widgets = {
+            "status": forms.Select(attrs={"class": "form-select"}),
+            "date": forms.DateInput(attrs={"type": "date", "class": "form-control"}),
+            "activity_type": forms.Select(attrs={"class": "form-select"}),
+            "resource": forms.Select(attrs={"class": "form-select"}),
+            "duration_minutes": forms.NumberInput(
+                attrs={"class": "form-control", "placeholder": "e.g. 30"}
+            ),
+            "topic": forms.TextInput(
+                attrs={"class": "form-control", "placeholder": "e.g. Glycolysis"}
+            ),
+            "notes": forms.Textarea(attrs={"class": "form-control", "rows": 3}),
+        }
+
+    def clean_duration_minutes(self):
+        """Reject zero or negative durations — must be at least 1 minute."""
+        duration = self.cleaned_data.get("duration_minutes")
+        if duration is not None and duration < 1:
+            raise forms.ValidationError("Duration must be at least 1 minute.")
+        return duration
+
+    def clean_date(self):
+        """Future dates are only valid for planned sessions, not logged ones."""
+        date = self.cleaned_data.get("date")
+        status = self.cleaned_data.get("status")
+        if (
+            date
+            and date > datetime.date.today()
+            and status != StudySession.Status.PLANNED
+        ):
+            raise forms.ValidationError(
+                "Future dates are only allowed when planning a session."
+            )
+        return date
 
 
 class LearningUnitForm(forms.ModelForm):

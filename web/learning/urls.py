@@ -15,6 +15,12 @@ from .views import (
     ResourceDetailView,
     ResourceListView,
     ResourceUpdateView,
+    StudySessionCalendarView,
+    StudySessionCreateView,
+    StudySessionDayView,
+    StudySessionDeleteView,
+    StudySessionListView,
+    StudySessionUpdateView,
     YouTubePreviewView,
     dashboard_view,
 )
@@ -72,6 +78,24 @@ urlpatterns = [
         name="unit_complete_reading",
     ),
     path("dashboard/", dashboard_view, name="dashboard"),
+    path("sessions/", StudySessionListView.as_view(), name="session_list"),
+    path("sessions/log/", StudySessionCreateView.as_view(), name="session_create"),
+    path(
+        "sessions/<int:pk>/edit/",
+        StudySessionUpdateView.as_view(),
+        name="session_update",
+    ),
+    path(
+        "sessions/<int:pk>/delete/",
+        StudySessionDeleteView.as_view(),
+        name="session_delete",
+    ),
+    path(
+        "sessions/calendar/",
+        StudySessionCalendarView.as_view(),
+        name="session_calendar",
+    ),
+    path("sessions/day/", StudySessionDayView.as_view(), name="session_day"),
     path(
         "<int:pk>/archive/",
         ResourceArchiveView.as_view(),

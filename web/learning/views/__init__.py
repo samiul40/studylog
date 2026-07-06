@@ -17,6 +17,14 @@ from .learning_unit import (
     LearningUnitUpdateStatusView,
     LearningUnitUpdateView,
 )
+from .study_session import (
+    StudySessionCalendarView,
+    StudySessionCreateView,
+    StudySessionDayView,
+    StudySessionDeleteView,
+    StudySessionListView,
+    StudySessionUpdateView,
+)
 from .youtube import YouTubePreviewView
 
 __all__ = [
@@ -34,6 +42,12 @@ __all__ = [
     "LearningUnitReorderView",
     "LearningUnitUpdateStatusView",
     "LearningUnitInlinePatchView",
+    "StudySessionCalendarView",
+    "StudySessionCreateView",
+    "StudySessionDeleteView",
+    "StudySessionDayView",
+    "StudySessionListView",
+    "StudySessionUpdateView",
     "YouTubePreviewView",
     "dashboard_view",
 ]
