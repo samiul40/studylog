@@ -14,6 +14,17 @@ from django.db.models import (
 from django.db.models.functions import Coalesce
 
 
+class StudySessionQuerySet(models.QuerySet):
+    def for_user(self, user):
+        return self.filter(user=user)
+
+    def for_month(self, year: int, month: int):
+        return self.filter(date__year=year, date__month=month)
+
+    def dates_with_activity(self):
+        return set(self.values_list("date", flat=True).distinct())
+
+
 class LearningResourceQuerySet(models.QuerySet):
     def for_user(self, user):
         return self.filter(user=user)

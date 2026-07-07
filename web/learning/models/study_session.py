@@ -2,32 +2,23 @@ from django.conf import settings
 from django.db import models
 from django.urls import reverse
 
-
-class StudySessionQuerySet(models.QuerySet):
-    def for_user(self, user):
-        return self.filter(user=user)
-
-    def for_month(self, year, month):
-        return self.filter(date__year=year, date__month=month)
-
-    def dates_with_activity(self):
-        return set(self.values_list("date", flat=True).distinct())
+from learning.models.querysets import StudySessionQuerySet
 
 
 class StudySession(models.Model):
     class ActivityType(models.TextChoices):
         # Auto-logged from resource progress
-        VIDEO_WATCH  = "video_watch",  "Video watching"
-        READING      = "reading",      "Reading chapter"
+        VIDEO_WATCH = "video_watch", "Video watching"
+        READING = "reading", "Reading chapter"
         # Manually logged (freeform sessions)
-        FLASHCARDS   = "flashcards",   "Flashcards / Anki"
-        PRACTICE     = "practice",     "Practice problems"
-        PAST_PAPERS  = "past_papers",  "Past papers"
+        FLASHCARDS = "flashcards", "Flashcards / Anki"
+        PRACTICE = "practice", "Practice problems"
+        PAST_PAPERS = "past_papers", "Past papers"
         REVIEW_NOTES = "review_notes", "Review notes"
-        WRITING      = "writing",      "Writing / essays"
+        WRITING = "writing", "Writing / essays"
 
     class Status(models.TextChoices):
-        LOGGED  = "logged",  "Logged"
+        LOGGED = "logged", "Logged"
         PLANNED = "planned", "Planned"
 
     user = models.ForeignKey(
@@ -42,18 +33,18 @@ class StudySession(models.Model):
         on_delete=models.SET_NULL,
         related_name="study_sessions",
     )
-    date             = models.DateField()
-    status           = models.CharField(
+    date = models.DateField()
+    status = models.CharField(
         max_length=10,
         choices=Status.choices,
         default=Status.LOGGED,
     )
-    activity_type    = models.CharField(max_length=30, choices=ActivityType.choices)
-    topic            = models.CharField(max_length=255, blank=True)
+    activity_type = models.CharField(max_length=30, choices=ActivityType.choices)
+    topic = models.CharField(max_length=255, blank=True)
     duration_minutes = models.PositiveIntegerField()
-    notes            = models.TextField(blank=True)
-    created_at       = models.DateTimeField(auto_now_add=True)
-    updated_at       = models.DateTimeField(auto_now=True)
+    notes = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     objects = StudySessionQuerySet.as_manager()
 

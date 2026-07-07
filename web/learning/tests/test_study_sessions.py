@@ -343,12 +343,15 @@ class TestCompleteReadingView:
 class TestStudySessionCreateView:
     def test_creates_session_for_current_user(self, client_logged_in, user):
         url = reverse("learning:session_create")
-        resp = client_logged_in.post(url, {
-            "activity_type": StudySession.ActivityType.FLASHCARDS,
-            "date": str(TODAY),
-            "duration_minutes": 30,
-            "status": StudySession.Status.LOGGED,
-        })
+        resp = client_logged_in.post(
+            url,
+            {
+                "activity_type": StudySession.ActivityType.FLASHCARDS,
+                "date": str(TODAY),
+                "duration_minutes": 30,
+                "status": StudySession.Status.LOGGED,
+            },
+        )
 
         assert resp.status_code == 302
         session = StudySession.objects.get()
@@ -375,12 +378,15 @@ class TestStudySessionUpdateView:
     def test_can_edit_own_session(self, client_logged_in, user):
         session = make_session(user, duration_minutes=20)
         url = reverse("learning:session_update", kwargs={"pk": session.pk})
-        resp = client_logged_in.post(url, {
-            "activity_type": session.activity_type,
-            "date": str(session.date),
-            "duration_minutes": 45,
-            "status": session.status,
-        })
+        resp = client_logged_in.post(
+            url,
+            {
+                "activity_type": session.activity_type,
+                "date": str(session.date),
+                "duration_minutes": 45,
+                "status": session.status,
+            },
+        )
 
         assert resp.status_code == 302
         session.refresh_from_db()
@@ -432,14 +438,11 @@ class TestStudySessionCalendarView:
         resp = client_logged_in.get(url, {"year": TODAY.year, "month": TODAY.month})
         data = resp.json()
         today_cell = next(
-            cell
-            for week in data["weeks"]
-            for cell in week
-            if cell["date"] == TODAY.isoformat()
+            day for day in data["days"] if day["date"] == TODAY.isoformat()
         )
 
         assert resp.status_code == 200
-        assert today_cell["total_minutes"] == 50
+        assert today_cell["done_minutes"] == 50
 
     def test_other_users_sessions_excluded(self, client_logged_in, user):
         other = baker.make("auth.User")
@@ -465,7 +468,7 @@ class TestStudySessionDayView:
         data = resp.json()
 
         assert resp.status_code == 200
-        assert data["day_session_count"] == 1
+        assert data["day_done_count"] == 1
         assert data["day_total_minutes"] == 25
 
     def test_empty_when_no_sessions(self, client_logged_in, user):
@@ -473,7 +476,7 @@ class TestStudySessionDayView:
         resp = client_logged_in.get(url, {"date": TODAY.isoformat()})
         data = resp.json()
 
-        assert data["day_session_count"] == 0
+        assert data["day_done_count"] == 0
 
     def test_other_users_sessions_excluded(self, client_logged_in, user):
         other = baker.make("auth.User")
@@ -482,4 +485,4 @@ class TestStudySessionDayView:
         resp = client_logged_in.get(url, {"date": TODAY.isoformat()})
         data = resp.json()
 
-        assert data["day_session_count"] == 0
+        assert data["day_done_count"] == 0
