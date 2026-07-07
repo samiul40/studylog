@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% load learning_filters %}
+
+{% block title %}Sessions — StudyLog{% endblock %}
+
+{% block breadcrumbs %}{% endblock %}
+{% block alerts %}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+  {% include 'partials/_alerts.html' %}
+
+  <nav aria-label="Breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{% url 'learning:dashboard' %}">Dashboard</a></li>
+      <li class="breadcrumb-item active" aria-current="page">Sessions</li>
+    </ol>
+  </nav>
+
+  <h1 class="mb-2">Sessions</h1>
+  <p class="text-muted mb-4">Coming soon.</p>
+  <a href="{% url 'learning:session_create' %}" class="btn btn-primary">Log a session</a>
+
+</div>
+{% endblock %}

@@ -1,5 +1,6 @@
 import calendar as _calendar
 import datetime
+import json
 
 from django.contrib import messages
 from django.db.models import Sum
@@ -11,7 +12,7 @@ from django.views.generic import CreateView, DeleteView, UpdateView
 
 from learning.forms import StudySessionForm
 from learning.mixins import UserPermissionMixin
-from learning.models import StudySession
+from learning.models import LearningResource, StudySession
 
 # ---------------------------------------------------------------------------
 # Helpers (private)
@@ -101,6 +102,7 @@ class StudySessionCreateView(UserPermissionMixin, CreateView):
     permission_required = "learning.add_studysession"
     model = StudySession
     form_class = StudySessionForm
+    template_name = "sessions/session_create.html"
     success_url = reverse_lazy("learning:session_list")
 
     def get_form_kwargs(self):
@@ -108,9 +110,39 @@ class StudySessionCreateView(UserPermissionMixin, CreateView):
         kwargs["user"] = self.request.user
         return kwargs
 
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        user = self.request.user
+
+        resources = (
+            LearningResource.objects.for_user(user)
+            .active()
+            .select_related("resource_type")
+            .order_by("title")
+        )
+        ctx["resources_json"] = json.dumps([
+            {
+                "id": r.id,
+                "name": r.title,
+                "kind": r.resource_type.content_kind,
+                "tag": r.resource_type.name,
+            }
+            for r in resources
+        ])
+
+        ctx["recent_sessions"] = (
+            StudySession.objects.for_user(user)
+            .filter(status=StudySession.Status.LOGGED)
+            .select_related("resource")[:4]
+        )
+        ctx["today_iso"] = datetime.date.today().isoformat()
+        ctx["resource_prefill"] = self.request.GET.get("resource", "")
+        return ctx
+
     def form_valid(self, form):
         form.instance.user = self.request.user
-        messages.success(self.request, "Session logged.")
+        label = "Session planned." if form.instance.status == StudySession.Status.PLANNED else "Session logged."
+        messages.success(self.request, label)
         return super().form_valid(form)
 
 
