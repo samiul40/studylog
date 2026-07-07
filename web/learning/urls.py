@@ -18,8 +18,11 @@ from .views import (
     StudySessionCalendarView,
     StudySessionCreateView,
     StudySessionDayView,
+    StudySessionDeleteAjaxView,
     StudySessionDeleteView,
     StudySessionListView,
+    StudySessionMarkDoneView,
+    StudySessionPatchView,
     StudySessionUpdateView,
     YouTubePreviewView,
     dashboard_view,
@@ -96,6 +99,21 @@ urlpatterns = [
         name="session_calendar",
     ),
     path("sessions/day/", StudySessionDayView.as_view(), name="session_day"),
+    path(
+        "sessions/<int:pk>/patch/",
+        StudySessionPatchView.as_view(),
+        name="session_patch",
+    ),
+    path(
+        "sessions/<int:pk>/mark-done/",
+        StudySessionMarkDoneView.as_view(),
+        name="session_mark_done",
+    ),
+    path(
+        "sessions/<int:pk>/delete-ajax/",
+        StudySessionDeleteAjaxView.as_view(),
+        name="session_delete_ajax",
+    ),
     path(
         "<int:pk>/archive/",
         ResourceArchiveView.as_view(),

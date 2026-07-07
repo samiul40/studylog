@@ -1,5 +1,55 @@
 from typing import List, Optional, TypedDict
 
+# ---------------------------------------------------------------------------
+# Session calendar / day-panel types
+# ---------------------------------------------------------------------------
+
+
+class CalendarDay(TypedDict):
+    day: int
+    date: str  # ISO-8601 e.g. "2026-07-07"
+    done_minutes: int
+    done_count: int
+    planned_count: int
+    overdue: bool  # planned sessions exist AND date is before today
+    is_today: bool
+    is_future: bool
+
+
+class CalendarData(TypedDict):
+    year: int
+    month: int
+    month_name: str  # e.g. "July 2026"
+    start_offset: int  # Monday-first weekday index of the 1st (0=Mon … 6=Sun)
+    days: List[CalendarDay]
+    total_minutes: int
+    active_days: int
+    prev_year: int
+    prev_month: int
+    next_year: int
+    next_month: int
+
+
+class SessionDict(TypedDict):
+    id: int
+    activity_type: str
+    activity_label: str
+    status: str
+    topic: str
+    resource_id: Optional[int]
+    resource_title: Optional[str]
+    date: str
+    duration_minutes: int
+    notes: str
+    is_overdue: bool
+
+
+class DayData(TypedDict):
+    day_sessions: List[SessionDict]
+    day_done_count: int
+    day_total_minutes: int
+    day_planned_count: int
+
 
 class ResourceProgress(TypedDict):
     id: int

@@ -1,26 +1,804 @@
 {% extends "base.html" %}
-{% load learning_filters %}
+{% load static %}
 
 {% block title %}Sessions — StudyLog{% endblock %}
 
+{% block main_class %}sl-bg{% endblock %}
 {% block breadcrumbs %}{% endblock %}
 {% block alerts %}{% endblock %}
 
 {% block content %}
-<div class="container py-4">
+<div class="sl-page">
 
-  {% include 'partials/_alerts.html' %}
-
-  <nav aria-label="Breadcrumb" class="mb-3">
-    <ol class="breadcrumb">
-      <li class="breadcrumb-item"><a href="{% url 'learning:dashboard' %}">Dashboard</a></li>
-      <li class="breadcrumb-item active" aria-current="page">Sessions</li>
-    </ol>
+  {# ── Breadcrumb ─────────────────────────────────────────────────────── #}
+  <nav class="sl-crumbs" aria-label="Breadcrumb">
+    <a href="{% url 'learning:dashboard' %}">Dashboard</a>
+    <span class="sl-crumbs__sep" aria-hidden="true">/</span>
+    <span class="sl-crumbs__cur" aria-current="page">Sessions</span>
   </nav>
 
-  <h1 class="mb-2">Sessions</h1>
-  <p class="text-muted mb-4">Coming soon.</p>
-  <a href="{% url 'learning:session_create' %}" class="btn btn-primary">Log a session</a>
+  {# ── Page header ─────────────────────────────────────────────────────── #}
+  <div class="sesshead">
+    <div>
+      <h1 class="sesshead__title">Sessions</h1>
+      <p class="sesshead__sub">Anki, past papers, revision — log the time you put in.</p>
+    </div>
+    <a href="{% url 'learning:session_create' %}" class="btn-log">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
+           stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M12 5v14M5 12h14"/>
+      </svg>
+      Log a session
+    </a>
+  </div>
 
+  {# ── Activity filter bar ─────────────────────────────────────────────── #}
+  <div class="filterbar" id="js-filterbar" role="group" aria-label="Filter by activity">
+    {# rendered by JS #}
+  </div>
+
+  {# ── Two-column grid ─────────────────────────────────────────────────── #}
+  <div class="sess-grid">
+
+    {# ── Calendar heat-map ────────────────────────────────────────────── #}
+    <div class="calcard">
+      <div class="cal__head">
+        <div>
+          <div class="cal__month" id="js-cal-month"></div>
+          <div class="cal__summary" id="js-cal-summary"></div>
+        </div>
+        <div class="cal__nav">
+          <button class="cal__today" id="js-cal-today" type="button">Today</button>
+          <button class="cal__btn" id="js-cal-prev" type="button" aria-label="Previous month">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M15 18l-6-6 6-6"/>
+            </svg>
+          </button>
+          <button class="cal__btn" id="js-cal-next" type="button" aria-label="Next month">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M9 18l6-6-6-6"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+      <div class="cal__dow" aria-hidden="true">
+        <span>Mon</span><span>Tue</span><span>Wed</span>
+        <span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+      </div>
+      <div class="cal__grid" id="js-cal-grid" role="grid" aria-label="Study calendar"></div>
+      <div class="cal__legend" aria-label="Heat map legend">
+        <span>Less</span>
+        <span class="sw l0" aria-label="0 minutes"></span>
+        <span class="sw l1" aria-label="1–44 minutes"></span>
+        <span class="sw l2" aria-label="45–89 minutes"></span>
+        <span class="sw l3" aria-label="90–149 minutes"></span>
+        <span class="sw l4" aria-label="150+ minutes"></span>
+        <span>More</span>
+        <span class="cal__legend__right">study minutes / day</span>
+      </div>
+    </div>
+
+    {# ── Day detail panel ─────────────────────────────────────────────── #}
+    <aside class="daypanel" id="js-daypanel" aria-live="polite" aria-label="Day sessions"></aside>
+
+  </div>{# .sess-grid #}
+</div>{# .sl-page #}
+
+{# ── Edit sheet modal ────────────────────────────────────────────────────── #}
+<div class="sheet-overlay" id="js-sheet" role="presentation">
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="js-sheet-title">
+
+    <div class="sheet__head">
+      <div>
+        <h3 class="sheet__title" id="js-sheet-title">Edit session</h3>
+        <div class="sheet__date" id="js-sheet-date"></div>
+        <div class="sheet__resource" id="js-sheet-resource" hidden></div>
+      </div>
+      <span class="sheet__status" id="js-sheet-status" hidden></span>
+      <button class="sheet__close" id="js-sheet-close" type="button" aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
+             stroke-linecap="round" aria-hidden="true">
+          <path d="M18 6L6 18M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="sheet__body">
+      {# Activity #}
+      <div>
+        <div class="sl-field__label">Activity</div>
+        <div class="sl-actgrid" id="js-sheet-actgrid"></div>
+      </div>
+
+      {# Duration #}
+      <div>
+        <div class="sl-field__label">Duration</div>
+        <div class="sl-pillrow" id="js-sheet-durrow"></div>
+      </div>
+
+      {# Reschedule date (planned only) #}
+      <div id="js-sheet-datefield" hidden>
+        <div class="sl-field__label">Planned for</div>
+        <input type="date" class="sl-control" id="js-sheet-dateinput"
+               style="width:auto; padding:11px 14px;">
+        <div class="sl-field__hint">Change the date to reschedule this planned session.</div>
+      </div>
+
+      {# Topic #}
+      <div>
+        <div class="sl-field__label">Topic / tags</div>
+        <div class="sl-taginput" id="js-sheet-taginput" role="group" aria-label="Topic tags">
+          <input type="text" id="js-sheet-tag-input"
+                 placeholder="Type a topic and press Enter…"
+                 aria-label="Add a topic tag">
+        </div>
+      </div>
+    </div>
+
+    <div class="sheet__actions">
+      <button class="sl-btn sl-btn--danger" id="js-sheet-delete" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+        </svg>
+        Delete
+      </button>
+      <span class="spacer"></span>
+      <button class="sl-btn sl-btn--ghost" id="js-sheet-cancel" type="button">Cancel</button>
+      <button class="sl-btn sl-btn--markdone" id="js-sheet-markdone" type="button" hidden>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M20 6L9 17l-5-5"/>
+        </svg>
+        Mark done
+      </button>
+      <button class="sl-btn sl-btn--primary" id="js-sheet-save" type="button">Save changes</button>
+    </div>
+
+  </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script nonce="{{ request.csp_nonce }}">
+(function () {
+  "use strict";
+
+  // ── Server-provided initial state ────────────────────────────────────────
+  const INIT_CAL  = {{ cal_data_json|safe }};
+  const INIT_DAY  = {{ day_data_json|safe }};
+  const TODAY_ISO = '{{ today_iso }}';
+  const CSRF      = '{{ csrf_token }}';
+
+  // URL builders
+  const URL_CAL      = '{% url "learning:session_calendar" %}';
+  const URL_DAY      = '{% url "learning:session_day" %}';
+  const URL_CREATE   = '{% url "learning:session_create" %}';
+
+  // ── Activity definitions (model values + display labels) ─────────────────
+  const ACTIVITIES = [
+    { val: 'flashcards',   label: 'Flashcards / Anki',  ic: 'flashcards' },
+    { val: 'practice',     label: 'Practice problems',   ic: 'practice'   },
+    { val: 'past_papers',  label: 'Past papers',         ic: 'pastpapers' },
+    { val: 'review_notes', label: 'Review notes',        ic: 'review'     },
+    { val: 'writing',      label: 'Writing / essays',    ic: 'writing'    },
+  ];
+  const ACT_MAP = Object.fromEntries(ACTIVITIES.map(a => [a.val, a]));
+  const DURATIONS = [15, 30, 45, 60, 90];
+
+  // ── SVG icon library ─────────────────────────────────────────────────────
+  const IC = {
+    flashcards: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="14" height="12" rx="2"></rect><path d="M7 4h13a1 1 0 0 1 1 1v11"></path></svg>',
+    practice:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>',
+    pastpapers: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6M8 13h8M8 17h5"></path></svg>',
+    review:     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4h7a3 3 0 0 1 3 3v13a2.5 2.5 0 0 0-2.5-2.5H2z"></path><path d="M22 4h-7a3 3 0 0 0-3 3v13a2.5 2.5 0 0 1 2.5-2.5H22z"></path></svg>',
+    writing:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"></path></svg>',
+    clock:      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>',
+    tag:        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0l-7.2-7.2a2 2 0 0 1-.6-1.4V4a2 2 0 0 1 2-2h8a2 2 0 0 1 1.4.6l6.4 6.4a2 2 0 0 1 0 2.8z"></path><circle cx="7.5" cy="7.5" r="1.2" fill="currentColor" stroke="none"></circle></svg>',
+    empty:      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4M8 2v4M3 10h18M9 15l2 2 4-4"></path></svg>',
+    chevron:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"></path></svg>',
+    check:      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg>',
+    reschedule: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4v6h6"></path><path d="M3.5 10a9 9 0 1 1-.8 4"></path></svg>',
+    custom:     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"></path></svg>',
+  };
+
+  function icForActivity(val) {
+    const map = { flashcards:'flashcards', practice:'practice', past_papers:'pastpapers', review_notes:'review', writing:'writing' };
+    return IC[map[val]] || IC.clock;
+  }
+
+  // ── Helpers ───────────────────────────────────────────────────────────────
+  function fmt(m) {
+    if (!m) return '0m';
+    const h = Math.floor(m / 60), mm = m % 60;
+    return h > 0 ? (mm ? h + 'h ' + mm + 'm' : h + 'h') : mm + 'm';
+  }
+
+  function esc(s) {
+    return String(s || '').replace(/[&<>"]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c]));
+  }
+
+  function heatLevel(mins) {
+    if (!mins) return 0;
+    if (mins < 45) return 1;
+    if (mins < 90) return 2;
+    if (mins < 150) return 3;
+    return 4;
+  }
+
+  function fmtFullDate(isoDate) {
+    const [y, m, d] = isoDate.split('-').map(Number);
+    const dt = new Date(y, m - 1, d);
+    return dt.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
+  }
+
+  function fmtMonthYear(isoDate) {
+    const [y, m] = isoDate.split('-').map(Number);
+    return new Date(y, m - 1, 1).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+  }
+
+  function isPast(isoDate) {
+    return isoDate < TODAY_ISO;
+  }
+
+  function urlFor(pk, action) {
+    return '/learning/sessions/' + pk + '/' + action + '/';
+  }
+
+  async function apiFetch(url, method, body) {
+    const res = await fetch(url, {
+      method: method || 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': CSRF,
+      },
+      body: body ? JSON.stringify(body) : undefined,
+    });
+    return res.json();
+  }
+
+  // ── State ─────────────────────────────────────────────────────────────────
+  let viewYear  = INIT_CAL.year;
+  let viewMonth = INIT_CAL.month;
+  let calData   = INIT_CAL;
+  let dayData   = INIT_DAY;
+  let selDate   = '{{ selected_date_iso }}';
+  let filter    = '{{ activity_filter }}';
+
+  // ── Filter bar ────────────────────────────────────────────────────────────
+  function renderFilter() {
+    const el = document.getElementById('js-filterbar');
+    if (!el) return;
+    const chips = [
+      { val: 'all', label: 'All activity', icon: '' },
+      ...ACTIVITIES.map(a => ({ val: a.val, label: a.label, icon: icForActivity(a.val) })),
+    ];
+    el.innerHTML = '<span class="filterbar__l" aria-hidden="true">Filter</span>'
+      + chips.map(c =>
+        `<button class="fchip${(filter === c.val || (c.val === 'all' && !filter)) ? ' on' : ''}"
+                 data-filter="${esc(c.val)}" type="button">
+           ${c.icon}${esc(c.label)}
+         </button>`
+      ).join('');
+    el.querySelectorAll('[data-filter]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        filter = btn.dataset.filter === 'all' ? '' : btn.dataset.filter;
+        renderFilter();
+        fetchCal();
+        fetchDay();
+      });
+    });
+  }
+
+  // ── Calendar ──────────────────────────────────────────────────────────────
+  function renderCal(data) {
+    if (data) calData = data;
+    const d = calData;
+
+    document.getElementById('js-cal-month').textContent = d.month_name;
+
+    const summary = d.active_days
+      ? fmt(d.total_minutes) + ' across ' + d.active_days + ' day' + (d.active_days > 1 ? 's' : '')
+        + (filter ? ' · ' + (ACT_MAP[filter] ? ACT_MAP[filter].label.toLowerCase() : '') : '')
+      : 'No sessions this month' + (filter ? ' · ' + (ACT_MAP[filter] ? ACT_MAP[filter].label.toLowerCase() : '') : '');
+    document.getElementById('js-cal-summary').textContent = summary;
+
+    const grid = document.getElementById('js-cal-grid');
+    let html = '';
+
+    // Leading blank cells (Monday-first offset)
+    for (let i = 0; i < d.start_offset; i++) {
+      html += '<div class="cell empty" role="gridcell" aria-hidden="true"></div>';
+    }
+
+    d.days.forEach(day => {
+      const lvl = heatLevel(day.done_minutes);
+      const isToday = day.date === TODAY_ISO;
+      const isSel   = day.date === selDate;
+      const plannedOnly = day.done_count === 0 && day.planned_count > 0;
+      const hasPlanDot  = !plannedOnly && day.planned_count > 0;
+
+      const cls = ['cell'];
+      if (lvl) cls.push('l' + lvl);
+      if (plannedOnly) cls.push('planned');
+      if (day.overdue) cls.push('overdue');
+      if (isToday) cls.push('today');
+      if (isSel) cls.push('sel');
+
+      let content = '';
+      if (day.done_minutes) {
+        content = `<span class="cell__mins">${fmt(day.done_minutes)}</span>`;
+      } else if (day.planned_count) {
+        content = `<span class="cell__plan">${day.overdue ? 'missed' : day.planned_count + ' planned'}</span>`;
+      } else if (day.done_count > 0) {
+        const dots = Array.from({ length: Math.min(day.done_count, 3) }).map(() => '<i></i>').join('');
+        content = `<div class="cell__dots">${dots}</div>`;
+      }
+
+      const planDot = hasPlanDot ? '<span class="cell__plandot" aria-hidden="true"></span>' : '';
+      const dimStyle = (day.is_future && !day.planned_count) ? ' style="opacity:.4"' : '';
+
+      html += `<div class="${cls.join(' ')}" data-date="${esc(day.date)}"
+                    role="gridcell" tabindex="0"
+                    aria-label="Day ${day.day}${isToday ? ', today' : ''}"
+                    aria-selected="${isSel}"${dimStyle}>
+        <span class="cell__num">${day.day}</span>
+        ${planDot}
+        ${content}
+      </div>`;
+    });
+
+    grid.innerHTML = html;
+
+    grid.querySelectorAll('.cell:not(.empty)').forEach(cell => {
+      const selectCell = () => {
+        selDate = cell.dataset.date;
+        renderCal();
+        fetchDay();
+      };
+      cell.addEventListener('click', selectCell);
+      cell.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); selectCell(); }
+      });
+    });
+  }
+
+  async function fetchCal() {
+    try {
+      const params = new URLSearchParams({ year: viewYear, month: viewMonth });
+      if (filter) params.set('activity', filter);
+      const data = await apiFetch(URL_CAL + '?' + params);
+      renderCal(data);
+    } catch (e) {
+      console.error('Calendar fetch failed', e);
+    }
+  }
+
+  // ── Day panel ─────────────────────────────────────────────────────────────
+  function renderDay(data) {
+    if (data) dayData = data;
+    const el = document.getElementById('js-daypanel');
+    if (!el) return;
+
+    const past = isPast(selDate);
+    const label = fmtFullDate(selDate);
+
+    const done    = dayData.day_sessions.filter(s => s.status === 'logged');
+    const planned = dayData.day_sessions.filter(s => s.status === 'planned');
+
+    // Head
+    let metaBits = '';
+    if (done.length) {
+      metaBits += `<span class="chip">${fmt(dayData.day_total_minutes)}</span>
+                   <span class="dot"></span>
+                   <span>${done.length} done</span>`;
+    }
+    if (planned.length) {
+      metaBits += `${done.length ? '<span class="dot"></span>' : ''}
+                   <span>${planned.length} planned</span>`;
+    }
+
+    // Planned rows
+    function planRow(s) {
+      const overdue = s.is_overdue;
+      const tagHtml = overdue
+        ? '<span class="plan-tag plan-tag--overdue">Missed</span>'
+        : '<span class="plan-tag">Planned</span>';
+      const btn = overdue
+        ? `<button class="srow__done srow__done--ghost" type="button"
+                   data-reschedule data-id="${s.id}" aria-label="Reschedule session">
+             ${IC.reschedule}Reschedule
+           </button>`
+        : `<button class="srow__done" type="button"
+                   data-markdone data-id="${s.id}" aria-label="Mark session done">
+             ${IC.check}Mark done
+           </button>`;
+      return `<div class="srow srow--edit srow--planned${overdue ? ' srow--overdue' : ''}"
+                   data-id="${s.id}" role="button" tabindex="0"
+                   aria-label="${esc(s.activity_label || s.activity_type)} planned">
+        <span class="srow__ic" aria-hidden="true">${icForActivity(s.activity_type)}</span>
+        <div class="srow__main">
+          <div class="srow__t">${esc(s.activity_label || s.activity_type)}</div>
+          <div class="srow__meta">
+            ${tagHtml}
+            <span class="srow__res">${IC.tag}${esc(s.topic)}</span>
+          </div>
+        </div>
+        <span class="srow__dur">${fmt(s.duration_minutes)}</span>
+        ${btn}
+      </div>`;
+    }
+
+    // Done rows
+    function doneRow(s) {
+      return `<div class="srow srow--edit" data-id="${s.id}" role="button" tabindex="0"
+                   aria-label="${esc(s.activity_label || s.activity_type)} ${fmt(s.duration_minutes)}">
+        <span class="srow__ic" aria-hidden="true">${icForActivity(s.activity_type)}</span>
+        <div class="srow__main">
+          <div class="srow__t">${esc(s.activity_label || s.activity_type)}</div>
+          <div class="srow__meta">
+            <span class="srow__res">${IC.tag}${esc(s.topic)}</span>
+          </div>
+        </div>
+        <span class="srow__dur">${fmt(s.duration_minutes)}</span>
+        <span class="srow__go" aria-hidden="true">${IC.chevron}</span>
+      </div>`;
+    }
+
+    // Empty state
+    function emptyState() {
+      const isToday = selDate === TODAY_ISO;
+      const canLog  = past || isToday;
+      return `<div class="daypanel__empty">
+        ${IC.empty}
+        <p>${past ? 'No sessions logged this day.' : 'Nothing here yet.'}</p>
+        <a href="${URL_CREATE}" class="btn-log">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 5v14M5 12h14"/>
+          </svg>
+          ${canLog ? 'Log a session' : 'Plan a session'}
+        </a>
+      </div>`;
+    }
+
+    // Body
+    let body = '';
+    if (dayData.day_sessions.length === 0) {
+      body = emptyState();
+    } else {
+      if (planned.length) body += `<div class="slist">${planned.map(planRow).join('')}</div>`;
+      if (done.length)    body += `<div class="slist">${done.map(doneRow).join('')}</div>`;
+    }
+
+    el.innerHTML = `
+      <div class="daypanel__head">
+        <div class="daypanel__date">${esc(label)}</div>
+        ${metaBits ? `<div class="daypanel__meta">${metaBits}</div>` : ''}
+      </div>
+      ${body}`;
+
+    // Wire quick actions
+    el.querySelectorAll('[data-markdone]').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        quickMarkDone(Number(btn.dataset.id));
+      });
+    });
+    el.querySelectorAll('[data-reschedule]').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        const s = dayData.day_sessions.find(x => x.id === Number(btn.dataset.id));
+        if (s) openSheet(s, true);
+      });
+    });
+    el.querySelectorAll('.srow--edit').forEach(row => {
+      const open = () => {
+        const s = dayData.day_sessions.find(x => x.id === Number(row.dataset.id));
+        if (s) openSheet(s, false);
+      };
+      row.addEventListener('click', open);
+      row.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); }
+      });
+    });
+  }
+
+  async function fetchDay() {
+    try {
+      const params = new URLSearchParams({ date: selDate });
+      if (filter) params.set('activity', filter);
+      const data = await apiFetch(URL_DAY + '?' + params);
+      renderDay(data);
+    } catch (e) {
+      console.error('Day fetch failed', e);
+    }
+  }
+
+  // Inline mark-done (no sheet)
+  async function quickMarkDone(id) {
+    try {
+      await apiFetch(urlFor(id, 'mark-done'), 'POST', {});
+      await Promise.all([fetchCal(), fetchDay()]);
+    } catch (e) {
+      console.error('Mark done failed', e);
+    }
+  }
+
+  // ── Calendar navigation ───────────────────────────────────────────────────
+  function prevMonth() {
+    viewMonth--;
+    if (viewMonth < 1) { viewMonth = 12; viewYear--; }
+    fetchCal();
+  }
+  function nextMonth() {
+    viewMonth++;
+    if (viewMonth > 12) { viewMonth = 1; viewYear++; }
+    fetchCal();
+  }
+  function goToday() {
+    const [y, m] = TODAY_ISO.split('-').map(Number);
+    viewYear = y; viewMonth = m;
+    selDate = TODAY_ISO;
+    fetchCal();
+    fetchDay();
+  }
+
+  document.getElementById('js-cal-prev').addEventListener('click', prevMonth);
+  document.getElementById('js-cal-next').addEventListener('click', nextMonth);
+  document.getElementById('js-cal-today').addEventListener('click', goToday);
+
+  // ── Edit sheet ────────────────────────────────────────────────────────────
+  let sheetSession = null;
+  let sheetDraft   = {};
+
+  const X_IC = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg>';
+
+  function addSheetTag(text) {
+    text = (text || '').trim();
+    if (!text) return;
+    const wrap  = document.getElementById('js-sheet-taginput');
+    const input = document.getElementById('js-sheet-tag-input');
+    const el = document.createElement('span');
+    el.className = 'sl-tag';
+    el.setAttribute('role', 'listitem');
+    el.innerHTML = esc(text)
+      + `<button type="button" class="sl-tag__rm" aria-label="Remove ${esc(text)}">${X_IC}</button>`;
+    el.querySelector('.sl-tag__rm').addEventListener('click', () => { el.remove(); syncSheetTopic(); });
+    wrap.insertBefore(el, input);
+    syncSheetTopic();
+  }
+
+  function syncSheetTopic() {
+    const wrap = document.getElementById('js-sheet-taginput');
+    const tags = Array.from(wrap.querySelectorAll('.sl-tag'))
+      .map(t => t.childNodes[0].textContent.trim());
+    sheetDraft.topic = tags.join(', ');
+  }
+
+  function buildSheetStatics() {
+    // Activity chips
+    const actGrid = document.getElementById('js-sheet-actgrid');
+    actGrid.innerHTML = ACTIVITIES.map(a =>
+      `<button type="button" class="sl-actchip" data-actval="${esc(a.val)}">
+         <span class="sl-actchip__ic">${icForActivity(a.val)}</span>
+         <span class="sl-actchip__t">${esc(a.label)}</span>
+       </button>`
+    ).join('');
+
+    actGrid.querySelectorAll('[data-actval]').forEach(chip => {
+      chip.addEventListener('click', () => {
+        actGrid.querySelectorAll('[data-actval]').forEach(c => c.classList.remove('on'));
+        chip.classList.add('on');
+        sheetDraft.activity_type = chip.dataset.actval;
+      });
+    });
+
+    // Duration pills
+    const durRow = document.getElementById('js-sheet-durrow');
+    durRow.innerHTML = DURATIONS.map(d =>
+      `<button type="button" class="sl-pill" data-dur="${d}">${d}m</button>`
+    ).join('')
+    + `<button type="button" class="sl-pill sl-pill--custom" data-dur="custom">${IC.custom}Custom</button>`
+    + `<span class="sl-custom-min" id="js-sheet-custom">
+         <input type="number" min="1" max="600" class="sl-control" id="js-sheet-custom-input" placeholder="90">
+         <span class="sl-custom-min__unit">min</span>
+       </span>`;
+
+    const customWrap  = document.getElementById('js-sheet-custom');
+    const customInput = document.getElementById('js-sheet-custom-input');
+
+    durRow.querySelectorAll('[data-dur]').forEach(pill => {
+      pill.addEventListener('click', () => {
+        durRow.querySelectorAll('[data-dur]').forEach(p => p.classList.remove('on'));
+        pill.classList.add('on');
+        if (pill.dataset.dur === 'custom') {
+          customWrap.classList.add('show');
+          customInput.focus();
+          sheetDraft.duration_minutes = Number(customInput.value) || 0;
+        } else {
+          customWrap.classList.remove('show');
+          sheetDraft.duration_minutes = Number(pill.dataset.dur);
+        }
+      });
+    });
+
+    customInput.addEventListener('input', () => {
+      sheetDraft.duration_minutes = Number(customInput.value) || 0;
+    });
+
+    // Tag chip input
+    const tagWrapEl = document.getElementById('js-sheet-taginput');
+    const tagInpEl  = document.getElementById('js-sheet-tag-input');
+    tagInpEl.addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        addSheetTag(tagInpEl.value);
+        tagInpEl.value = '';
+      } else if (e.key === 'Backspace' && !tagInpEl.value) {
+        const last = tagWrapEl.querySelector('.sl-tag:last-of-type');
+        if (last) { last.remove(); syncSheetTopic(); }
+      }
+    });
+    tagWrapEl.addEventListener('click', () => tagInpEl.focus());
+
+    // Close handlers
+    document.getElementById('js-sheet-close').addEventListener('click', closeSheet);
+    document.getElementById('js-sheet-cancel').addEventListener('click', closeSheet);
+    document.getElementById('js-sheet').addEventListener('click', e => {
+      if (e.target === e.currentTarget) closeSheet();
+    });
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') closeSheet();
+    });
+
+    // Actions
+    document.getElementById('js-sheet-save').addEventListener('click', saveSheet);
+    document.getElementById('js-sheet-delete').addEventListener('click', deleteSheet);
+    document.getElementById('js-sheet-markdone').addEventListener('click', markDoneFromSheet);
+  }
+
+  function openSheet(session, focusDate) {
+    sheetSession = session;
+    const planned  = session.status === 'planned';
+    const overdue  = session.is_overdue;
+
+    sheetDraft = {
+      activity_type:    session.activity_type,
+      duration_minutes: session.duration_minutes,
+      topic:            session.topic || '',
+      date:             session.date,
+    };
+
+    // Title / date / status badge
+    document.getElementById('js-sheet-title').textContent = planned ? 'Edit planned session' : 'Edit session';
+    document.getElementById('js-sheet-date').textContent  = fmtFullDate(session.date);
+
+    // Resource link (read-only)
+    const resEl = document.getElementById('js-sheet-resource');
+    if (session.resource_title) {
+      resEl.innerHTML = IC.tag + esc(session.resource_title);
+      resEl.hidden = false;
+    } else {
+      resEl.hidden = true;
+    }
+    const badge = document.getElementById('js-sheet-status');
+    badge.hidden    = !planned;
+    badge.textContent = overdue ? 'Missed plan' : 'Planned';
+    badge.className = 'sheet__status' + (overdue ? ' overdue' : '');
+
+    // Activity chips
+    document.querySelectorAll('#js-sheet-actgrid [data-actval]').forEach(c => {
+      c.classList.toggle('on', c.dataset.actval === session.activity_type);
+    });
+
+    // Duration pills
+    const durPills    = document.querySelectorAll('#js-sheet-durrow [data-dur]');
+    const customWrap  = document.getElementById('js-sheet-custom');
+    const customInput = document.getElementById('js-sheet-custom-input');
+    let matched = false;
+    durPills.forEach(p => {
+      const on = p.dataset.dur === String(session.duration_minutes);
+      p.classList.toggle('on', on);
+      if (on) matched = true;
+    });
+    if (matched) {
+      customWrap.classList.remove('show');
+    } else {
+      const customPill = document.querySelector('#js-sheet-durrow [data-dur="custom"]');
+      if (customPill) customPill.classList.add('on');
+      customWrap.classList.add('show');
+      customInput.value = session.duration_minutes;
+    }
+
+    // Topic tags
+    const tagWrap3 = document.getElementById('js-sheet-taginput');
+    tagWrap3.querySelectorAll('.sl-tag').forEach(t => t.remove());
+    (session.topic || '').split(',').filter(t => t.trim()).forEach(t => addSheetTag(t));
+
+    // Reschedule date field (planned only)
+    const dateField = document.getElementById('js-sheet-datefield');
+    const dateInput = document.getElementById('js-sheet-dateinput');
+    dateField.hidden = !planned;
+    if (planned) {
+      dateInput.value = session.date;
+      if (focusDate) setTimeout(() => dateInput.focus(), 80);
+    }
+
+    // Mark-done button (planned only)
+    document.getElementById('js-sheet-markdone').hidden = !planned;
+    document.getElementById('js-sheet-save').textContent = planned ? 'Save plan' : 'Save changes';
+
+    // Show
+    const overlay = document.getElementById('js-sheet');
+    overlay.classList.add('open');
+    document.getElementById('js-sheet-close').focus();
+  }
+
+  function closeSheet() {
+    document.getElementById('js-sheet').classList.remove('open');
+    sheetSession = null;
+    sheetDraft   = {};
+  }
+
+  function pendingDate() {
+    const dateField = document.getElementById('js-sheet-datefield');
+    const dateInput = document.getElementById('js-sheet-dateinput');
+    if (dateField.hidden || !dateInput.value) return null;
+    return dateInput.value;
+  }
+
+  async function saveSheet() {
+    if (!sheetSession) return;
+    const body = { ...sheetDraft };
+    const newDate = pendingDate();
+    if (newDate) body.date = newDate;
+    if (body.duration_minutes < 1) body.duration_minutes = sheetSession.duration_minutes;
+    try {
+      await apiFetch(urlFor(sheetSession.id, 'patch'), 'POST', body);
+      if (newDate && newDate !== selDate) selDate = newDate;
+      closeSheet();
+      await Promise.all([fetchCal(), fetchDay()]);
+    } catch (e) {
+      console.error('Save failed', e);
+    }
+  }
+
+  async function markDoneFromSheet() {
+    if (!sheetSession) return;
+    const body = { ...sheetDraft };
+    const newDate = pendingDate();
+    if (newDate) body.date = newDate;
+    if (body.duration_minutes < 1) body.duration_minutes = sheetSession.duration_minutes;
+    try {
+      await apiFetch(urlFor(sheetSession.id, 'mark-done'), 'POST', body);
+      if (newDate && newDate !== selDate) selDate = newDate;
+      closeSheet();
+      await Promise.all([fetchCal(), fetchDay()]);
+    } catch (e) {
+      console.error('Mark done failed', e);
+    }
+  }
+
+  async function deleteSheet() {
+    if (!sheetSession) return;
+    try {
+      await apiFetch(urlFor(sheetSession.id, 'delete-ajax'), 'POST', {});
+      closeSheet();
+      await Promise.all([fetchCal(), fetchDay()]);
+    } catch (e) {
+      console.error('Delete failed', e);
+    }
+  }
+
+  // ── Boot ──────────────────────────────────────────────────────────────────
+  buildSheetStatics();
+  renderFilter();
+  renderCal(INIT_CAL);
+  renderDay(INIT_DAY);
+
+})();
+</script>
 {% endblock %}

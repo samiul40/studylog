@@ -1,11 +1,9 @@
-import calendar as _calendar
 import datetime
 import json
 
 from django.contrib import messages
-from django.db.models import Sum
 from django.http import JsonResponse
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404, render
 from django.urls import reverse_lazy
 from django.views import View
 from django.views.generic import CreateView, DeleteView, UpdateView
@@ -13,72 +11,23 @@ from django.views.generic import CreateView, DeleteView, UpdateView
 from learning.forms import StudySessionForm
 from learning.mixins import UserPermissionMixin
 from learning.models import LearningResource, StudySession
+from learning.services.sessions import get_day_sessions, get_month_calendar
 
-# ---------------------------------------------------------------------------
-# Helpers (private)
-# ---------------------------------------------------------------------------
+MANUAL_ACTIVITIES = [
+    ("flashcards", "Flashcards / Anki"),
+    ("practice", "Practice problems"),
+    ("past_papers", "Past papers"),
+    ("review_notes", "Review notes"),
+    ("writing", "Writing / essays"),
+]
 
 
-def _parse_date(value):
+def _parse_date(value: str | None) -> datetime.date | None:
     """Return a date from an ISO string, or None on invalid/missing input."""
     try:
         return datetime.date.fromisoformat(value) if value else None
     except ValueError:
         return None
-
-
-def _get_month_calendar(session_qs, year, month):
-    """
-    Return calendar grid data for the given month.
-    Used by both the SSR page and the AJAX month-navigation endpoint.
-    """
-    daily_totals = {
-        row["date"]: row["total"]
-        for row in session_qs.for_month(year, month)
-        .values("date")
-        .annotate(total=Sum("duration_minutes"))
-    }
-
-    cal = _calendar.Calendar(firstweekday=0)  # Monday-anchored
-    weeks = [
-        [
-            {
-                "date": d.isoformat(),
-                "day": d.day,
-                "in_month": d.month == month,
-                "total_minutes": daily_totals.get(d, 0),
-            }
-            for d in week
-        ]
-        for week in cal.monthdatescalendar(year, month)
-    ]
-
-    all_totals = list(daily_totals.values())
-    prev_date = datetime.date(year, month, 1) - datetime.timedelta(days=1)
-    next_date = datetime.date(year, month, 28) + datetime.timedelta(days=4)
-
-    return {
-        "year": year,
-        "month": month,
-        "month_name": datetime.date(year, month, 1).strftime("%B %Y"),
-        "total_minutes": sum(all_totals),
-        "active_days": sum(1 for t in all_totals if t > 0),
-        "weeks": weeks,
-        "prev_year": prev_date.year,
-        "prev_month": prev_date.month,
-        "next_year": next_date.year,
-        "next_month": next_date.month,
-    }
-
-
-def _get_day_sessions(session_qs, date):
-    """Return sessions for a specific date, ready for the day panel."""
-    sessions = list(session_qs.filter(date=date).select_related("resource"))
-    return {
-        "day_sessions": [s.to_dict() for s in sessions],
-        "day_total_minutes": sum(s.duration_minutes for s in sessions),
-        "day_session_count": len(sessions),
-    }
 
 
 # ---------------------------------------------------------------------------
@@ -120,15 +69,17 @@ class StudySessionCreateView(UserPermissionMixin, CreateView):
             .select_related("resource_type")
             .order_by("title")
         )
-        ctx["resources_json"] = json.dumps([
-            {
-                "id": r.id,
-                "name": r.title,
-                "kind": r.resource_type.content_kind,
-                "tag": r.resource_type.name,
-            }
-            for r in resources
-        ])
+        ctx["resources_json"] = json.dumps(
+            [
+                {
+                    "id": r.id,
+                    "name": r.title,
+                    "kind": r.resource_type.content_kind,
+                    "tag": r.resource_type.name,
+                }
+                for r in resources
+            ]
+        )
 
         ctx["recent_sessions"] = (
             StudySession.objects.for_user(user)
@@ -141,7 +92,8 @@ class StudySessionCreateView(UserPermissionMixin, CreateView):
 
     def form_valid(self, form):
         form.instance.user = self.request.user
-        label = "Session planned." if form.instance.status == StudySession.Status.PLANNED else "Session logged."
+        planned = form.instance.status == StudySession.Status.PLANNED
+        label = "Session planned." if planned else "Session logged."
         messages.success(self.request, label)
         return super().form_valid(form)
 
@@ -185,28 +137,26 @@ class StudySessionListView(UserPermissionMixin, View):
         year = int(request.GET.get("year", today.year))
         month = int(request.GET.get("month", today.month))
         activity = request.GET.get("activity", "").strip()
-        status_filter = request.GET.get("status", "").strip()
 
         session_qs = StudySession.objects.for_user(request.user)
         if activity:
             session_qs = session_qs.filter(activity_type=activity)
-        if status_filter:
-            session_qs = session_qs.filter(status=status_filter)
 
         selected_date = _parse_date(request.GET.get("date")) or today
+
+        cal_data = get_month_calendar(session_qs, year, month)
+        day_data = get_day_sessions(session_qs, selected_date)
 
         return render(
             request,
             "sessions/session_list.html",
             {
-                **_get_month_calendar(session_qs, year, month),
-                **_get_day_sessions(session_qs, selected_date),
-                "selected_date": selected_date,
-                "activity_types": StudySession.ActivityType.choices,
-                "status_choices": StudySession.Status.choices,
-                "selected_activity": activity,
-                "selected_status": status_filter,
-                "form": StudySessionForm(user=request.user),
+                "cal_data_json": json.dumps(cal_data),
+                "day_data_json": json.dumps(day_data),
+                "selected_date_iso": selected_date.isoformat(),
+                "today_iso": today.isoformat(),
+                "activity_filter": activity,
+                "manual_activities": MANUAL_ACTIVITIES,
             },
         )
 
@@ -224,15 +174,12 @@ class StudySessionCalendarView(UserPermissionMixin, View):
             return JsonResponse({"error": "year and month required"}, status=400)
 
         activity = request.GET.get("activity", "").strip()
-        status_filter = request.GET.get("status", "").strip()
 
         session_qs = StudySession.objects.for_user(request.user)
         if activity:
             session_qs = session_qs.filter(activity_type=activity)
-        if status_filter:
-            session_qs = session_qs.filter(status=status_filter)
 
-        return JsonResponse(_get_month_calendar(session_qs, year, month))
+        return JsonResponse(get_month_calendar(session_qs, year, month))
 
 
 class StudySessionDayView(UserPermissionMixin, View):
@@ -246,12 +193,105 @@ class StudySessionDayView(UserPermissionMixin, View):
             return JsonResponse({"error": "valid date required"}, status=400)
 
         activity = request.GET.get("activity", "").strip()
-        status_filter = request.GET.get("status", "").strip()
 
         session_qs = StudySession.objects.for_user(request.user)
         if activity:
             session_qs = session_qs.filter(activity_type=activity)
-        if status_filter:
-            session_qs = session_qs.filter(status=status_filter)
 
-        return JsonResponse(_get_day_sessions(session_qs, date))
+        return JsonResponse(get_day_sessions(session_qs, date))
+
+
+# ---------------------------------------------------------------------------
+# AJAX mutation views (used by the edit sheet)
+# ---------------------------------------------------------------------------
+
+
+class StudySessionPatchView(BaseStudySessionView, View):
+    """AJAX: update a session's fields from the edit sheet."""
+
+    permission_required = "learning.change_studysession"
+
+    def post(self, request, pk):
+        session = get_object_or_404(self.get_queryset(), pk=pk)
+        try:
+            data = json.loads(request.body)
+        except (json.JSONDecodeError, ValueError):
+            return JsonResponse({"error": "Invalid JSON"}, status=400)
+
+        if "activity_type" in data:
+            val = data["activity_type"]
+            if val in dict(StudySession.ActivityType.choices):
+                session.activity_type = val
+
+        if "duration_minutes" in data:
+            try:
+                mins = int(data["duration_minutes"])
+                if mins < 1:
+                    return JsonResponse(
+                        {"error": "Duration must be at least 1 minute"},
+                        status=400,
+                    )
+                session.duration_minutes = mins
+            except (TypeError, ValueError):
+                return JsonResponse({"error": "Invalid duration"}, status=400)
+
+        if "topic" in data:
+            session.topic = str(data["topic"]).strip()
+
+        if "date" in data:
+            d = _parse_date(data["date"])
+            if d is None:
+                return JsonResponse({"error": "Invalid date"}, status=400)
+            session.date = d
+
+        session.save()
+        return JsonResponse({"ok": True, "session": session.to_dict()})
+
+
+class StudySessionMarkDoneView(BaseStudySessionView, View):
+    """AJAX: flip a planned session to logged, applying any pending edits."""
+
+    permission_required = "learning.change_studysession"
+
+    def post(self, request, pk):
+        session = get_object_or_404(self.get_queryset(), pk=pk)
+        try:
+            data = json.loads(request.body) if request.body else {}
+        except (json.JSONDecodeError, ValueError):
+            data = {}
+
+        if "activity_type" in data:
+            val = data["activity_type"]
+            if val in dict(StudySession.ActivityType.choices):
+                session.activity_type = val
+
+        if "duration_minutes" in data:
+            try:
+                mins = int(data["duration_minutes"])
+                if mins >= 1:
+                    session.duration_minutes = mins
+            except (TypeError, ValueError):
+                pass
+
+        if "topic" in data:
+            session.topic = str(data["topic"]).strip()
+
+        if "date" in data:
+            d = _parse_date(data["date"])
+            if d is not None:
+                session.date = d
+
+        session.status = StudySession.Status.LOGGED
+        session.save()
+        return JsonResponse({"ok": True, "session": session.to_dict()})
+
+
+class StudySessionDeleteAjaxView(BaseStudySessionView, View):
+    """AJAX: delete a session and return JSON."""
+
+    permission_required = "learning.delete_studysession"
+
+    def post(self, request, pk):
+        session = get_object_or_404(self.get_queryset(), pk=pk)
+        session.delete()
+        return JsonResponse({"ok": True})
