@@ -5,7 +5,12 @@ import pytest
 from django.urls import reverse
 from model_bakery import baker
 
-from learning.models import LearningResource, LearningUnit, StudySession
+from learning.models import (
+    Activity,
+    LearningResource,
+    LearningUnit,
+    StudySession,
+)
 from learning.services.sessions import upsert_resource_session
 
 pytestmark = pytest.mark.django_db
@@ -22,7 +27,9 @@ TOMORROW = TODAY + datetime.timedelta(days=1)
 
 def make_session(user, **kwargs):
     kwargs.setdefault("date", TODAY)
-    kwargs.setdefault("activity_type", StudySession.ActivityType.FLASHCARDS)
+    kwargs.setdefault(
+        "activity", Activity.objects.get(slug="flashcards", is_system=True)
+    )
     kwargs.setdefault("duration_minutes", 30)
     kwargs.setdefault("status", StudySession.Status.LOGGED)
     return baker.make(StudySession, user=user, **kwargs)
@@ -110,7 +117,7 @@ class TestStudySessionModel:
 
 class TestUpsertResourceSession:
     def setup_method(self):
-        self.activity = StudySession.ActivityType.VIDEO_WATCH
+        self.activity = Activity.objects.get(slug="watch", is_system=True)
 
     def test_creates_new_session(self, user):
         resource = baker.make(LearningResource, user=user)
@@ -159,9 +166,8 @@ class TestUpsertResourceSession:
 
     def test_zero_duration_creates_session(self, user):
         resource = baker.make(LearningResource, user=user)
-        session = upsert_resource_session(
-            user, resource, TODAY, StudySession.ActivityType.READING, 0
-        )
+        read_act = Activity.objects.get(slug="read", is_system=True)
+        session = upsert_resource_session(user, resource, TODAY, read_act, 0)
 
         assert session is not None
         assert session.duration_minutes == 0
@@ -183,9 +189,10 @@ class TestStudySessionForm:
     def test_valid_minimal(self, user):
         from learning.forms import StudySessionForm
 
+        activity = Activity.objects.get(slug="flashcards", is_system=True)
         form = StudySessionForm(
             data={
-                "activity_type": StudySession.ActivityType.FLASHCARDS,
+                "activity": activity.pk,
                 "date": str(TODAY),
                 "duration_minutes": 30,
                 "status": StudySession.Status.LOGGED,
@@ -198,9 +205,10 @@ class TestStudySessionForm:
     def test_future_date_invalid_for_logged(self, user):
         from learning.forms import StudySessionForm
 
+        activity = Activity.objects.get(slug="flashcards", is_system=True)
         form = StudySessionForm(
             data={
-                "activity_type": StudySession.ActivityType.FLASHCARDS,
+                "activity": activity.pk,
                 "date": str(TOMORROW),
                 "duration_minutes": 30,
                 "status": StudySession.Status.LOGGED,
@@ -214,9 +222,10 @@ class TestStudySessionForm:
     def test_future_date_valid_for_planned(self, user):
         from learning.forms import StudySessionForm
 
+        activity = Activity.objects.get(slug="flashcards", is_system=True)
         form = StudySessionForm(
             data={
-                "activity_type": StudySession.ActivityType.FLASHCARDS,
+                "activity": activity.pk,
                 "date": str(TOMORROW),
                 "duration_minutes": 30,
                 "status": StudySession.Status.PLANNED,
@@ -229,9 +238,10 @@ class TestStudySessionForm:
     def test_zero_duration_invalid(self, user):
         from learning.forms import StudySessionForm
 
+        activity = Activity.objects.get(slug="flashcards", is_system=True)
         form = StudySessionForm(
             data={
-                "activity_type": StudySession.ActivityType.FLASHCARDS,
+                "activity": activity.pk,
                 "date": str(TODAY),
                 "duration_minutes": 0,
                 "status": StudySession.Status.LOGGED,
@@ -278,7 +288,7 @@ class TestVideoSessionAutoLog:
         assert StudySession.objects.filter(
             user=user,
             resource=resource,
-            activity_type=StudySession.ActivityType.VIDEO_WATCH,
+            activity__slug="watch",
         ).exists()
         session = StudySession.objects.get(user=user, resource=resource)
         assert session.duration_minutes == 15
@@ -317,7 +327,7 @@ class TestCompleteReadingView:
         assert unit.status == LearningUnit.StatusChoices.COMPLETED
         session = StudySession.objects.get(user=user, resource=resource)
         assert session.duration_minutes == 45
-        assert session.activity_type == StudySession.ActivityType.READING
+        assert session.activity.slug == "read"
 
     def test_zero_duration_still_creates_session(self, client_logged_in, user):
         resource = baker.make(LearningResource, user=user)
@@ -342,11 +352,12 @@ class TestCompleteReadingView:
 
 class TestStudySessionCreateView:
     def test_creates_session_for_current_user(self, client_logged_in, user):
+        activity = Activity.objects.get(slug="flashcards", is_system=True)
         url = reverse("learning:session_create")
         resp = client_logged_in.post(
             url,
             {
-                "activity_type": StudySession.ActivityType.FLASHCARDS,
+                "activity": activity.pk,
                 "date": str(TODAY),
                 "duration_minutes": 30,
                 "status": StudySession.Status.LOGGED,
@@ -381,7 +392,7 @@ class TestStudySessionUpdateView:
         resp = client_logged_in.post(
             url,
             {
-                "activity_type": session.activity_type,
+                "activity": session.activity_id,
                 "date": str(session.date),
                 "duration_minutes": 45,
                 "status": session.status,

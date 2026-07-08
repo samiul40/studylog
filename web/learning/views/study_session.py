@@ -2,24 +2,18 @@ import datetime
 import json
 
 from django.contrib import messages
+from django.db.models import Q
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse_lazy
+from django.utils.text import slugify
 from django.views import View
 from django.views.generic import CreateView, DeleteView, UpdateView
 
 from learning.forms import StudySessionForm
 from learning.mixins import UserPermissionMixin
-from learning.models import LearningResource, LearningUnit, StudySession
+from learning.models import Activity, LearningResource, LearningUnit, StudySession
 from learning.services.sessions import get_day_sessions, get_month_calendar
-
-MANUAL_ACTIVITIES = [
-    ("flashcards", "Flashcards / Anki"),
-    ("practice", "Practice problems"),
-    ("past_papers", "Past papers"),
-    ("review_notes", "Review notes"),
-    ("writing", "Writing / essays"),
-]
 
 
 def _parse_date(value: str | None) -> datetime.date | None:
@@ -28,6 +22,29 @@ def _parse_date(value: str | None) -> datetime.date | None:
         return datetime.date.fromisoformat(value) if value else None
     except ValueError:
         return None
+
+
+def _find_or_create_activity(name: str, user) -> Activity | None:
+    """
+    Case-insensitive find-or-create for a user's custom activity.
+    Returns None if name is empty or exceeds 32 chars.
+    """
+    name = name.strip()[:32]
+    if not name:
+        return None
+    slug = slugify(name)
+    existing = Activity.objects.filter(
+        Q(is_system=True, slug=slug) | Q(is_system=False, user=user, slug=slug)
+    ).first()
+    if existing:
+        return existing
+    activity, _ = Activity.objects.get_or_create(
+        slug=slug,
+        user=user,
+        is_system=False,
+        defaults={"name": name},
+    )
+    return activity
 
 
 # ---------------------------------------------------------------------------
@@ -94,16 +111,44 @@ class StudySessionCreateView(UserPermissionMixin, CreateView):
             )
         ctx["units_by_resource_json"] = json.dumps(units_by_resource)
 
+        # System activities + user's own custom activities for the picker.
+        activities = list(
+            Activity.objects.for_user(user).order_by("-is_system", "name")
+        )
+        ctx["activities_json"] = json.dumps(
+            [
+                {
+                    "id": a.id,
+                    "slug": a.slug,
+                    "name": a.name,
+                    "is_system": a.is_system,
+                }
+                for a in activities
+            ]
+        )
+
         ctx["recent_sessions"] = (
             StudySession.objects.for_user(user)
             .filter(status=StudySession.Status.LOGGED)
-            .select_related("resource")[:4]
+            .select_related("resource", "activity")[:4]
         )
         ctx["today_iso"] = datetime.date.today().isoformat()
         ctx["resource_prefill"] = self.request.GET.get("resource", "")
         return ctx
 
     def form_valid(self, form):
+        # If the user typed a new custom activity name, find-or-create it.
+        new_name = form.cleaned_data.get("new_activity_name", "").strip()
+        if new_name:
+            activity = _find_or_create_activity(new_name, self.request.user)
+            if not activity:
+                form.add_error(
+                    None,
+                    "Activity name is required (max 32 characters).",
+                )
+                return self.form_invalid(form)
+            form.instance.activity = activity
+
         form.instance.user = self.request.user
         planned = form.instance.status == StudySession.Status.PLANNED
         label = "Session planned." if planned else "Session logged."
@@ -122,6 +167,11 @@ class StudySessionUpdateView(BaseStudySessionView, UpdateView):
         return kwargs
 
     def form_valid(self, form):
+        new_name = form.cleaned_data.get("new_activity_name", "").strip()
+        if new_name:
+            activity = _find_or_create_activity(new_name, self.request.user)
+            if activity:
+                form.instance.activity = activity
         messages.success(self.request, "Session updated.")
         return super().form_valid(form)
 
@@ -149,16 +199,31 @@ class StudySessionListView(UserPermissionMixin, View):
         today = datetime.date.today()
         year = int(request.GET.get("year", today.year))
         month = int(request.GET.get("month", today.month))
-        activity = request.GET.get("activity", "").strip()
+        activity_slug = request.GET.get("activity", "").strip()
 
         session_qs = StudySession.objects.for_user(request.user)
-        if activity:
-            session_qs = session_qs.filter(activity_type=activity)
+        if activity_slug:
+            session_qs = session_qs.filter(activity__slug=activity_slug)
 
         selected_date = _parse_date(request.GET.get("date")) or today
 
         cal_data = get_month_calendar(session_qs, year, month)
         day_data = get_day_sessions(session_qs, selected_date)
+
+        # Activities for the filter bar: system + user's custom.
+        filter_activities = list(
+            Activity.objects.for_user(request.user).order_by("-is_system", "name")
+        )
+        filter_activities_json = json.dumps(
+            [
+                {
+                    "slug": a.slug,
+                    "name": a.name,
+                    "is_system": a.is_system,
+                }
+                for a in filter_activities
+            ]
+        )
 
         return render(
             request,
@@ -168,8 +233,8 @@ class StudySessionListView(UserPermissionMixin, View):
                 "day_data_json": json.dumps(day_data),
                 "selected_date_iso": selected_date.isoformat(),
                 "today_iso": today.isoformat(),
-                "activity_filter": activity,
-                "manual_activities": MANUAL_ACTIVITIES,
+                "activity_filter": activity_slug,
+                "filter_activities_json": filter_activities_json,
             },
         )
 
@@ -186,11 +251,11 @@ class StudySessionCalendarView(UserPermissionMixin, View):
         except (KeyError, ValueError):
             return JsonResponse({"error": "year and month required"}, status=400)
 
-        activity = request.GET.get("activity", "").strip()
+        activity_slug = request.GET.get("activity", "").strip()
 
         session_qs = StudySession.objects.for_user(request.user)
-        if activity:
-            session_qs = session_qs.filter(activity_type=activity)
+        if activity_slug:
+            session_qs = session_qs.filter(activity__slug=activity_slug)
 
         return JsonResponse(get_month_calendar(session_qs, year, month))
 
@@ -205,11 +270,11 @@ class StudySessionDayView(UserPermissionMixin, View):
         if not date:
             return JsonResponse({"error": "valid date required"}, status=400)
 
-        activity = request.GET.get("activity", "").strip()
+        activity_slug = request.GET.get("activity", "").strip()
 
         session_qs = StudySession.objects.for_user(request.user)
-        if activity:
-            session_qs = session_qs.filter(activity_type=activity)
+        if activity_slug:
+            session_qs = session_qs.filter(activity__slug=activity_slug)
 
         return JsonResponse(get_day_sessions(session_qs, date))
 
@@ -231,10 +296,11 @@ class StudySessionPatchView(BaseStudySessionView, View):
         except (json.JSONDecodeError, ValueError):
             return JsonResponse({"error": "Invalid JSON"}, status=400)
 
-        if "activity_type" in data:
-            val = data["activity_type"]
-            if val in dict(StudySession.ActivityType.choices):
-                session.activity_type = val
+        if "activity_slug" in data:
+            slug = str(data["activity_slug"]).strip()
+            activity = Activity.objects.for_user(request.user).filter(slug=slug).first()
+            if activity:
+                session.activity = activity
 
         if "duration_minutes" in data:
             try:
@@ -247,6 +313,9 @@ class StudySessionPatchView(BaseStudySessionView, View):
                 session.duration_minutes = mins
             except (TypeError, ValueError):
                 return JsonResponse({"error": "Invalid duration"}, status=400)
+
+        if "title" in data:
+            session.title = str(data["title"]).strip()
 
         if "topic" in data:
             session.topic = str(data["topic"]).strip()
@@ -273,10 +342,11 @@ class StudySessionMarkDoneView(BaseStudySessionView, View):
         except (json.JSONDecodeError, ValueError):
             data = {}
 
-        if "activity_type" in data:
-            val = data["activity_type"]
-            if val in dict(StudySession.ActivityType.choices):
-                session.activity_type = val
+        if "activity_slug" in data:
+            slug = str(data["activity_slug"]).strip()
+            activity = Activity.objects.for_user(request.user).filter(slug=slug).first()
+            if activity:
+                session.activity = activity
 
         if "duration_minutes" in data:
             try:
@@ -285,6 +355,9 @@ class StudySessionMarkDoneView(BaseStudySessionView, View):
                     session.duration_minutes = mins
             except (TypeError, ValueError):
                 pass
+
+        if "title" in data:
+            session.title = str(data["title"]).strip()
 
         if "topic" in data:
             session.topic = str(data["topic"]).strip()

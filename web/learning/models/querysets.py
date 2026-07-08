@@ -14,6 +14,17 @@ from django.db.models import (
 from django.db.models.functions import Coalesce
 
 
+class ActivityQuerySet(models.QuerySet):
+    def system(self):
+        return self.filter(is_system=True)
+
+    def custom(self):
+        return self.filter(is_system=False)
+
+    def for_user(self, user):
+        return self.filter(Q(is_system=True) | Q(user=user))
+
+
 class StudySessionQuerySet(models.QuerySet):
     def for_user(self, user):
         return self.filter(user=user)

@@ -177,15 +177,11 @@
   const URL_DAY      = '{% url "learning:session_day" %}';
   const URL_CREATE   = '{% url "learning:session_create" %}';
 
-  // ── Activity definitions (model values + display labels) ─────────────────
-  const ACTIVITIES = [
-    { val: 'flashcards',   label: 'Flashcards / Anki',  ic: 'flashcards' },
-    { val: 'practice',     label: 'Practice problems',   ic: 'practice'   },
-    { val: 'past_papers',  label: 'Past papers',         ic: 'pastpapers' },
-    { val: 'review_notes', label: 'Review notes',        ic: 'review'     },
-    { val: 'writing',      label: 'Writing / essays',    ic: 'writing'    },
-  ];
-  const ACT_MAP = Object.fromEntries(ACTIVITIES.map(a => [a.val, a]));
+  // ── Activity definitions from Django (system + user custom) ─────────────
+  const ACTIVITIES = {{ filter_activities_json|safe }};
+  // Only show chip-selectable activities in the filter bar (exclude auto-logged watch/read)
+  const FILTER_ACTS = ACTIVITIES.filter(a => ['flashcards','practice','pastpapers','review','writing'].indexOf(a.slug) !== -1 || !a.is_system);
+  const ACT_MAP = Object.fromEntries(ACTIVITIES.map(a => [a.slug, a]));
   const DURATIONS = [15, 30, 45, 60, 90];
 
   // ── SVG icon library ─────────────────────────────────────────────────────
@@ -204,9 +200,9 @@
     custom:     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"></path></svg>',
   };
 
-  function icForActivity(val) {
-    const map = { flashcards:'flashcards', practice:'practice', past_papers:'pastpapers', review_notes:'review', writing:'writing' };
-    return IC[map[val]] || IC.clock;
+  function icForActivity(slug) {
+    const known = { flashcards:'flashcards', practice:'practice', pastpapers:'pastpapers', review:'review', writing:'writing', watch:'clock', read:'clock' };
+    return IC[known[slug]] || IC.clock;
   }
 
   // ── Helpers ───────────────────────────────────────────────────────────────
@@ -273,7 +269,7 @@
     if (!el) return;
     const chips = [
       { val: 'all', label: 'All activity', icon: '' },
-      ...ACTIVITIES.map(a => ({ val: a.val, label: a.label, icon: icForActivity(a.val) })),
+      ...FILTER_ACTS.map(a => ({ val: a.slug, label: a.name, icon: icForActivity(a.slug) })),
     ];
     el.innerHTML = '<span class="filterbar__l" aria-hidden="true">Filter</span>'
       + chips.map(c =>
@@ -301,8 +297,8 @@
 
     const summary = d.active_days
       ? fmt(d.total_minutes) + ' across ' + d.active_days + ' day' + (d.active_days > 1 ? 's' : '')
-        + (filter ? ' · ' + (ACT_MAP[filter] ? ACT_MAP[filter].label.toLowerCase() : '') : '')
-      : 'No sessions this month' + (filter ? ' · ' + (ACT_MAP[filter] ? ACT_MAP[filter].label.toLowerCase() : '') : '');
+        + (filter ? ' · ' + (ACT_MAP[filter] ? ACT_MAP[filter].name.toLowerCase() : '') : '')
+      : 'No sessions this month' + (filter ? ' · ' + (ACT_MAP[filter] ? ACT_MAP[filter].name.toLowerCase() : '') : '');
     document.getElementById('js-cal-summary').textContent = summary;
 
     const grid = document.getElementById('js-cal-grid');
@@ -420,7 +416,7 @@
                    aria-label="${esc(s.activity_label || s.activity_type)} planned">
         <span class="srow__ic" aria-hidden="true">${icForActivity(s.activity_type)}</span>
         <div class="srow__main">
-          <div class="srow__t">${esc(s.activity_label || s.activity_type)}</div>
+          <div class="srow__t">${esc(s.title || s.activity_label || s.activity_type)}</div>
           <div class="srow__meta">
             ${tagHtml}
             <span class="srow__res">${IC.tag}${esc(s.topic)}</span>
@@ -437,7 +433,7 @@
                    aria-label="${esc(s.activity_label || s.activity_type)} ${fmt(s.duration_minutes)}">
         <span class="srow__ic" aria-hidden="true">${icForActivity(s.activity_type)}</span>
         <div class="srow__main">
-          <div class="srow__t">${esc(s.activity_label || s.activity_type)}</div>
+          <div class="srow__t">${esc(s.title || s.activity_label || s.activity_type)}</div>
           <div class="srow__meta">
             <span class="srow__res">${IC.tag}${esc(s.topic)}</span>
           </div>
@@ -581,10 +577,10 @@
   function buildSheetStatics() {
     // Activity chips
     const actGrid = document.getElementById('js-sheet-actgrid');
-    actGrid.innerHTML = ACTIVITIES.map(a =>
-      `<button type="button" class="sl-actchip" data-actval="${esc(a.val)}">
-         <span class="sl-actchip__ic">${icForActivity(a.val)}</span>
-         <span class="sl-actchip__t">${esc(a.label)}</span>
+    actGrid.innerHTML = FILTER_ACTS.map(a =>
+      `<button type="button" class="sl-actchip" data-actval="${esc(a.slug)}">
+         <span class="sl-actchip__ic">${icForActivity(a.slug)}</span>
+         <span class="sl-actchip__t">${esc(a.name)}</span>
        </button>`
     ).join('');
 
@@ -592,7 +588,7 @@
       chip.addEventListener('click', () => {
         actGrid.querySelectorAll('[data-actval]').forEach(c => c.classList.remove('on'));
         chip.classList.add('on');
-        sheetDraft.activity_type = chip.dataset.actval;
+        sheetDraft.activity_slug = chip.dataset.actval;
       });
     });
 
@@ -666,7 +662,7 @@
     const overdue  = session.is_overdue;
 
     sheetDraft = {
-      activity_type:    session.activity_type,
+      activity_slug:    session.activity_type,  // to_dict returns slug as activity_type
       duration_minutes: session.duration_minutes,
       topic:            session.topic || '',
       date:             session.date,
@@ -691,7 +687,7 @@
 
     // Activity chips
     document.querySelectorAll('#js-sheet-actgrid [data-actval]').forEach(c => {
-      c.classList.toggle('on', c.dataset.actval === session.activity_type);
+      c.classList.toggle('on', c.dataset.actval === session.activity_type);  // activity_type is slug from to_dict
     });
 
     // Duration pills
