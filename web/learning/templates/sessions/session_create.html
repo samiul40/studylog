@@ -57,6 +57,8 @@
                value="{{ form.status.value|default:'logged' }}">
         <input type="hidden" name="resource" id="id_resource"
                value="{{ form.resource.value|default:'' }}">
+        <input type="hidden" name="unit" id="id_unit"
+               value="{{ form.unit.value|default:'' }}">
         <input type="hidden" name="duration_minutes" id="id_duration_minutes"
                value="{{ form.duration_minutes.value|default:'30' }}">
         <input type="hidden" name="topic" id="id_topic"
@@ -163,6 +165,20 @@
               Studying <strong>on top of</strong> a resource — flashcards, past papers or notes from a lecture or book.
               It won't change the resource's watch/read progress; it's logged as extra study.
             </div>
+          </div>
+        </div>
+
+        {# ── Section B2: Learning unit (shown when resource selected) ───── #}
+        <div class="ss-fsection" id="ss-unit-section" style="display:none;">
+          <div class="ss-fsection__head">
+            <span class="ss-fsection__kicker">Learning unit</span>
+            <span class="ss-fsection__note">Optional</span>
+          </div>
+          <div class="ss-field">
+            <select id="ss-unit-select" class="ss-control ss-control--select">
+              <option value="">— No specific unit —</option>
+            </select>
+            <div class="ss-field__hint">Which chapter or video in this resource did you study?</div>
           </div>
         </div>
 
@@ -402,6 +418,7 @@
 
   /* ─── Resource data from Django ────────────────────────────────────────── */
   const RESOURCES = {{ resources_json|safe }};
+  const UNITS_BY_RESOURCE = {{ units_by_resource_json|safe }};
 
   /* ─── SVG icons ─────────────────────────────────────────────────────────── */
   const IC = {
@@ -610,6 +627,36 @@
   tagWrap.addEventListener('click', function() { tagInput.focus(); });
 
   /* ═══════════════════════════════════════════════════════════════════════
+     UNIT SELECT
+  ═══════════════════════════════════════════════════════════════════════ */
+  var unitSection = document.getElementById('ss-unit-section');
+  var unitSelect  = document.getElementById('ss-unit-select');
+  var unitInput   = document.getElementById('id_unit');
+  var INIT_UNIT   = unitInput.value || '';
+
+  function showUnitSection(resourceId) {
+    var units = UNITS_BY_RESOURCE[String(resourceId)] || [];
+    if (!units.length) { hideUnitSection(); return; }
+    unitSelect.innerHTML = '<option value="">— No specific unit —</option>';
+    units.forEach(function(u) {
+      var opt = document.createElement('option');
+      opt.value = u.id;
+      opt.textContent = u.title;
+      unitSelect.appendChild(opt);
+    });
+    if (INIT_UNIT) { unitSelect.value = INIT_UNIT; unitInput.value = unitSelect.value; }
+    unitSection.style.display = '';
+  }
+
+  function hideUnitSection() {
+    unitSection.style.display = 'none';
+    unitSelect.innerHTML = '<option value="">— No specific unit —</option>';
+    unitInput.value = '';
+  }
+
+  unitSelect.addEventListener('change', function() { unitInput.value = this.value; });
+
+  /* ═══════════════════════════════════════════════════════════════════════
      RESOURCE COMBOBOX
   ═══════════════════════════════════════════════════════════════════════ */
   var resInput  = document.getElementById('id_resource');
@@ -667,6 +714,7 @@
     cTag.style.display = '';
     cIc.innerHTML = r.kind === 'video' ? IC.video : IC.book;
     closeCombo();
+    showUnitSection(r.id);
   }
 
   function selectNone() {
@@ -678,6 +726,7 @@
     cTag.style.display = '';
     cIc.innerHTML = IC.none;
     closeCombo();
+    hideUnitSection();
   }
 
   document.getElementById('ss-combo-control').addEventListener('click', function() {
@@ -690,6 +739,7 @@
     resInput.value = '';
     cTag.style.display = 'none';
     cIc.innerHTML = IC.none;
+    hideUnitSection();
     renderPanel();
   });
   cPanel.addEventListener('click', function(e) {

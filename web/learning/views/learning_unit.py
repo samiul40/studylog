@@ -226,8 +226,16 @@ class LearningUnitInlinePatchView(UserPermissionMixin, View):
             )
             return JsonResponse({"ok": False, "error": "Invalid JSON"}, status=400)
 
-        # Capture before patching so we can compute the delta after save.
+        # Capture before patching so we can compute deltas after save.
         old_progress = unit.video_progress_minutes
+        old_status = unit.status
+
+        # Detect a reading chapter being unchecked (completed → not_started).
+        is_reading_uncheck = (
+            data.get("status") == LearningUnit.StatusChoices.NOT_STARTED
+            and old_status == LearningUnit.StatusChoices.COMPLETED
+            and unit.resource.resource_type.content_kind == "reading"
+        )
 
         if "duration_minutes" in data:
             val = data["duration_minutes"]
@@ -242,6 +250,9 @@ class LearningUnitInlinePatchView(UserPermissionMixin, View):
             if val in dict(LearningUnit.StatusChoices.choices):
                 unit.status = val
 
+        if is_reading_uncheck:
+            unit.reading_minutes = None
+
         if "title" in data:
             val = str(data["title"]).strip()
             if val:
@@ -255,6 +266,14 @@ class LearningUnitInlinePatchView(UserPermissionMixin, View):
         except ValidationError as e:
             return JsonResponse({"ok": False, "error": str(e)}, status=400)
 
+        # Reading chapter unchecked — delete its per-unit session.
+        if is_reading_uncheck:
+            StudySession.objects.filter(
+                user=request.user,
+                unit=unit,
+                activity_type=StudySession.ActivityType.READING,
+            ).delete()
+
         # Auto-log a VIDEO_WATCH session when progress changes.
         if "video_progress_minutes" in data and unit.video_progress_minutes is not None:
             delta = unit.video_progress_minutes - (old_progress or 0)
@@ -262,10 +281,19 @@ class LearningUnitInlinePatchView(UserPermissionMixin, View):
                 upsert_resource_session(
                     user=request.user,
                     resource=unit.resource,
+                    unit=unit,
                     date=datetime.date.today(),
                     activity_type=StudySession.ActivityType.VIDEO_WATCH,
                     delta_minutes=delta,
                 )
+            # Slider rewound to 0 — remove the now-empty session.
+            if unit.video_progress_minutes == 0:
+                StudySession.objects.filter(
+                    user=request.user,
+                    unit=unit,
+                    activity_type=StudySession.ActivityType.VIDEO_WATCH,
+                    duration_minutes=0,
+                ).delete()
 
         return JsonResponse({"ok": True, "unit": unit.to_inline_dict()})
 
@@ -286,20 +314,25 @@ class LearningUnitCompleteReadingView(UserPermissionMixin, UserUnitMixin, View):
 
         try:
             data = json.loads(request.body)
-            duration = int(data.get("duration_minutes", 0))
+            new_duration = int(data.get("duration_minutes", 0))
         except (json.JSONDecodeError, ValueError):
             return JsonResponse({"ok": False, "error": "Invalid JSON"}, status=400)
 
-        if unit.status != LearningUnit.StatusChoices.COMPLETED:
-            unit.status = LearningUnit.StatusChoices.COMPLETED
-            unit.save()
+        unit.status = LearningUnit.StatusChoices.COMPLETED
+        unit.reading_minutes = new_duration if new_duration > 0 else None
+        unit.save()
 
-        upsert_resource_session(
+        # One session per chapter — update on re-log, create on first log.
+        StudySession.objects.update_or_create(
             user=request.user,
-            resource=unit.resource,
-            date=datetime.date.today(),
+            unit=unit,
             activity_type=StudySession.ActivityType.READING,
-            delta_minutes=duration,
+            defaults={
+                "resource": unit.resource,
+                "date": datetime.date.today(),
+                "duration_minutes": new_duration,
+                "status": StudySession.Status.LOGGED,
+            },
         )
 
         return JsonResponse({"ok": True, "unit": unit.to_inline_dict()})

@@ -115,8 +115,22 @@ class StudySessionForm(forms.ModelForm):
             self.fields["resource"].queryset = (
                 LearningResource.objects.for_user(user).active().order_by("title")
             )
+            self.fields["unit"].queryset = LearningUnit.objects.filter(
+                resource__user=user
+            ).order_by("resource_id", "order")
         else:
             self.fields["resource"].queryset = LearningResource.objects.none()
+            self.fields["unit"].queryset = LearningUnit.objects.none()
+
+    def clean(self):
+        cleaned_data = super().clean()
+        unit = cleaned_data.get("unit")
+        resource = cleaned_data.get("resource")
+        if unit and resource and unit.resource != resource:
+            self.add_error(
+                "unit", "This unit does not belong to the selected resource."
+            )
+        return cleaned_data
 
     class Meta:
         model = StudySession
@@ -124,6 +138,7 @@ class StudySessionForm(forms.ModelForm):
             "status",
             "activity_type",
             "resource",
+            "unit",
             "date",
             "duration_minutes",
             "topic",
@@ -134,6 +149,7 @@ class StudySessionForm(forms.ModelForm):
             "date": forms.DateInput(attrs={"type": "date", "class": "form-control"}),
             "activity_type": forms.Select(attrs={"class": "form-select"}),
             "resource": forms.Select(attrs={"class": "form-select"}),
+            "unit": forms.HiddenInput(),
             "duration_minutes": forms.NumberInput(
                 attrs={"class": "form-control", "placeholder": "e.g. 30"}
             ),

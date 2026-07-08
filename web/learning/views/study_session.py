@@ -10,7 +10,7 @@ from django.views.generic import CreateView, DeleteView, UpdateView
 
 from learning.forms import StudySessionForm
 from learning.mixins import UserPermissionMixin
-from learning.models import LearningResource, StudySession
+from learning.models import LearningResource, LearningUnit, StudySession
 from learning.services.sessions import get_day_sessions, get_month_calendar
 
 MANUAL_ACTIVITIES = [
@@ -80,6 +80,19 @@ class StudySessionCreateView(UserPermissionMixin, CreateView):
                 for r in resources
             ]
         )
+
+        units_qs = (
+            LearningUnit.objects.filter(resource__in=resources)
+            .order_by("resource_id", "order")
+            .values("id", "title", "resource_id")
+        )
+        units_by_resource: dict[str, list] = {}
+        for u in units_qs:
+            key = str(u["resource_id"])
+            units_by_resource.setdefault(key, []).append(
+                {"id": u["id"], "title": u["title"]}
+            )
+        ctx["units_by_resource_json"] = json.dumps(units_by_resource)
 
         ctx["recent_sessions"] = (
             StudySession.objects.for_user(user)

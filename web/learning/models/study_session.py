@@ -33,6 +33,13 @@ class StudySession(models.Model):
         on_delete=models.SET_NULL,
         related_name="study_sessions",
     )
+    unit = models.ForeignKey(
+        "LearningUnit",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="unit_sessions",
+    )
     date = models.DateField()
     status = models.CharField(
         max_length=10,
@@ -72,6 +79,8 @@ class StudySession(models.Model):
             "topic": self.topic,
             "resource_id": self.resource_id,
             "resource_title": self.resource.title if self.resource else None,
+            "unit_id": self.unit_id,
+            "unit_title": self.unit.title if self.unit else None,
             "date": self.date.isoformat(),
             "duration_minutes": self.duration_minutes,
             "notes": self.notes,
