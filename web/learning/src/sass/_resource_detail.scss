@@ -1293,6 +1293,35 @@
     gap: 9px;
   }
 
+  // Log reading time modal footer
+  .log-reading-footer {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 9px;
+
+    &__actions {
+      display: flex;
+      gap: 9px;
+    }
+
+    @media (max-width: 560px) {
+      flex-wrap: wrap;
+
+      .log-reading-footer__actions {
+        order: 1;
+        flex: 1 1 100%;
+
+        .rdbtn { flex: 1; }
+      }
+
+      #logReadingSkip {
+        order: 2;
+        flex: 1 1 100%;
+      }
+    }
+  }
+
   .modal-input {
     width: 100%;
     background: var(--field);

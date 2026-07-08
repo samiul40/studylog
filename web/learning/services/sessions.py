@@ -8,10 +8,14 @@ from learning.models import StudySession
 from learning.services.types import CalendarData, DayData
 
 
-def upsert_resource_session(user, resource, date, activity_type, delta_minutes):
+def upsert_resource_session(
+    user, resource, date, activity_type, delta_minutes, unit=None
+):
     """
-    Create or update a resource-linked session keyed on
-    (user, resource, date, activity_type).
+    Create or update a session keyed on (user, resource, unit, date, activity_type).
+
+    ``unit`` should be passed for auto-logged sessions (video watch, reading) so
+    each learning unit gets its own row.  Manual sessions leave ``unit=None``.
 
     delta_minutes semantics:
       > 0  — forward progress: create or increment existing session
@@ -19,13 +23,13 @@ def upsert_resource_session(user, resource, date, activity_type, delta_minutes):
       = 0  — reading logged without a tracked duration: create if not exists
       None — no-op, returns None
 
-    Same-day example (video):
-      Slider 0→5  today → delta=5,  new session duration=5
-      Slider 5→20 today → delta=15, same session updated to 20
+    Same-day example (video, unit provided):
+      Slider 0→5  today → delta=5,  new row for (unit, today)
+      Slider 5→20 today → delta=15, same row updated to 20
     Cross-day example:
-      Slider 20→30 tomorrow → delta=10, NEW session for tomorrow, duration=10
+      Slider 20→30 tomorrow → delta=10, NEW row for (unit, tomorrow)
     Backward correction:
-      Slider 20→10 same day → delta=-10, session decremented to max(0, 10)
+      Slider 20→10 same day → delta=-10, row decremented to max(0, 10)
     """
     if delta_minutes is None:
         return None
@@ -33,6 +37,7 @@ def upsert_resource_session(user, resource, date, activity_type, delta_minutes):
     qs = StudySession.objects.filter(
         user=user,
         resource=resource,
+        unit=unit,
         date=date,
         activity_type=activity_type,
     )
@@ -41,6 +46,7 @@ def upsert_resource_session(user, resource, date, activity_type, delta_minutes):
         session, created = StudySession.objects.get_or_create(
             user=user,
             resource=resource,
+            unit=unit,
             date=date,
             activity_type=activity_type,
             defaults={"duration_minutes": delta_minutes},
@@ -56,6 +62,7 @@ def upsert_resource_session(user, resource, date, activity_type, delta_minutes):
         StudySession.objects.get_or_create(
             user=user,
             resource=resource,
+            unit=unit,
             date=date,
             activity_type=activity_type,
             defaults={"duration_minutes": 0},

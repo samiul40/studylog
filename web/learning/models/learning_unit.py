@@ -39,6 +39,12 @@ class LearningUnit(models.Model):
         verbose_name="Progress Watched (minutes)",
         help_text="How many minutes of the video have been watched.",
     )
+    reading_minutes = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        verbose_name="Reading Time (minutes)",
+        help_text="Minutes logged when this chapter was marked complete.",
+    )
     notes = models.TextField(blank=True)
     completed_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -143,6 +149,7 @@ class LearningUnit(models.Model):
             "status": self.status,
             "duration_minutes": self.duration_minutes,
             "video_progress_minutes": self.video_progress_minutes,
+            "reading_minutes": self.reading_minutes,
             "notes": self.notes,
             "progress_percent": self.progress_percent,
             "completed_at": (

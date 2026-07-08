@@ -15,6 +15,8 @@ def get_resource_progress(resource: LearningResource) -> dict[str, int]:
     completed_units = units.filter(status="completed").count()
     remaining_units = total_units - completed_units
 
+    is_reading = resource.resource_type.content_kind == "reading"
+
     total_duration = units.aggregate(total=Sum("duration_minutes"))["total"] or 0
 
     completed_duration = (
@@ -41,6 +43,18 @@ def get_resource_progress(resource: LearningResource) -> dict[str, int]:
     else:
         completion_percentage = calculate_percentage(completed_units, total_units)
 
+    # Reading-specific stats: sum of per-chapter logged minutes
+    time_read_total = 0
+    chapters_with_read = 0
+    if is_reading:
+        agg = units.filter(status="completed").aggregate(total=Sum("reading_minutes"))
+        time_read_total = agg["total"] or 0
+        chapters_with_read = units.filter(
+            status="completed",
+            reading_minutes__isnull=False,
+            reading_minutes__gt=0,
+        ).count()
+
     return {
         "units": units,
         "total_units": total_units,
@@ -50,4 +64,7 @@ def get_resource_progress(resource: LearningResource) -> dict[str, int]:
         "total_duration": total_duration,
         "completed_duration": time_done,
         "remaining_duration": remaining_duration,
+        "is_reading": is_reading,
+        "time_read_total": time_read_total,
+        "chapters_with_read": chapters_with_read,
     }
