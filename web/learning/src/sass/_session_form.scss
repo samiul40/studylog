@@ -266,6 +266,10 @@ select.ss-control--select {
   gap: 9px;
 }
 
+.ss-custom-act {
+  margin-top: 16px;
+}
+
 .ss-actchip {
   display: flex;
   flex-direction: column;
@@ -606,6 +610,46 @@ select.ss-control--select {
     font-size: 0.72rem;
     color: var(--ink-faint);
   }
+}
+
+.ss-combo__create {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.14s;
+  color: var(--emerald-deep);
+
+  [data-theme="dark"] & { color: var(--emerald-bright); }
+
+  &:hover { background: color-mix(in srgb, var(--emerald) 11%, transparent); }
+
+  &__ic {
+    width: 30px;
+    height: 30px;
+    flex: 0 0 auto;
+    border-radius: 8px;
+    display: grid;
+    place-items: center;
+    background: var(--emerald);
+    color: #042b1d;
+
+    svg { width: 16px; height: 16px; }
+  }
+
+  span:last-child {
+    font-weight: 600;
+    font-size: 0.94rem;
+  }
+}
+
+.ss-combo__empty {
+  padding: 16px 12px;
+  font-size: 0.88rem;
+  color: var(--ink-faint);
+  text-align: center;
 }
 
 .ss-check {

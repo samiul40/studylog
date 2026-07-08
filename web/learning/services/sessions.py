@@ -4,17 +4,27 @@ import datetime
 from django.db.models import Count, F, QuerySet, Sum, Value
 from django.db.models.functions import Greatest
 
-from learning.models import StudySession
+from learning.models import (
+    Activity,
+    LearningResource,
+    LearningUnit,
+    StudySession,
+)
 from learning.services.types import CalendarData, DayData
 
 
 def upsert_resource_session(
-    user, resource, date, activity_type, delta_minutes, unit=None
-):
+    user,
+    resource: LearningResource,
+    date: datetime.date,
+    activity: Activity,
+    delta_minutes: int | None,
+    unit: LearningUnit | None = None,
+) -> StudySession | None:
     """
-    Create or update a session keyed on (user, resource, unit, date, activity_type).
+    Create or update a session keyed on (user, resource, unit, date, activity).
 
-    ``unit`` should be passed for auto-logged sessions (video watch, reading) so
+    ``unit`` should be passed for auto-logged sessions (watch, read) so
     each learning unit gets its own row.  Manual sessions leave ``unit=None``.
 
     delta_minutes semantics:
@@ -22,14 +32,6 @@ def upsert_resource_session(
       < 0  — backward correction (slider moved back): decrement, floored at 0
       = 0  — reading logged without a tracked duration: create if not exists
       None — no-op, returns None
-
-    Same-day example (video, unit provided):
-      Slider 0→5  today → delta=5,  new row for (unit, today)
-      Slider 5→20 today → delta=15, same row updated to 20
-    Cross-day example:
-      Slider 20→30 tomorrow → delta=10, NEW row for (unit, tomorrow)
-    Backward correction:
-      Slider 20→10 same day → delta=-10, row decremented to max(0, 10)
     """
     if delta_minutes is None:
         return None
@@ -39,7 +41,7 @@ def upsert_resource_session(
         resource=resource,
         unit=unit,
         date=date,
-        activity_type=activity_type,
+        activity=activity,
     )
 
     if delta_minutes > 0:
@@ -48,7 +50,7 @@ def upsert_resource_session(
             resource=resource,
             unit=unit,
             date=date,
-            activity_type=activity_type,
+            activity=activity,
             defaults={"duration_minutes": delta_minutes},
         )
         if not created:
@@ -64,7 +66,7 @@ def upsert_resource_session(
             resource=resource,
             unit=unit,
             date=date,
-            activity_type=activity_type,
+            activity=activity,
             defaults={"duration_minutes": 0},
         )
 
@@ -104,7 +106,6 @@ def get_month_calendar(
         daily_planned[row["date"]] = row["cnt"]
 
     first_of_month = datetime.date(year, month, 1)
-    # Python weekday() is 0=Mon … 6=Sun — matches Monday-first grid directly.
     start_offset: int = first_of_month.weekday()
 
     days_in_month = _calendar.monthrange(year, month)[1]
@@ -154,13 +155,12 @@ def get_day_sessions(
 ) -> DayData:
     """
     Return all sessions for a given date, annotated with overdue status.
-
-    Planned sessions whose date is before today are marked is_overdue=True
-    so the day panel can render "Missed" badges and swap buttons.
     """
     today = datetime.date.today()
     sessions = list(
-        session_qs.filter(date=date).select_related("resource").order_by("created_at")
+        session_qs.filter(date=date)
+        .select_related("resource", "activity")
+        .order_by("created_at")
     )
 
     result = []

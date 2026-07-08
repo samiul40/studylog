@@ -19,394 +19,396 @@
     <span class="ss-crumbs__cur" aria-current="page">Log</span>
   </nav>
 
-    {# ── Main card ──────────────────────────────────────────────────────────── #}
-    <div class="ss-card">
+  {# ── Main card ──────────────────────────────────────────────────────────── #}
+  <div class="ss-card">
 
-      {# Card header #}
-      <div class="ss-card__head">
-        <div class="ss-card__icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-               stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 1.5M9 2h6M12 5V2"/>
-          </svg>
-        </div>
-        <div>
-          <h1 class="ss-card__title" id="ss-card-title">Log a study session</h1>
-          <p class="ss-card__sub" id="ss-card-sub">Record time you spent studying — Anki, revision, past papers, anything.</p>
-        </div>
-      </div>
-
-      {# Error banner — shown when Django validation fails #}
-      {% if form.errors %}
-      <div class="ss-banner" role="alert">
+    {# Card header #}
+    <div class="ss-card__head">
+      <div class="ss-card__icon" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <circle cx="12" cy="12" r="10"/><path d="M12 8v5M12 16h.01"/>
+             stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 1.5M9 2h6M12 5V2"/>
         </svg>
-        <span>Please fix the errors highlighted below.</span>
       </div>
-      {% endif %}
-
-      <form method="post" autocomplete="off" id="ss-form" novalidate>
-        {% csrf_token %}
-
-        {# Hidden real form fields — driven by the visual UI below #}
-        <input type="hidden" name="activity_type" id="id_activity_type"
-               value="{{ form.activity_type.value|default:'flashcards' }}">
-        <input type="hidden" name="status" id="id_status"
-               value="{{ form.status.value|default:'logged' }}">
-        <input type="hidden" name="resource" id="id_resource"
-               value="{{ form.resource.value|default:'' }}">
-        <input type="hidden" name="unit" id="id_unit"
-               value="{{ form.unit.value|default:'' }}">
-        <input type="hidden" name="duration_minutes" id="id_duration_minutes"
-               value="{{ form.duration_minutes.value|default:'30' }}">
-        <input type="hidden" name="topic" id="id_topic"
-               value="{{ form.topic.value|default:'' }}">
-        {# Date and notes are standard inputs below #}
-
-        {# ── Section A: Activity ─────────────────────────────────────────── #}
-        <div class="ss-fsection">
-          <div class="ss-fsection__head">
-            <span class="ss-fsection__kicker">Activity</span>
-            <span class="ss-fsection__note">What kind of studying?</span>
-          </div>
-          <div class="ss-actgrid" id="ss-actgrid" role="radiogroup" aria-label="Activity type">
-            <button type="button" class="ss-actchip" data-act="flashcards" role="radio"
-                    aria-checked="false">
-              <span class="ss-actchip__ic" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                     stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="3" y="7" width="14" height="12" rx="2"/>
-                  <path d="M7 4h13a1 1 0 0 1 1 1v11"/>
-                </svg>
-              </span>
-              <span class="ss-actchip__t">Flashcards / Anki</span>
-            </button>
-            <button type="button" class="ss-actchip" data-act="practice" role="radio"
-                    aria-checked="false">
-              <span class="ss-actchip__ic" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                     stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M9 11l3 3L22 4"/>
-                  <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
-                </svg>
-              </span>
-              <span class="ss-actchip__t">Practice problems</span>
-            </button>
-            <button type="button" class="ss-actchip" data-act="past_papers" role="radio"
-                    aria-checked="false">
-              <span class="ss-actchip__ic" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                     stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                  <path d="M14 2v6h6M8 13h8M8 17h5"/>
-                </svg>
-              </span>
-              <span class="ss-actchip__t">Past papers</span>
-            </button>
-            <button type="button" class="ss-actchip" data-act="review_notes" role="radio"
-                    aria-checked="false">
-              <span class="ss-actchip__ic" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                     stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M2 4h7a3 3 0 0 1 3 3v13a2.5 2.5 0 0 0-2.5-2.5H2z"/>
-                  <path d="M22 4h-7a3 3 0 0 0-3 3v13a2.5 2.5 0 0 1 2.5-2.5H22z"/>
-                </svg>
-              </span>
-              <span class="ss-actchip__t">Review notes</span>
-            </button>
-            <button type="button" class="ss-actchip" data-act="writing" role="radio"
-                    aria-checked="false">
-              <span class="ss-actchip__ic" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                     stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M12 20h9"/>
-                  <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/>
-                </svg>
-              </span>
-              <span class="ss-actchip__t">Writing / essays</span>
-            </button>
-          </div>
-        </div>
-
-        {# ── Section B: Link a resource ──────────────────────────────────── #}
-        <div class="ss-fsection">
-          <div class="ss-fsection__head">
-            <span class="ss-fsection__kicker">Link a resource</span>
-            <span class="ss-fsection__note">Optional</span>
-          </div>
-          <div class="ss-field">
-            <div class="ss-combo" id="ss-combo">
-              <div class="ss-combo__control" id="ss-combo-control">
-                <span class="ss-combo__ic" id="ss-combo-ic" aria-hidden="true">
-                  {# none icon #}
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                       stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="9"/><path d="M8 12h8"/>
-                  </svg>
-                </span>
-                <input type="text" id="ss-combo-input" role="combobox"
-                       aria-autocomplete="list" aria-expanded="false"
-                       aria-controls="ss-combo-panel"
-                       placeholder="Search a course, video or book… or leave blank"
-                       spellcheck="false" autocomplete="off">
-                <span class="ss-combo__tag" id="ss-combo-tag" style="display:none;" aria-live="polite"></span>
-                <span class="ss-combo__chev" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
-                       stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M6 9l6 6 6-6"/>
-                  </svg>
-                </span>
-              </div>
-              <div class="ss-combo__panel" id="ss-combo-panel" role="listbox"></div>
-            </div>
-            <div class="ss-field__hint">
-              Studying <strong>on top of</strong> a resource — flashcards, past papers or notes from a lecture or book.
-              It won't change the resource's watch/read progress; it's logged as extra study.
-            </div>
-          </div>
-        </div>
-
-        {# ── Section B2: Learning unit (shown when resource selected) ───── #}
-        <div class="ss-fsection" id="ss-unit-section" style="display:none;">
-          <div class="ss-fsection__head">
-            <span class="ss-fsection__kicker">Learning unit</span>
-            <span class="ss-fsection__note">Optional</span>
-          </div>
-          <div class="ss-field">
-            <select id="ss-unit-select" class="ss-control ss-control--select">
-              <option value="">— No specific unit —</option>
-            </select>
-            <div class="ss-field__hint">Which chapter or video in this resource did you study?</div>
-          </div>
-        </div>
-
-        {# ── Section C: When & how long ──────────────────────────────────── #}
-        <div class="ss-fsection">
-          <div class="ss-fsection__head">
-            <span class="ss-fsection__kicker">When &amp; how long</span>
-          </div>
-
-          {# Mode toggle #}
-          <div class="ss-field">
-            <div class="ss-segmented" id="ss-mode" role="group" aria-label="Session mode">
-              <button type="button" class="on" data-modeval="logged" id="ss-btn-log">Log now</button>
-              <button type="button" data-modeval="planned" id="ss-btn-plan">Plan for later</button>
-            </div>
-            <div class="ss-field__hint" id="ss-mode-hint">Recording something you've already studied.</div>
-          </div>
-
-          {# Date #}
-          <div class="ss-field">
-            <label class="ss-field__label" id="ss-date-label" for="id_date">Date</label>
-            <div class="ss-pillrow" id="ss-dategroup">
-              <button type="button" class="ss-pill on" data-date="today" id="ss-date-today">Today</button>
-              <button type="button" class="ss-pill" data-date="alt" id="ss-date-alt">Yesterday</button>
-              <input type="date" name="date" id="id_date" class="ss-dateinput"
-                     value="{% if form.is_bound %}{{ form.data.date }}{% else %}{{ today_iso }}{% endif %}"
-                     aria-label="Specific date">
-            </div>
-            {% if form.date.errors %}
-            <div class="ss-field__err" role="alert">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
-                   stroke-linecap="round" aria-hidden="true">
-                <circle cx="12" cy="12" r="10"/><path d="M12 8v5M12 16h.01"/>
-              </svg>
-              {% for err in form.date.errors %}{{ err }}{% endfor %}
-            </div>
-            {% endif %}
-          </div>
-
-          {# Duration #}
-          <div class="ss-field">
-            <label class="ss-field__label">Duration</label>
-            <div class="ss-pillrow" id="ss-durgroup">
-              <button type="button" class="ss-pill" data-dur="15">15m</button>
-              <button type="button" class="ss-pill on" data-dur="30">30m</button>
-              <button type="button" class="ss-pill" data-dur="45">45m</button>
-              <button type="button" class="ss-pill" data-dur="60">60m</button>
-              <button type="button" class="ss-pill" data-dur="90">90m</button>
-              <button type="button" class="ss-pill ss-pill--custom" data-dur="custom">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                  <path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/>
-                </svg>
-                Custom
-              </button>
-              <span class="ss-custom-min" id="ss-custom-min" aria-live="polite">
-                <input type="number" min="1" max="600" class="ss-control ss-custom-min__input"
-                       id="ss-custom-input" placeholder="90" aria-label="Custom duration in minutes">
-                <span class="ss-custom-min__unit">min</span>
-              </span>
-            </div>
-            <div class="ss-dur-readout" aria-live="polite">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                   stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>
-              </svg>
-              <span id="ss-dur-prefix">Logging</span>
-              <strong id="ss-dur-readout">30m</strong>
-            </div>
-            {% if form.duration_minutes.errors %}
-            <div class="ss-field__err" role="alert">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
-                   stroke-linecap="round" aria-hidden="true">
-                <circle cx="12" cy="12" r="10"/><path d="M12 8v5M12 16h.01"/>
-              </svg>
-              {% for err in form.duration_minutes.errors %}{{ err }}{% endfor %}
-            </div>
-            {% endif %}
-          </div>
-        </div>
-
-        {# ── Section D: Details ──────────────────────────────────────────── #}
-        <div class="ss-fsection">
-          <div class="ss-fsection__head">
-            <span class="ss-fsection__kicker">Details</span>
-            <span class="ss-fsection__note">Optional context for future-you</span>
-          </div>
-
-          {# Topic / tags #}
-          <div class="ss-field">
-            <label class="ss-field__label" id="ss-tags-label">
-              Topic / tags
-              <span class="ss-opt">Optional</span>
-            </label>
-            <div class="ss-taginput" id="ss-taginput" role="group"
-                 aria-labelledby="ss-tags-label">
-              <input type="text" id="ss-tag-input"
-                     placeholder="Type a topic and press Enter…"
-                     aria-label="Add a topic tag">
-            </div>
-            <div class="ss-field__hint">
-              e.g. Glycolysis, Chapter 4, Weak areas — group sessions by what you covered.
-            </div>
-          </div>
-
-          {# Notes #}
-          <div class="ss-field">
-            <label class="ss-field__label" for="id_notes">
-              Notes
-              <span class="ss-opt">Optional</span>
-            </label>
-            <textarea name="notes" id="id_notes" class="ss-control"
-                      placeholder="How did it go? What to revisit next time?">{{ form.notes.value|default:'' }}</textarea>
-          </div>
-        </div>
-
-        {# ── Contribution note ────────────────────────────────────────────── #}
-        <div class="ss-contrib">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M3 3v18h18"/><path d="M7 14l3-3 3 2 4-5"/>
-          </svg>
-          <span id="ss-contrib-text">
-            Counts toward your <strong>dashboard time &amp; streak stats</strong> — whether or not you link a resource.
-          </span>
-        </div>
-
-        {# ── Actions ─────────────────────────────────────────────────────── #}
-        <div class="ss-card__actions">
-          <a href="{% url 'learning:session_list' %}" class="ss-btn ss-btn--ghost">Cancel</a>
-          <button type="submit" class="ss-btn ss-btn--primary" id="ss-submit">
-            <span id="ss-submit-label">Log session</span>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"
-                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M20 6L9 17l-5-5"/>
-            </svg>
-          </button>
-        </div>
-
-      </form>
-    </div>{# .ss-card #}
-
-    {# ── Recent sessions ─────────────────────────────────────────────────── #}
-    <div class="ss-recent">
-      <div class="ss-recent__head">
-        <span class="ss-recent__title">Recent sessions</span>
-        <a href="{% url 'learning:session_list' %}" class="ss-recent__link">View all →</a>
-      </div>
-      <div class="ss-slist">
-        {% for session in recent_sessions %}
-        <div class="ss-srow">
-          <span class="ss-srow__ic" aria-hidden="true">
-            {% if session.activity_type == 'flashcards' %}
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                 stroke-linecap="round" stroke-linejoin="round">
-              <rect x="3" y="7" width="14" height="12" rx="2"/>
-              <path d="M7 4h13a1 1 0 0 1 1 1v11"/>
-            </svg>
-            {% elif session.activity_type == 'practice' %}
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                 stroke-linecap="round" stroke-linejoin="round">
-              <path d="M9 11l3 3L22 4"/>
-              <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
-            </svg>
-            {% elif session.activity_type == 'past_papers' %}
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                 stroke-linecap="round" stroke-linejoin="round">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-              <path d="M14 2v6h6M8 13h8M8 17h5"/>
-            </svg>
-            {% elif session.activity_type == 'review_notes' %}
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                 stroke-linecap="round" stroke-linejoin="round">
-              <path d="M2 4h7a3 3 0 0 1 3 3v13a2.5 2.5 0 0 0-2.5-2.5H2z"/>
-              <path d="M22 4h-7a3 3 0 0 0-3 3v13a2.5 2.5 0 0 1 2.5-2.5H22z"/>
-            </svg>
-            {% elif session.activity_type == 'writing' %}
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                 stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 20h9"/>
-              <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/>
-            </svg>
-            {% else %}
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                 stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>
-            </svg>
-            {% endif %}
-          </span>
-          <div class="ss-srow__main">
-            <div class="ss-srow__t">{{ session.get_activity_type_display }}</div>
-            <div class="ss-srow__meta">
-              {% if session.topic %}
-              <span class="ss-srow__res">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                  <path d="M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0l-7.2-7.2a2 2 0 0 1-.6-1.4V4a2 2 0 0 1 2-2h8a2 2 0 0 1 1.4.6l6.4 6.4a2 2 0 0 1 0 2.8z"/>
-                  <circle cx="7.5" cy="7.5" r="1.2" fill="currentColor" stroke="none"/>
-                </svg>
-                {{ session.topic }}
-              </span>
-              {% elif session.resource %}
-              <span class="ss-srow__res">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                  <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
-                  <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
-                </svg>
-                {{ session.resource.title }}
-              </span>
-              {% endif %}
-            </div>
-          </div>
-          <span class="ss-srow__dur">{{ session.duration_minutes|format_duration }}</span>
-          <span class="ss-srow__date">
-            {% now "Y-m-d" as today_str %}
-            {% if session.date|date:"Y-m-d" == today_str %}
-              Today
-            {% else %}
-              {{ session.date|date:"D j" }}
-            {% endif %}
-          </span>
-        </div>
-        {% empty %}
-        <p class="ss-recent__empty">No sessions logged yet.</p>
-        {% endfor %}
+      <div>
+        <h1 class="ss-card__title" id="ss-card-title">Log a study session</h1>
+        <p class="ss-card__sub" id="ss-card-sub">Record time you spent studying — Anki, revision, past papers, anything.</p>
       </div>
     </div>
+
+    {# Error banner #}
+    {% if form.errors %}
+    <div class="ss-banner" role="alert">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+           stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="10"/><path d="M12 8v5M12 16h.01"/>
+      </svg>
+      <span>Please fix the errors highlighted below.</span>
+    </div>
+    {% endif %}
+
+    <form method="post" autocomplete="off" id="ss-form" novalidate>
+      {% csrf_token %}
+
+      {# Hidden real form fields — driven by the visual UI below #}
+      <input type="hidden" name="activity" id="id_activity"
+             value="{{ form.activity.value|default:'' }}">
+      <input type="hidden" name="new_activity_name" id="id_new_activity_name" value="">
+      <input type="hidden" name="status" id="id_status"
+             value="{{ form.status.value|default:'logged' }}">
+      <input type="hidden" name="resource" id="id_resource"
+             value="{{ form.resource.value|default:'' }}">
+      <input type="hidden" name="unit" id="id_unit"
+             value="{{ form.unit.value|default:'' }}">
+      <input type="hidden" name="duration_minutes" id="id_duration_minutes"
+             value="{{ form.duration_minutes.value|default:'30' }}">
+      {# date, title, topic, notes are standard inputs below #}
+
+      {# ── Section A: Activity ─────────────────────────────────────────── #}
+      <div class="ss-fsection">
+        <div class="ss-fsection__head">
+          <span class="ss-fsection__kicker">Activity</span>
+          <span class="ss-fsection__note">What kind of studying?</span>
+        </div>
+        <div class="ss-actgrid" id="ss-actgrid" role="radiogroup" aria-label="Activity type">
+          {# chips rendered by JS from ACTIVITIES JSON #}
+        </div>
+        {# Other… activity combobox — shown when Other chip is selected #}
+        <div class="ss-custom-act" id="ss-custom-act" style="display:none;">
+          <div class="ss-combo" id="ss-act-combo">
+            <div class="ss-combo__control" id="ss-act-combo-control">
+              <span class="ss-combo__ic" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.4 2.4M15.6 15.6L18 18M18 6l-2.4 2.4M8.4 15.6L6 18"/>
+                </svg>
+              </span>
+              <input type="text" id="ss-act-input"
+                     placeholder="Pick one you've used, or type a new activity…"
+                     spellcheck="false" maxlength="32" autocomplete="off">
+              <span class="ss-combo__tag" id="ss-act-combo-tag" style="display:none;">New</span>
+              <span class="ss-combo__chev" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                     stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M6 9l6 6 6-6"/>
+                </svg>
+              </span>
+            </div>
+            <div class="ss-combo__panel" id="ss-act-combo-panel" role="listbox"></div>
+          </div>
+          <div class="ss-field__hint">Choose an activity you've logged before, or type a new one — e.g. Drawing, Programming.</div>
+        </div>
+      </div>
+
+      {# ── Section B: When & how long ──────────────────────────────────── #}
+      <div class="ss-fsection">
+        <div class="ss-fsection__head">
+          <span class="ss-fsection__kicker">When &amp; how long</span>
+        </div>
+
+        {# Mode toggle #}
+        <div class="ss-field">
+          <div class="ss-segmented" id="ss-mode" role="group" aria-label="Session mode">
+            <button type="button" class="on" data-modeval="logged" id="ss-btn-log">Log now</button>
+            <button type="button" data-modeval="planned" id="ss-btn-plan">Plan for later</button>
+          </div>
+          <div class="ss-field__hint" id="ss-mode-hint">Recording something you've already studied.</div>
+        </div>
+
+        {# Date #}
+        <div class="ss-field">
+          <label class="ss-field__label" id="ss-date-label" for="id_date">Date</label>
+          <div class="ss-pillrow" id="ss-dategroup">
+            <button type="button" class="ss-pill on" data-date="today" id="ss-date-today">Today</button>
+            <button type="button" class="ss-pill" data-date="alt" id="ss-date-alt">Yesterday</button>
+            <input type="date" name="date" id="id_date" class="ss-dateinput"
+                   value="{% if form.is_bound %}{{ form.data.date }}{% else %}{{ today_iso }}{% endif %}"
+                   aria-label="Specific date">
+          </div>
+          {% if form.date.errors %}
+          <div class="ss-field__err" role="alert">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
+                 stroke-linecap="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="10"/><path d="M12 8v5M12 16h.01"/>
+            </svg>
+            {% for err in form.date.errors %}{{ err }}{% endfor %}
+          </div>
+          {% endif %}
+        </div>
+
+        {# Duration #}
+        <div class="ss-field">
+          <label class="ss-field__label">Duration</label>
+          <div class="ss-pillrow" id="ss-durgroup">
+            <button type="button" class="ss-pill" data-dur="15">15m</button>
+            <button type="button" class="ss-pill on" data-dur="30">30m</button>
+            <button type="button" class="ss-pill" data-dur="45">45m</button>
+            <button type="button" class="ss-pill" data-dur="60">60m</button>
+            <button type="button" class="ss-pill" data-dur="90">90m</button>
+            <button type="button" class="ss-pill ss-pill--custom" data-dur="custom">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/>
+              </svg>
+              Custom
+            </button>
+            <span class="ss-custom-min" id="ss-custom-min" aria-live="polite">
+              <input type="number" min="1" max="600" class="ss-control ss-custom-min__input"
+                     id="ss-custom-input" placeholder="90" aria-label="Custom duration in minutes">
+              <span class="ss-custom-min__unit">min</span>
+            </span>
+          </div>
+          <div class="ss-dur-readout" aria-live="polite">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>
+            </svg>
+            <span id="ss-dur-prefix">Logging</span>
+            <strong id="ss-dur-readout">30m</strong>
+          </div>
+          {% if form.duration_minutes.errors %}
+          <div class="ss-field__err" role="alert">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
+                 stroke-linecap="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="10"/><path d="M12 8v5M12 16h.01"/>
+            </svg>
+            {% for err in form.duration_minutes.errors %}{{ err }}{% endfor %}
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      {# ── Section C: Link a resource ──────────────────────────────────── #}
+      <div class="ss-fsection">
+        <div class="ss-fsection__head">
+          <span class="ss-fsection__kicker">Link a resource</span>
+          <span class="ss-fsection__note">Optional</span>
+        </div>
+        <div class="ss-field">
+          <div class="ss-combo" id="ss-combo">
+            <div class="ss-combo__control" id="ss-combo-control">
+              <span class="ss-combo__ic" id="ss-combo-ic" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="9"/><path d="M8 12h8"/>
+                </svg>
+              </span>
+              <input type="text" id="ss-combo-input" role="combobox"
+                     aria-autocomplete="list" aria-expanded="false"
+                     aria-controls="ss-combo-panel"
+                     placeholder="Search a course, video or book… or leave blank"
+                     spellcheck="false" autocomplete="off">
+              <span class="ss-combo__tag" id="ss-combo-tag" style="display:none;" aria-live="polite"></span>
+              <span class="ss-combo__chev" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                     stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M6 9l6 6 6-6"/>
+                </svg>
+              </span>
+            </div>
+            <div class="ss-combo__panel" id="ss-combo-panel" role="listbox"></div>
+          </div>
+          <div class="ss-field__hint">
+            Studying <strong>on top of</strong> a resource — flashcards, past papers or notes from a lecture or book.
+            It won't change the resource's watch/read progress; it's logged as extra study.
+          </div>
+        </div>
+      </div>
+
+      {# ── Section C2: Learning unit (shown when resource selected) ────── #}
+      <div class="ss-fsection" id="ss-unit-section" style="display:none;">
+        <div class="ss-fsection__head">
+          <span class="ss-fsection__kicker">Learning unit</span>
+          <span class="ss-fsection__note">Optional</span>
+        </div>
+        <div class="ss-field">
+          <select id="ss-unit-select" class="ss-control ss-control--select">
+            <option value="">— No specific unit —</option>
+          </select>
+          <div class="ss-field__hint">Which chapter or video in this resource did you study?</div>
+        </div>
+      </div>
+
+      {# ── Section D: Details ──────────────────────────────────────────── #}
+      <div class="ss-fsection">
+        <div class="ss-fsection__head">
+          <span class="ss-fsection__kicker">Details</span>
+          <span class="ss-fsection__note">Optional context for future-you</span>
+        </div>
+
+        {# Title — first field in Details #}
+        <div class="ss-field" id="ss-title-field">
+          <label class="ss-field__label" for="id_title">
+            Title
+            <span class="ss-opt">Optional</span>
+          </label>
+          <input type="text" name="title" id="id_title" class="ss-control"
+                 placeholder="e.g. June 2019 Chem Paper 2" spellcheck="false"
+                 value="{{ form.title.value|default:'' }}">
+          <div class="ss-field__hint">
+            Name this session so it's easy to spot later. Leave blank and we'll label it from the activity.
+          </div>
+        </div>
+
+        {# Topic / tags #}
+        <div class="ss-field">
+          <label class="ss-field__label" id="ss-tags-label">
+            Topic / tags
+            <span class="ss-opt">Optional</span>
+          </label>
+          <div class="ss-taginput" id="ss-taginput" role="group"
+               aria-labelledby="ss-tags-label">
+            <input type="text" id="ss-tag-input"
+                   placeholder="Type a topic and press Enter…"
+                   aria-label="Add a topic tag">
+          </div>
+          <div class="ss-field__hint">
+            e.g. Glycolysis, Chapter 4, Weak areas — group sessions by what you covered.
+          </div>
+          {# Hidden field synced from tag chips — kept inside ss-field to preserve sibling margins #}
+          <input type="hidden" name="topic" id="id_topic"
+                 value="{{ form.topic.value|default:'' }}">
+        </div>
+
+        {# Notes #}
+        <div class="ss-field">
+          <label class="ss-field__label" for="id_notes">
+            Notes
+            <span class="ss-opt">Optional</span>
+          </label>
+          <textarea name="notes" id="id_notes" class="ss-control"
+                    placeholder="How did it go? What to revisit next time?">{{ form.notes.value|default:'' }}</textarea>
+        </div>
+      </div>
+
+      {# ── Contribution note ────────────────────────────────────────────── #}
+      <div class="ss-contrib">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M3 3v18h18"/><path d="M7 14l3-3 3 2 4-5"/>
+        </svg>
+        <span id="ss-contrib-text">
+          Counts toward your <strong>dashboard time &amp; streak stats</strong> — whether or not you link a resource.
+        </span>
+      </div>
+
+      {# ── Actions ─────────────────────────────────────────────────────── #}
+      <div class="ss-card__actions">
+        <a href="{% url 'learning:session_list' %}" class="ss-btn ss-btn--ghost">Cancel</a>
+        <button type="submit" class="ss-btn ss-btn--primary" id="ss-submit">
+          <span id="ss-submit-label">Log session</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M20 6L9 17l-5-5"/>
+          </svg>
+        </button>
+      </div>
+
+    </form>
+  </div>{# .ss-card #}
+
+  {# ── Recent sessions ─────────────────────────────────────────────────── #}
+  <div class="ss-recent">
+    <div class="ss-recent__head">
+      <span class="ss-recent__title">Recent sessions</span>
+      <a href="{% url 'learning:session_list' %}" class="ss-recent__link">View all →</a>
+    </div>
+    <div class="ss-slist">
+      {% for session in recent_sessions %}
+      <div class="ss-srow">
+        <span class="ss-srow__ic" aria-hidden="true">
+          {% with slug=session.activity.slug %}
+          {% if slug == 'flashcards' %}
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="7" width="14" height="12" rx="2"/>
+            <path d="M7 4h13a1 1 0 0 1 1 1v11"/>
+          </svg>
+          {% elif slug == 'practice' %}
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 11l3 3L22 4"/>
+            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+          </svg>
+          {% elif slug == 'pastpapers' %}
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <path d="M14 2v6h6M8 13h8M8 17h5"/>
+          </svg>
+          {% elif slug == 'review' %}
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path d="M2 4h7a3 3 0 0 1 3 3v13a2.5 2.5 0 0 0-2.5-2.5H2z"/>
+            <path d="M22 4h-7a3 3 0 0 0-3 3v13a2.5 2.5 0 0 1 2.5-2.5H22z"/>
+          </svg>
+          {% elif slug == 'writing' %}
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 20h9"/>
+            <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/>
+          </svg>
+          {% elif slug == 'read' %}
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+          </svg>
+          {% elif slug == 'watch' %}
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="4" width="20" height="16" rx="3"/>
+            <path d="M10 9l5 3-5 3z"/>
+          </svg>
+          {% else %}
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.4 2.4M15.6 15.6L18 18M18 6l-2.4 2.4M8.4 15.6L6 18"/>
+          </svg>
+          {% endif %}
+          {% endwith %}
+        </span>
+        <div class="ss-srow__main">
+          <div class="ss-srow__t">
+            {% if session.title %}{{ session.title }}{% else %}{{ session.activity.name }}{% endif %}
+          </div>
+          <div class="ss-srow__meta">
+            {% if session.topic %}
+            <span class="ss-srow__res">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0l-7.2-7.2a2 2 0 0 1-.6-1.4V4a2 2 0 0 1 2-2h8a2 2 0 0 1 1.4.6l6.4 6.4a2 2 0 0 1 0 2.8z"/>
+                <circle cx="7.5" cy="7.5" r="1.2" fill="currentColor" stroke="none"/>
+              </svg>
+              {{ session.topic }}
+            </span>
+            {% elif session.resource %}
+            <span class="ss-srow__res">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+              </svg>
+              {{ session.resource.title }}
+            </span>
+            {% endif %}
+          </div>
+        </div>
+        <span class="ss-srow__dur">{{ session.duration_minutes|format_duration }}</span>
+        <span class="ss-srow__date">
+          {% now "Y-m-d" as today_str %}
+          {% if session.date|date:"Y-m-d" == today_str %}
+            Today
+          {% else %}
+            {{ session.date|date:"D j" }}
+          {% endif %}
+        </span>
+      </div>
+      {% empty %}
+      <p class="ss-recent__empty">No sessions logged yet.</p>
+      {% endfor %}
+    </div>
+  </div>
 
 </div>{# .ss-page #}
 {% endblock %}
@@ -416,17 +418,30 @@
 (function () {
   "use strict";
 
-  /* ─── Resource data from Django ────────────────────────────────────────── */
+  /* ─── Data from Django ──────────────────────────────────────────────────── */
   const RESOURCES = {{ resources_json|safe }};
   const UNITS_BY_RESOURCE = {{ units_by_resource_json|safe }};
+  const ACTIVITIES = {{ activities_json|safe }};
+
+  /* System activity slugs that get chip tiles (not watch/read — auto-logged) */
+  const CHIP_SLUGS = ['flashcards','practice','pastpapers','review','writing'];
+  const ACT_BY_ID  = Object.fromEntries(ACTIVITIES.map(a => [a.id, a]));
+  const ACT_BY_SLUG = Object.fromEntries(ACTIVITIES.map(a => [a.slug, a]));
 
   /* ─── SVG icons ─────────────────────────────────────────────────────────── */
   const IC = {
-    none: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12h8"/></svg>',
-    book: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>',
-    video: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="3"/><path d="M10 9l5 3-5 3z"/></svg>',
-    check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>',
-    x: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>'
+    flashcards: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="14" height="12" rx="2"/><path d="M7 4h13a1 1 0 0 1 1 1v11"/></svg>',
+    practice:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>',
+    pastpapers: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg>',
+    review:     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4h7a3 3 0 0 1 3 3v13a2.5 2.5 0 0 0-2.5-2.5H2z"/><path d="M22 4h-7a3 3 0 0 0-3 3v13a2.5 2.5 0 0 1 2.5-2.5H22z"/></svg>',
+    writing:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>',
+    spark:      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.4 2.4M15.6 15.6L18 18M18 6l-2.4 2.4M8.4 15.6L6 18"/></svg>',
+    plus:       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>',
+    check:      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>',
+    x:          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>',
+    none:       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12h8"/></svg>',
+    book:       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>',
+    video:      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="3"/><path d="M10 9l5 3-5 3z"/></svg>'
   };
 
   /* ─── Helpers ───────────────────────────────────────────────────────────── */
@@ -442,43 +457,218 @@
   function $(sel, ctx) { return (ctx || document).querySelector(sel); }
   function $$(sel, ctx) { return Array.from((ctx || document).querySelectorAll(sel)); }
 
-  /* ─── Initial state from Django (handles re-render after validation error) #}─ */
-  const INIT_ACT  = document.getElementById('id_activity_type').value || 'flashcards';
-  const INIT_DUR  = parseInt(document.getElementById('id_duration_minutes').value, 10) || 30;
-  const INIT_STA  = document.getElementById('id_status').value || 'logged';
-  const INIT_RES  = document.getElementById('id_resource').value || '';
-  const INIT_TOP  = document.getElementById('id_topic').value || '';
-  /* resource_prefill is interpolated below in initResource() */
+  /* ─── Initial state from Django ─────────────────────────────────────────── */
+  const INIT_ACT_ID = document.getElementById('id_activity').value || '';
+  const INIT_DUR    = parseInt(document.getElementById('id_duration_minutes').value, 10) || 30;
+  const INIT_STA    = document.getElementById('id_status').value || 'logged';
+  const INIT_RES    = document.getElementById('id_resource').value || '';
+  const INIT_TOP    = document.getElementById('id_topic').value || '';
 
   /* ═══════════════════════════════════════════════════════════════════════
      ACTIVITY CHIPS
   ═══════════════════════════════════════════════════════════════════════ */
-  var actInput = document.getElementById('id_activity_type');
-  $$('[data-act]').forEach(function(chip) {
-    var val = chip.dataset.act;
-    chip.classList.toggle('on', val === INIT_ACT);
-    chip.setAttribute('aria-checked', val === INIT_ACT ? 'true' : 'false');
-    chip.addEventListener('click', function() {
-      $$('[data-act]').forEach(function(c) {
-        c.classList.remove('on');
-        c.setAttribute('aria-checked', 'false');
-      });
-      chip.classList.add('on');
-      chip.setAttribute('aria-checked', 'true');
-      actInput.value = val;
+  var actInput        = document.getElementById('id_activity');
+  var newActInput     = document.getElementById('id_new_activity_name');
+  var actGrid         = document.getElementById('ss-actgrid');
+  var customActWrap   = document.getElementById('ss-custom-act');
+  var selActId        = INIT_ACT_ID ? parseInt(INIT_ACT_ID, 10) : null;
+  var isOtherMode     = false;
+
+  function chipIcon(slug) { return IC[slug] || IC.spark; }
+
+  function buildChips() {
+    var chips = ACTIVITIES.filter(function(a) { return CHIP_SLUGS.indexOf(a.slug) !== -1; });
+    var html = chips.map(function(a) {
+      var on = !isOtherMode && selActId === a.id;
+      return '<button type="button" class="ss-actchip' + (on ? ' on' : '') + '" data-act-id="' + a.id + '" role="radio" aria-checked="' + on + '">'
+           + '<span class="ss-actchip__ic" aria-hidden="true">' + chipIcon(a.slug) + '</span>'
+           + '<span class="ss-actchip__t">' + esc(a.name) + '</span>'
+           + '</button>';
+    }).join('');
+    html += '<button type="button" class="ss-actchip actchip--other' + (isOtherMode ? ' on' : '') + '" data-act-id="__other" role="radio" aria-checked="' + isOtherMode + '">'
+          + '<span class="ss-actchip__ic" aria-hidden="true">' + IC.plus + '</span>'
+          + '<span class="ss-actchip__t">Other…</span>'
+          + '</button>';
+    actGrid.innerHTML = html;
+    $$('[data-act-id]', actGrid).forEach(function(chip) {
+      chip.addEventListener('click', function() { selectChip(chip); });
     });
-  });
+    /* Restore initial selection when re-rendering */
+    if (selActId && !isOtherMode) {
+      var init = $('[data-act-id="' + selActId + '"]', actGrid);
+      if (init) { init.classList.add('on'); init.setAttribute('aria-checked','true'); }
+    }
+  }
+
+  function selectChip(chip) {
+    $$('[data-act-id]', actGrid).forEach(function(c) {
+      c.classList.remove('on'); c.setAttribute('aria-checked','false');
+    });
+    chip.classList.add('on'); chip.setAttribute('aria-checked','true');
+
+    if (chip.dataset.actId === '__other') {
+      isOtherMode = true;
+      selActId = null;
+      actInput.value = '';
+      newActInput.value = '';
+      customActWrap.style.display = '';
+      var ai = document.getElementById('ss-act-input');
+      if (ai) { ai.focus(); setTimeout(openActCombo, 0); }
+    } else {
+      isOtherMode = false;
+      selActId = parseInt(chip.dataset.actId, 10);
+      actInput.value = selActId;
+      newActInput.value = '';
+      customActWrap.style.display = 'none';
+      closeActCombo();
+    }
+  }
+
+  /* ── Activity combobox (Other… path) ─────────────────────────────────── */
+  var actComboWrap    = document.getElementById('ss-act-combo');
+  var actComboControl = document.getElementById('ss-act-combo-control');
+  var actComboInput   = document.getElementById('ss-act-input');
+  var actComboPanel   = document.getElementById('ss-act-combo-panel');
+  var actComboTag     = document.getElementById('ss-act-combo-tag');
+  var selCustomActId  = null;  /* id of a chosen existing custom activity */
+
+  function updateActTag() {
+    var q = (actComboInput.value || '').trim();
+    var isExisting = selCustomActId !== null || customActivities().some(function(a) {
+      return a.name.toLowerCase() === q.toLowerCase();
+    });
+    if (q && !isExisting) {
+      actComboTag.style.display = '';
+    } else {
+      actComboTag.style.display = 'none';
+    }
+  }
+
+  function customActivities() {
+    return ACTIVITIES.filter(function(a) { return !a.is_system; });
+  }
+
+  function renderActComboPanel() {
+    var q = (actComboInput.value || '').trim().toLowerCase();
+    var customs = customActivities().filter(function(a) {
+      return !q || a.name.toLowerCase().indexOf(q) !== -1;
+    });
+    var exact = customs.some(function(a) {
+      return a.name.toLowerCase() === q;
+    });
+    var html = '';
+    if (customs.length) {
+      html += '<div class="ss-combo__group">Your activities</div>';
+      html += customs.map(function(a) {
+        var sel = selCustomActId === a.id;
+        return '<div class="ss-combo__opt' + (sel ? ' selected' : '') + '" data-acv="' + a.id + '" role="option" aria-selected="' + sel + '">'
+             + '<span class="ss-combo__opt__ic">' + IC.spark + '</span>'
+             + '<span class="ss-combo__opt__t">' + esc(a.name) + '</span>'
+             + '<span class="ss-check">' + IC.check + '</span>'
+             + '</div>';
+      }).join('');
+    }
+    if (q && !exact) {
+      html += '<div class="ss-combo__create" data-ac-create>'
+            + '<span class="ss-combo__create__ic">' + IC.plus + '</span>'
+            + '<span>Create <b>&ldquo;' + esc(q) + '&rdquo;</b></span>'
+            + '</div>';
+    }
+    if (!html) {
+      html = '<div class="ss-combo__empty">Type an activity name to add your first one.</div>';
+    }
+    actComboPanel.innerHTML = html;
+  }
+
+  function openActCombo() {
+    if (!actComboWrap) return;
+    actComboWrap.classList.add('is-open');
+    renderActComboPanel();
+  }
+  function closeActCombo() {
+    if (actComboWrap) actComboWrap.classList.remove('is-open');
+  }
+
+  function chooseExistingAct(id) {
+    var a = ACT_BY_ID[id];
+    if (!a) return;
+    selCustomActId = id;
+    actInput.value = id;
+    newActInput.value = '';
+    actComboInput.value = a.name;
+    actComboTag.style.display = 'none';
+    closeActCombo();
+  }
+
+  function commitTypedAct() {
+    var q = (actComboInput.value || '').trim();
+    if (!q) return false;
+    /* Check if it matches an existing custom activity (case-insensitive) */
+    var existing = customActivities().find(function(a) {
+      return a.name.toLowerCase() === q.toLowerCase();
+    });
+    if (existing) {
+      chooseExistingAct(existing.id);
+    } else {
+      selCustomActId = null;
+      actInput.value = '';
+      newActInput.value = q;
+    }
+    return true;
+  }
+
+  if (actComboControl) {
+    actComboControl.addEventListener('click', function() {
+      actComboInput.focus(); openActCombo();
+    });
+    actComboInput.addEventListener('focus', openActCombo);
+    actComboInput.addEventListener('input', function() {
+      selCustomActId = null;
+      actInput.value = '';
+      newActInput.value = '';
+      openActCombo();
+      updateActTag();
+    });
+    actComboInput.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') { e.preventDefault(); commitTypedAct(); closeActCombo(); }
+    });
+    actComboPanel.addEventListener('click', function(e) {
+      if (e.target.closest('[data-ac-create]')) {
+        commitTypedAct(); closeActCombo(); return;
+      }
+      var opt = e.target.closest('[data-acv]');
+      if (!opt) return;
+      chooseExistingAct(parseInt(opt.dataset.acv, 10));
+    });
+    document.addEventListener('click', function(e) {
+      if (!actComboWrap.contains(e.target)) closeActCombo();
+    });
+  }
+
+  /* Initial chip render */
+  buildChips();
+  /* If returning from a validation error with an activity set, mark Other if custom */
+  if (INIT_ACT_ID) {
+    var initAct = ACT_BY_ID[parseInt(INIT_ACT_ID, 10)];
+    if (initAct && !initAct.is_system) {
+      isOtherMode = true;
+      buildChips();
+      customActWrap.style.display = '';
+      actComboInput.value = initAct.name;
+      selCustomActId = initAct.id;
+    }
+  }
 
   /* ═══════════════════════════════════════════════════════════════════════
      MODE TOGGLE (log / plan)
   ═══════════════════════════════════════════════════════════════════════ */
-  var statusInput   = document.getElementById('id_status');
-  var altPill       = document.getElementById('ss-date-alt');
-  var dateLabel     = document.getElementById('ss-date-label');
-  var modeHint      = document.getElementById('ss-mode-hint');
-  var contribText   = document.getElementById('ss-contrib-text');
-  var submitLabel   = document.getElementById('ss-submit-label');
-  var durPrefix     = document.getElementById('ss-dur-prefix');
+  var statusInput = document.getElementById('id_status');
+  var altPill     = document.getElementById('ss-date-alt');
+  var dateLabel   = document.getElementById('ss-date-label');
+  var modeHint    = document.getElementById('ss-mode-hint');
+  var contribText = document.getElementById('ss-contrib-text');
+  var submitLabel = document.getElementById('ss-submit-label');
+  var durPrefix   = document.getElementById('ss-dur-prefix');
 
   function applyMode(mode) {
     var plan = (mode === 'planned');
@@ -499,7 +689,6 @@
   }
 
   applyMode(INIT_STA);
-
   $$('#ss-mode button').forEach(function(b) {
     b.addEventListener('click', function() { applyMode(b.dataset.modeval); });
   });
@@ -507,9 +696,9 @@
   /* ═══════════════════════════════════════════════════════════════════════
      DATE PILLS
   ═══════════════════════════════════════════════════════════════════════ */
-  var dateInput   = document.getElementById('id_date');
-  var today       = new Date();
-  var todayISO    = today.toISOString().slice(0, 10);
+  var dateInput = document.getElementById('id_date');
+  var today     = new Date();
+  var todayISO  = today.toISOString().slice(0, 10);
 
   function isoDate(d) { return d.toISOString().slice(0, 10); }
 
@@ -520,7 +709,6 @@
       if (pill.dataset.date === 'today') {
         dateInput.value = todayISO;
       } else {
-        /* alt pill: yesterday in log mode, tomorrow in plan mode */
         var offset = (statusInput.value === 'planned') ? 1 : -1;
         var d = new Date(today);
         d.setDate(d.getDate() + offset);
@@ -528,7 +716,6 @@
       }
     });
   });
-
   dateInput.addEventListener('focus', function() {
     $$('#ss-dategroup [data-date]').forEach(function(p) { p.classList.remove('on'); });
   });
@@ -542,9 +729,7 @@
   var customInput = document.getElementById('ss-custom-input');
   var PRESETS     = [15, 30, 45, 60, 90];
 
-  function setDurReadout(mins) {
-    durReadout.textContent = mins ? fmt(mins) : '—';
-  }
+  function setDurReadout(mins) { durReadout.textContent = mins ? fmt(mins) : '—'; }
 
   function selectDur(val) {
     $$('#ss-durgroup [data-dur]').forEach(function(p) { p.classList.remove('on'); });
@@ -562,7 +747,6 @@
     }
   }
 
-  /* init from server value */
   var initDurStr = String(INIT_DUR);
   if (PRESETS.indexOf(INIT_DUR) !== -1) {
     selectDur(initDurStr);
@@ -581,11 +765,11 @@
   });
 
   /* ═══════════════════════════════════════════════════════════════════════
-     TAG INPUT
+     TAG INPUT (topic)
   ═══════════════════════════════════════════════════════════════════════ */
-  var topicInput  = document.getElementById('id_topic');
-  var tagWrap     = document.getElementById('ss-taginput');
-  var tagInput    = document.getElementById('ss-tag-input');
+  var topicInput = document.getElementById('id_topic');
+  var tagWrap    = document.getElementById('ss-taginput');
+  var tagInput   = document.getElementById('ss-tag-input');
 
   function addTag(text) {
     text = text.trim();
@@ -595,8 +779,7 @@
     el.setAttribute('role', 'listitem');
     el.innerHTML = esc(text) + '<button type="button" class="ss-tag__rm" aria-label="Remove ' + esc(text) + '">' + IC.x + '</button>';
     el.querySelector('.ss-tag__rm').addEventListener('click', function() {
-      el.remove();
-      syncTopics();
+      el.remove(); syncTopics();
     });
     tagWrap.insertBefore(el, tagInput);
     syncTopics();
@@ -609,22 +792,31 @@
     topicInput.value = tags.join(', ');
   }
 
-  /* pre-populate from server value */
-  if (INIT_TOP) {
-    INIT_TOP.split(',').forEach(function(t) { addTag(t); });
-  }
+  if (INIT_TOP) { INIT_TOP.split(',').forEach(function(t) { addTag(t); }); }
 
   tagInput.addEventListener('keydown', function(e) {
     if (e.key === 'Enter') {
-      e.preventDefault();
-      addTag(tagInput.value);
-      tagInput.value = '';
+      e.preventDefault(); addTag(tagInput.value); tagInput.value = '';
     } else if (e.key === 'Backspace' && !tagInput.value) {
       var tags = tagWrap.querySelectorAll('.ss-tag');
       if (tags.length) { tags[tags.length - 1].remove(); syncTopics(); }
     }
   });
   tagWrap.addEventListener('click', function() { tagInput.focus(); });
+
+  /* ═══════════════════════════════════════════════════════════════════════
+     TITLE — context-aware placeholder
+  ═══════════════════════════════════════════════════════════════════════ */
+  var titleInput = document.getElementById('id_title');
+  var selResName = '';
+
+  function refreshTitlePlaceholder() {
+    if (titleInput) {
+      titleInput.placeholder = selResName
+        ? selResName
+        : 'e.g. June 2019 Chem Paper 2';
+    }
+  }
 
   /* ═══════════════════════════════════════════════════════════════════════
      UNIT SELECT
@@ -640,8 +832,7 @@
     unitSelect.innerHTML = '<option value="">— No specific unit —</option>';
     units.forEach(function(u) {
       var opt = document.createElement('option');
-      opt.value = u.id;
-      opt.textContent = u.title;
+      opt.value = u.id; opt.textContent = u.title;
       unitSelect.appendChild(opt);
     });
     if (INIT_UNIT) { unitSelect.value = INIT_UNIT; unitInput.value = unitSelect.value; }
@@ -665,14 +856,14 @@
   var cPanel    = document.getElementById('ss-combo-panel');
   var cTag      = document.getElementById('ss-combo-tag');
   var cIc       = document.getElementById('ss-combo-ic');
-  var selId     = INIT_RES ? String(INIT_RES) : null;
+  var selResId  = INIT_RES ? String(INIT_RES) : null;
 
-  function renderPanel() {
+  function renderResPanel() {
     var q = cInput.value.trim().toLowerCase();
     var matches = q
       ? RESOURCES.filter(function(r) { return r.name.toLowerCase().indexOf(q) !== -1; })
       : RESOURCES;
-    var none = selId === 'none';
+    var none = selResId === 'none';
     var html = '<div class="ss-combo__opt' + (none ? ' selected' : '') + '" data-rid="none" role="option" aria-selected="' + none + '">'
       + '<span class="ss-combo__opt__ic">' + IC.none + '</span>'
       + '<span class="ss-combo__opt__t">No resource — general study</span>'
@@ -681,7 +872,7 @@
     if (matches.length) {
       html += '<div class="ss-combo__group">Your resources</div>';
       html += matches.map(function(r) {
-        var sel = String(selId) === String(r.id);
+        var sel = String(selResId) === String(r.id);
         return '<div class="ss-combo__opt' + (sel ? ' selected' : '') + '" data-rid="' + r.id + '" role="option" aria-selected="' + sel + '">'
           + '<span class="ss-combo__opt__ic">' + (r.kind === 'video' ? IC.video : IC.book) + '</span>'
           + '<span class="ss-combo__opt__t">' + esc(r.name) + '</span>'
@@ -695,56 +886,46 @@
     cPanel.innerHTML = html;
   }
 
-  function openCombo() {
-    combo.classList.add('is-open');
-    cInput.setAttribute('aria-expanded', 'true');
-    renderPanel();
-  }
-
-  function closeCombo() {
-    combo.classList.remove('is-open');
-    cInput.setAttribute('aria-expanded', 'false');
-  }
+  function openCombo() { combo.classList.add('is-open'); cInput.setAttribute('aria-expanded','true'); renderResPanel(); }
+  function closeCombo() { combo.classList.remove('is-open'); cInput.setAttribute('aria-expanded','false'); }
 
   function selectResource(r) {
-    selId = String(r.id);
+    selResId = String(r.id);
     resInput.value = r.id;
     cInput.value = r.name;
-    cTag.textContent = r.tag;
-    cTag.style.display = '';
+    cTag.textContent = r.tag; cTag.style.display = '';
     cIc.innerHTML = r.kind === 'video' ? IC.video : IC.book;
+    selResName = r.name;
+    refreshTitlePlaceholder();
     closeCombo();
     showUnitSection(r.id);
   }
 
   function selectNone() {
-    selId = 'none';
+    selResId = 'none';
     resInput.value = '';
     cInput.value = '';
     cInput.placeholder = 'General study — no resource';
-    cTag.textContent = 'General';
-    cTag.style.display = '';
+    cTag.textContent = 'General'; cTag.style.display = '';
     cIc.innerHTML = IC.none;
+    selResName = '';
+    refreshTitlePlaceholder();
     closeCombo();
     hideUnitSection();
   }
 
   document.getElementById('ss-combo-control').addEventListener('click', function() {
-    cInput.focus();
-    openCombo();
+    cInput.focus(); openCombo();
   });
   cInput.addEventListener('focus', openCombo);
   cInput.addEventListener('input', function() {
-    selId = null;
-    resInput.value = '';
-    cTag.style.display = 'none';
-    cIc.innerHTML = IC.none;
-    hideUnitSection();
-    renderPanel();
+    selResId = null; resInput.value = '';
+    cTag.style.display = 'none'; cIc.innerHTML = IC.none;
+    selResName = ''; refreshTitlePlaceholder();
+    hideUnitSection(); renderResPanel();
   });
   cPanel.addEventListener('click', function(e) {
-    var opt = e.target.closest('.ss-combo__opt');
-    if (!opt) return;
+    var opt = e.target.closest('.ss-combo__opt'); if (!opt) return;
     var rid = opt.dataset.rid;
     if (rid === 'none') { selectNone(); }
     else {
@@ -752,11 +933,9 @@
       if (r) selectResource(r);
     }
   });
-  document.addEventListener('click', function(e) {
-    if (!combo.contains(e.target)) closeCombo();
-  });
+  document.addEventListener('click', function(e) { if (!combo.contains(e.target)) closeCombo(); });
 
-  /* pre-fill from Django re-render or ?resource= param */
+  /* Pre-fill from Django re-render or ?resource= param */
   (function initResource() {
     var prefill = "{{ resource_prefill|escapejs }}";
     if (INIT_RES) {
@@ -776,15 +955,22 @@
   })();
 
   /* ═══════════════════════════════════════════════════════════════════════
-     SUBMIT: brief confirmation then allow normal POST
+     SUBMIT VALIDATION + UX flourish
   ═══════════════════════════════════════════════════════════════════════ */
-  document.getElementById('ss-form').addEventListener('submit', function() {
-    var btn   = document.getElementById('ss-submit');
+  document.getElementById('ss-form').addEventListener('submit', function(e) {
+    /* Ensure activity is resolved before submit */
+    if (isOtherMode && !actInput.value && !newActInput.value) {
+      if (!commitTypedAct()) {
+        e.preventDefault();
+        if (actComboInput) { actComboInput.focus(); openActCombo(); }
+        return;
+      }
+    }
+    var btn = document.getElementById('ss-submit');
     var label = document.getElementById('ss-submit-label');
-    var plan  = statusInput.value === 'planned';
+    var plan = statusInput.value === 'planned';
     label.textContent = plan ? 'Planned ✓' : 'Logged ✓';
     btn.style.pointerEvents = 'none';
-    /* Let the native submit proceed; the label is just a brief UX flourish */
   });
 
 })();

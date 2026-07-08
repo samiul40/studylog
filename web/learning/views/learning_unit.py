@@ -13,8 +13,11 @@ from django.views.generic import CreateView, DeleteView, UpdateView
 
 from learning.forms import LearningUnitForm
 from learning.mixins import UserPermissionMixin
-from learning.models import LearningResource, LearningUnit, StudySession
+from learning.models import Activity, LearningResource, LearningUnit, StudySession
 from learning.services.sessions import upsert_resource_session
+
+_WATCH_SLUG = "watch"
+_READ_SLUG = "read"
 
 logger = logging.getLogger(__name__)
 
@@ -268,30 +271,37 @@ class LearningUnitInlinePatchView(UserPermissionMixin, View):
 
         # Reading chapter unchecked — delete its per-unit session.
         if is_reading_uncheck:
-            StudySession.objects.filter(
-                user=request.user,
-                unit=unit,
-                activity_type=StudySession.ActivityType.READING,
-            ).delete()
+            read_activity = Activity.objects.filter(
+                slug=_READ_SLUG, is_system=True
+            ).first()
+            if read_activity:
+                StudySession.objects.filter(
+                    user=request.user,
+                    unit=unit,
+                    activity=read_activity,
+                ).delete()
 
-        # Auto-log a VIDEO_WATCH session when progress changes.
+        # Auto-log a watch session when video progress changes.
         if "video_progress_minutes" in data and unit.video_progress_minutes is not None:
             delta = unit.video_progress_minutes - (old_progress or 0)
-            if delta != 0:
+            watch_activity = Activity.objects.filter(
+                slug=_WATCH_SLUG, is_system=True
+            ).first()
+            if delta != 0 and watch_activity:
                 upsert_resource_session(
                     user=request.user,
                     resource=unit.resource,
                     unit=unit,
                     date=datetime.date.today(),
-                    activity_type=StudySession.ActivityType.VIDEO_WATCH,
+                    activity=watch_activity,
                     delta_minutes=delta,
                 )
             # Slider rewound to 0 — remove the now-empty session.
-            if unit.video_progress_minutes == 0:
+            if unit.video_progress_minutes == 0 and watch_activity:
                 StudySession.objects.filter(
                     user=request.user,
                     unit=unit,
-                    activity_type=StudySession.ActivityType.VIDEO_WATCH,
+                    activity=watch_activity,
                     duration_minutes=0,
                 ).delete()
 
@@ -323,16 +333,18 @@ class LearningUnitCompleteReadingView(UserPermissionMixin, UserUnitMixin, View):
         unit.save()
 
         # One session per chapter — update on re-log, create on first log.
-        StudySession.objects.update_or_create(
-            user=request.user,
-            unit=unit,
-            activity_type=StudySession.ActivityType.READING,
-            defaults={
-                "resource": unit.resource,
-                "date": datetime.date.today(),
-                "duration_minutes": new_duration,
-                "status": StudySession.Status.LOGGED,
-            },
-        )
+        read_activity = Activity.objects.filter(slug=_READ_SLUG, is_system=True).first()
+        if read_activity:
+            StudySession.objects.update_or_create(
+                user=request.user,
+                unit=unit,
+                activity=read_activity,
+                defaults={
+                    "resource": unit.resource,
+                    "date": datetime.date.today(),
+                    "duration_minutes": new_duration,
+                    "status": StudySession.Status.LOGGED,
+                },
+            )
 
         return JsonResponse({"ok": True, "unit": unit.to_inline_dict()})
