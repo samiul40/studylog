@@ -1,11 +1,13 @@
 import datetime
 import json
+import zoneinfo
 
 from django.contrib import messages
 from django.db.models import Q
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse_lazy
+from django.utils import timezone as dj_timezone
 from django.utils.text import slugify
 from django.views import View
 from django.views.generic import CreateView, DeleteView, UpdateView
@@ -22,6 +24,16 @@ def _parse_date(value: str | None) -> datetime.date | None:
         return datetime.date.fromisoformat(value) if value else None
     except ValueError:
         return None
+
+
+def _user_today(request) -> datetime.date:
+    """Return today's date in the user's profile timezone."""
+    tz_name = getattr(getattr(request.user, "profile", None), "timezone", None) or "UTC"
+    try:
+        tz = zoneinfo.ZoneInfo(tz_name)
+        return dj_timezone.now().astimezone(tz).date()
+    except Exception:
+        return datetime.date.today()
 
 
 def _find_or_create_activity(name: str, user) -> Activity | None:
@@ -132,8 +144,9 @@ class StudySessionCreateView(UserPermissionMixin, CreateView):
             .filter(status=StudySession.Status.LOGGED)
             .select_related("resource", "activity")[:4]
         )
-        ctx["today_iso"] = datetime.date.today().isoformat()
+        ctx["today_iso"] = _user_today(self.request).isoformat()
         ctx["resource_prefill"] = self.request.GET.get("resource", "")
+        ctx["date_prefill"] = self.request.GET.get("date", "")
         return ctx
 
     def form_valid(self, form):
@@ -196,7 +209,7 @@ class StudySessionListView(UserPermissionMixin, View):
     permission_required = "learning.view_studysession"
 
     def get(self, request):
-        today = datetime.date.today()
+        today = _user_today(request)
         year = int(request.GET.get("year", today.year))
         month = int(request.GET.get("month", today.month))
         activity_slug = request.GET.get("activity", "").strip()

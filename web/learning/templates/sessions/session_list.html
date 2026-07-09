@@ -14,13 +14,13 @@
   <nav class="sl-crumbs" aria-label="Breadcrumb">
     <a href="{% url 'learning:dashboard' %}">Dashboard</a>
     <span class="sl-crumbs__sep" aria-hidden="true">/</span>
-    <span class="sl-crumbs__cur" aria-current="page">Sessions</span>
+    <span class="sl-crumbs__cur" aria-current="page">Log</span>
   </nav>
 
   {# ── Page header ─────────────────────────────────────────────────────── #}
   <div class="sesshead">
     <div>
-      <h1 class="sesshead__title">Sessions</h1>
+      <h1 class="sesshead__title">Study log</h1>
       <p class="sesshead__sub">Anki, past papers, revision — log the time you put in.</p>
     </div>
     <a href="{% url 'learning:session_create' %}" class="btn-log">
@@ -226,13 +226,13 @@
 
   function fmtFullDate(isoDate) {
     const [y, m, d] = isoDate.split('-').map(Number);
-    const dt = new Date(y, m - 1, d);
-    return dt.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
+    const dt = new Date(Date.UTC(y, m - 1, d));
+    return dt.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' });
   }
 
   function fmtMonthYear(isoDate) {
     const [y, m] = isoDate.split('-').map(Number);
-    return new Date(y, m - 1, 1).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+    return new Date(Date.UTC(y, m - 1, 1)).toLocaleDateString('en-GB', { month: 'long', year: 'numeric', timeZone: 'UTC' });
   }
 
   function isPast(isoDate) {
@@ -450,7 +450,7 @@
       return `<div class="daypanel__empty">
         ${IC.empty}
         <p>${past ? 'No sessions logged this day.' : 'Nothing here yet.'}</p>
-        <a href="${URL_CREATE}" class="btn-log">
+        <a href="${URL_CREATE}?date=${encodeURIComponent(selDate)}" class="btn-log">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
                stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M12 5v14M5 12h14"/>
@@ -669,13 +669,23 @@
     };
 
     // Title / date / status badge
-    document.getElementById('js-sheet-title').textContent = planned ? 'Edit planned session' : 'Edit session';
-    document.getElementById('js-sheet-date').textContent  = fmtFullDate(session.date);
+    const sheetKind = planned ? 'Edit planned session' : 'Edit session';
+    if (session.title) {
+      document.getElementById('js-sheet-title').textContent = session.title;
+      document.getElementById('js-sheet-date').textContent  = sheetKind + ' · ' + fmtFullDate(session.date);
+    } else {
+      document.getElementById('js-sheet-title').textContent = sheetKind;
+      document.getElementById('js-sheet-date').textContent  = fmtFullDate(session.date);
+    }
 
-    // Resource link (read-only)
+    // Resource / unit (read-only)
     const resEl = document.getElementById('js-sheet-resource');
     if (session.resource_title) {
-      resEl.innerHTML = IC.tag + esc(session.resource_title);
+      let resHtml = IC.tag + esc(session.resource_title);
+      if (session.unit_title) {
+        resHtml += ' <span style="opacity:.5;margin:0 2px">›</span> ' + esc(session.unit_title);
+      }
+      resEl.innerHTML = resHtml;
       resEl.hidden = false;
     } else {
       resEl.hidden = true;

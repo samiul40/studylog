@@ -1000,6 +1000,10 @@
   color: var(--ink);
   transition: border-color 0.2s, box-shadow 0.2s;
 
+  [data-theme="dark"] &::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+  }
+
   &::placeholder { color: var(--ink-faint); opacity: 0.6; }
 
   &:focus {
@@ -1183,6 +1187,13 @@
     &:not(.empty):hover {
       box-shadow: 0 10px 22px -12px rgba(0, 0, 0, 0.7);
     }
+
+    // Heat levels: mix against transparent (not --card) so the green reads
+    // clearly on the dark background instead of disappearing into near-black.
+    &.l1 { background: color-mix(in srgb, var(--emerald) 20%, transparent); }
+    &.l2 { background: color-mix(in srgb, var(--emerald) 40%, transparent); }
+    &.l3 { background: color-mix(in srgb, var(--emerald) 65%, transparent); }
+    &.l4 { background: var(--emerald); }
   }
 
   .cell__num {

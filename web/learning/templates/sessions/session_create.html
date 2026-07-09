@@ -14,9 +14,9 @@
   <nav class="ss-crumbs" aria-label="breadcrumb">
     <a href="{% url 'learning:dashboard' %}">Dashboard</a>
     <span class="ss-crumbs__sep" aria-hidden="true">/</span>
-    <a href="{% url 'learning:session_list' %}">Sessions</a>
+    <a href="{% url 'learning:session_list' %}">Log</a>
     <span class="ss-crumbs__sep" aria-hidden="true">/</span>
-    <span class="ss-crumbs__cur" aria-current="page">Log</span>
+    <span class="ss-crumbs__cur" aria-current="page">New session</span>
   </nav>
 
   {# ── Main card ──────────────────────────────────────────────────────────── #}
@@ -119,10 +119,10 @@
         <div class="ss-field">
           <label class="ss-field__label" id="ss-date-label" for="id_date">Date</label>
           <div class="ss-pillrow" id="ss-dategroup">
-            <button type="button" class="ss-pill on" data-date="today" id="ss-date-today">Today</button>
+            <button type="button" class="ss-pill{% if not date_prefill or date_prefill == today_iso %} on{% endif %}" data-date="today" id="ss-date-today">Today</button>
             <button type="button" class="ss-pill" data-date="alt" id="ss-date-alt">Yesterday</button>
             <input type="date" name="date" id="id_date" class="ss-dateinput"
-                   value="{% if form.is_bound %}{{ form.data.date }}{% else %}{{ today_iso }}{% endif %}"
+                   value="{% if form.is_bound %}{{ form.data.date }}{% elif date_prefill %}{{ date_prefill }}{% else %}{{ today_iso }}{% endif %}"
                    aria-label="Specific date">
           </div>
           {% if form.date.errors %}
