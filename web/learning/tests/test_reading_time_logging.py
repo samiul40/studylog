@@ -18,7 +18,7 @@ import pytest
 from django.urls import reverse
 from model_bakery import baker
 
-from learning.models import LearningResource, LearningUnit, StudySession
+from learning.models import Activity, LearningResource, LearningUnit, StudySession
 from learning.services.progress import get_resource_progress
 from learning.services.sessions import upsert_resource_session
 
@@ -30,6 +30,10 @@ TODAY = datetime.date.today()
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
+
+def get_activity(slug):
+    return Activity.objects.get(slug=slug, is_system=True)
 
 
 def make_reading_resource(user):
@@ -113,7 +117,7 @@ class TestStudySessionUnitFK:
             user=user,
             resource=resource,
             unit=unit,
-            activity_type=StudySession.ActivityType.READING,
+            activity=get_activity("read"),
             date=TODAY,
             duration_minutes=30,
         )
@@ -129,7 +133,7 @@ class TestStudySessionUnitFK:
             user=user,
             resource=resource,
             unit=None,
-            activity_type=StudySession.ActivityType.FLASHCARDS,
+            activity=get_activity("flashcards"),
             date=TODAY,
             duration_minutes=30,
         )
@@ -146,7 +150,7 @@ class TestStudySessionUnitFK:
             user=user,
             resource=resource,
             unit=unit,
-            activity_type=StudySession.ActivityType.READING,
+            activity=get_activity("read"),
             date=TODAY,
             duration_minutes=20,
         )
@@ -166,23 +170,10 @@ class TestUpsertResourceSessionWithUnit:
         resource = make_video_resource(user)
         unit_a = make_chapter(resource)
         unit_b = make_chapter(resource)
+        watch = get_activity("watch")
 
-        upsert_resource_session(
-            user,
-            resource,
-            TODAY,
-            StudySession.ActivityType.VIDEO_WATCH,
-            10,
-            unit=unit_a,
-        )
-        upsert_resource_session(
-            user,
-            resource,
-            TODAY,
-            StudySession.ActivityType.VIDEO_WATCH,
-            15,
-            unit=unit_b,
-        )
+        upsert_resource_session(user, resource, TODAY, watch, 10, unit=unit_a)
+        upsert_resource_session(user, resource, TODAY, watch, 15, unit=unit_b)
 
         qs = StudySession.objects.filter(user=user, resource=resource)
         assert qs.count() == 2
@@ -192,23 +183,10 @@ class TestUpsertResourceSessionWithUnit:
     def test_accumulates_on_same_unit_same_day(self, user):
         resource = make_video_resource(user)
         unit = make_chapter(resource)
+        watch = get_activity("watch")
 
-        upsert_resource_session(
-            user,
-            resource,
-            TODAY,
-            StudySession.ActivityType.VIDEO_WATCH,
-            5,
-            unit=unit,
-        )
-        upsert_resource_session(
-            user,
-            resource,
-            TODAY,
-            StudySession.ActivityType.VIDEO_WATCH,
-            10,
-            unit=unit,
-        )
+        upsert_resource_session(user, resource, TODAY, watch, 5, unit=unit)
+        upsert_resource_session(user, resource, TODAY, watch, 10, unit=unit)
 
         assert StudySession.objects.get(unit=unit).duration_minutes == 15
 
@@ -216,32 +194,12 @@ class TestUpsertResourceSessionWithUnit:
         resource = make_video_resource(user)
         unit_a = make_chapter(resource)
         unit_b = make_chapter(resource)
+        watch = get_activity("watch")
 
-        upsert_resource_session(
-            user,
-            resource,
-            TODAY,
-            StudySession.ActivityType.VIDEO_WATCH,
-            20,
-            unit=unit_a,
-        )
-        upsert_resource_session(
-            user,
-            resource,
-            TODAY,
-            StudySession.ActivityType.VIDEO_WATCH,
-            30,
-            unit=unit_b,
-        )
+        upsert_resource_session(user, resource, TODAY, watch, 20, unit=unit_a)
+        upsert_resource_session(user, resource, TODAY, watch, 30, unit=unit_b)
         # Rewind unit_a — must not affect unit_b
-        upsert_resource_session(
-            user,
-            resource,
-            TODAY,
-            StudySession.ActivityType.VIDEO_WATCH,
-            -10,
-            unit=unit_a,
-        )
+        upsert_resource_session(user, resource, TODAY, watch, -10, unit=unit_a)
 
         assert StudySession.objects.get(unit=unit_a).duration_minutes == 10
         assert StudySession.objects.get(unit=unit_b).duration_minutes == 30
@@ -258,9 +216,7 @@ class TestCompleteReadingViewExtended:
         unit = make_chapter(resource)
         complete_reading(client_logged_in, unit, 45)
 
-        session = StudySession.objects.get(
-            user=user, activity_type=StudySession.ActivityType.READING
-        )
+        session = StudySession.objects.get(user=user, activity=get_activity("read"))
         assert session.unit == unit
 
     def test_reading_minutes_stored_on_unit(self, client_logged_in, user):
@@ -289,7 +245,7 @@ class TestCompleteReadingViewExtended:
         sessions = StudySession.objects.filter(
             user=user,
             unit=unit,
-            activity_type=StudySession.ActivityType.READING,
+            activity=get_activity("read"),
         )
         assert sessions.count() == 1
         assert sessions.first().duration_minutes == 40
@@ -303,7 +259,7 @@ class TestCompleteReadingViewExtended:
 
         assert (
             StudySession.objects.filter(
-                user=user, activity_type=StudySession.ActivityType.READING
+                user=user, activity=get_activity("read")
             ).count()
             == 2
         )
@@ -321,6 +277,7 @@ class TestReadingUncheck:
         resource = make_reading_resource(user)
         ch1 = make_chapter(resource, status=LearningUnit.StatusChoices.COMPLETED)
         ch2 = make_chapter(resource, status=LearningUnit.StatusChoices.COMPLETED)
+        read = get_activity("read")
 
         # Create a session for each chapter
         baker.make(
@@ -328,7 +285,7 @@ class TestReadingUncheck:
             user=user,
             resource=resource,
             unit=ch1,
-            activity_type=StudySession.ActivityType.READING,
+            activity=read,
             date=TODAY,
             duration_minutes=20,
         )
@@ -337,7 +294,7 @@ class TestReadingUncheck:
             user=user,
             resource=resource,
             unit=ch2,
-            activity_type=StudySession.ActivityType.READING,
+            activity=read,
             date=TODAY,
             duration_minutes=15,
         )
@@ -403,7 +360,7 @@ class TestVideoSliderToZeroCleanup:
         # Move slider to 20
         patch_unit(client_logged_in, resource, unit, {"video_progress_minutes": 20})
         assert StudySession.objects.filter(
-            user=user, unit=unit, activity_type=StudySession.ActivityType.VIDEO_WATCH
+            user=user, unit=unit, activity=get_activity("watch")
         ).exists()
 
         # Rewind to 0
@@ -411,7 +368,7 @@ class TestVideoSliderToZeroCleanup:
         patch_unit(client_logged_in, resource, unit, {"video_progress_minutes": 0})
 
         assert not StudySession.objects.filter(
-            user=user, unit=unit, activity_type=StudySession.ActivityType.VIDEO_WATCH
+            user=user, unit=unit, activity=get_activity("watch")
         ).exists()
 
     def test_slider_to_zero_does_not_touch_other_units_session(
@@ -439,7 +396,7 @@ class TestVideoSliderToZeroCleanup:
 
         # unit_b session must be untouched
         assert StudySession.objects.filter(
-            user=user, unit=unit_b, activity_type=StudySession.ActivityType.VIDEO_WATCH
+            user=user, unit=unit_b, activity=get_activity("watch")
         ).exists()
 
 
@@ -454,7 +411,7 @@ class TestStudySessionFormUnitField:
 
         form = StudySessionForm(
             data={
-                "activity_type": StudySession.ActivityType.FLASHCARDS,
+                "activity": get_activity("flashcards").pk,
                 "date": str(TODAY),
                 "duration_minutes": 30,
                 "status": StudySession.Status.LOGGED,
@@ -472,7 +429,7 @@ class TestStudySessionFormUnitField:
 
         form = StudySessionForm(
             data={
-                "activity_type": StudySession.ActivityType.READING,
+                "activity": get_activity("read").pk,
                 "date": str(TODAY),
                 "duration_minutes": 20,
                 "status": StudySession.Status.LOGGED,
@@ -493,7 +450,7 @@ class TestStudySessionFormUnitField:
 
         form = StudySessionForm(
             data={
-                "activity_type": StudySession.ActivityType.READING,
+                "activity": get_activity("read").pk,
                 "date": str(TODAY),
                 "duration_minutes": 20,
                 "status": StudySession.Status.LOGGED,
@@ -535,7 +492,7 @@ class TestSessionCreateWithUnit:
         client_logged_in.post(
             url,
             {
-                "activity_type": StudySession.ActivityType.READING,
+                "activity": get_activity("read").pk,
                 "date": str(TODAY),
                 "duration_minutes": 30,
                 "status": StudySession.Status.LOGGED,
@@ -552,7 +509,7 @@ class TestSessionCreateWithUnit:
         client_logged_in.post(
             url,
             {
-                "activity_type": StudySession.ActivityType.FLASHCARDS,
+                "activity": get_activity("flashcards").pk,
                 "date": str(TODAY),
                 "duration_minutes": 30,
                 "status": StudySession.Status.LOGGED,
