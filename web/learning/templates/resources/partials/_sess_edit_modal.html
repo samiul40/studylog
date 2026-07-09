@@ -1,0 +1,54 @@
+{# ── Session edit modal ──────────────────────────────────────────────────────── #}
+<div class="modal fade modal--rd" id="sessEditModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="9"></circle>
+            <path d="M12 7v5l3 2"></path>
+          </svg>
+          Edit session
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"
+                aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="sfield">
+          <div class="modal-field-label">Activity</div>
+          <div class="sactgrid" id="sessActGrid"></div>
+        </div>
+        <div class="sfield" style="margin-top:18px">
+          <div class="modal-field-label">Duration</div>
+          <input type="text" class="modal-input" id="sessDurInput"
+                 placeholder="e.g. 45m or 1h 5m">
+        </div>
+        <div class="sfield" style="margin-top:18px">
+          <div class="modal-field-label">Title</div>
+          <input type="text" class="modal-input" id="sessTitleInput"
+                 placeholder="Name this session">
+        </div>
+        <div class="sfield" style="margin-top:18px">
+          <div class="modal-field-label">Notes</div>
+          <textarea class="modal-input sinput--ta" id="sessNotesInput" rows="4"
+                    placeholder="Add a takeaway or what to revisit…"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="rdbtn rdbtn--danger rdbtn--sm" id="sessDeleteBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
+          </svg>
+          Delete
+        </button>
+        <div style="flex:1"></div>
+        <button type="button" class="rdbtn rdbtn--ghost rdbtn--sm"
+                data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="rdbtn rdbtn--primary rdbtn--sm"
+                id="sessSaveBtn">Save changes</button>
+      </div>
+    </div>
+  </div>
+</div>

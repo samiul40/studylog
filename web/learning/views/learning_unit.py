@@ -1,3 +1,4 @@
+import datetime
 import json
 import logging
 
@@ -12,7 +13,11 @@ from django.views.generic import CreateView, DeleteView, UpdateView
 
 from learning.forms import LearningUnitForm
 from learning.mixins import UserPermissionMixin
-from learning.models import LearningResource, LearningUnit
+from learning.models import Activity, LearningResource, LearningUnit, StudySession
+from learning.services.sessions import upsert_resource_session
+
+_WATCH_SLUG = "watch"
+_READ_SLUG = "read"
 
 logger = logging.getLogger(__name__)
 
@@ -224,6 +229,17 @@ class LearningUnitInlinePatchView(UserPermissionMixin, View):
             )
             return JsonResponse({"ok": False, "error": "Invalid JSON"}, status=400)
 
+        # Capture before patching so we can compute deltas after save.
+        old_progress = unit.video_progress_minutes
+        old_status = unit.status
+
+        # Detect a reading chapter being unchecked (completed → not_started).
+        is_reading_uncheck = (
+            data.get("status") == LearningUnit.StatusChoices.NOT_STARTED
+            and old_status == LearningUnit.StatusChoices.COMPLETED
+            and unit.resource.resource_type.content_kind == "reading"
+        )
+
         if "duration_minutes" in data:
             val = data["duration_minutes"]
             unit.duration_minutes = int(val) if val not in (None, "") else None
@@ -236,6 +252,9 @@ class LearningUnitInlinePatchView(UserPermissionMixin, View):
             val = data["status"]
             if val in dict(LearningUnit.StatusChoices.choices):
                 unit.status = val
+
+        if is_reading_uncheck:
+            unit.reading_minutes = None
 
         if "title" in data:
             val = str(data["title"]).strip()
@@ -250,4 +269,113 @@ class LearningUnitInlinePatchView(UserPermissionMixin, View):
         except ValidationError as e:
             return JsonResponse({"ok": False, "error": str(e)}, status=400)
 
-        return JsonResponse({"ok": True, "unit": unit.to_inline_dict()})
+        # Reading chapter unchecked — delete its per-unit session.
+        cleared_unit_id = None
+        if is_reading_uncheck:
+            read_activity = Activity.objects.filter(
+                slug=_READ_SLUG, is_system=True
+            ).first()
+            if read_activity:
+                StudySession.objects.filter(
+                    user=request.user,
+                    unit=unit,
+                    activity=read_activity,
+                ).delete()
+                cleared_unit_id = unit.id
+
+        # Auto-log a watch session when video progress changes.
+        if "video_progress_minutes" in data and unit.video_progress_minutes is not None:
+            delta = unit.video_progress_minutes - (old_progress or 0)
+            watch_activity = Activity.objects.filter(
+                slug=_WATCH_SLUG, is_system=True
+            ).first()
+            if delta != 0 and watch_activity:
+                upsert_resource_session(
+                    user=request.user,
+                    resource=unit.resource,
+                    unit=unit,
+                    date=datetime.date.today(),
+                    activity=watch_activity,
+                    delta_minutes=delta,
+                )
+            # Slider rewound to 0 — remove the now-empty session.
+            if unit.video_progress_minutes == 0 and watch_activity:
+                StudySession.objects.filter(
+                    user=request.user,
+                    unit=unit,
+                    activity=watch_activity,
+                    duration_minutes=0,
+                ).delete()
+
+        return JsonResponse(
+            {
+                "ok": True,
+                "unit": unit.to_inline_dict(),
+                "cleared_unit_id": cleared_unit_id,
+            }
+        )
+
+
+class LearningUnitCompleteReadingView(UserPermissionMixin, UserUnitMixin, View):
+    """
+    Combined endpoint for reading chapter completion.
+    Marks the unit as COMPLETED and logs a READING session.
+    Accepts JSON: {"duration_minutes": <int>}
+    Returns the updated unit state (same shape as inline patch).
+    duration_minutes=0 is valid — session is logged even without a timed duration.
+    """
+
+    permission_required = "learning.change_learningunit"
+
+    def post(self, request, pk):
+        unit = self.get_unit()
+
+        try:
+            data = json.loads(request.body)
+            new_duration = int(data.get("duration_minutes", 0))
+        except (json.JSONDecodeError, ValueError):
+            return JsonResponse({"ok": False, "error": "Invalid JSON"}, status=400)
+
+        unit.status = LearningUnit.StatusChoices.COMPLETED
+        unit.reading_minutes = new_duration if new_duration > 0 else None
+        unit.save()
+
+        # One session per chapter — update on re-log, create on first log.
+        today = datetime.date.today()
+        read_activity = Activity.objects.filter(slug=_READ_SLUG, is_system=True).first()
+        new_session_data = None
+        if read_activity:
+            session, _ = StudySession.objects.update_or_create(
+                user=request.user,
+                unit=unit,
+                activity=read_activity,
+                defaults={
+                    "resource": unit.resource,
+                    "date": today,
+                    "duration_minutes": new_duration,
+                    "status": StudySession.Status.LOGGED,
+                },
+            )
+            new_session_data = {
+                "id": session.id,
+                "title": unit.title,
+                "act": _READ_SLUG,
+                "act_label": read_activity.name,
+                "mins": new_duration,
+                "when": "Today",
+                "date": today.isoformat(),
+                "status": "done",
+                "overdue": False,
+                "notes": session.notes,
+                "auto": True,
+                "unit_id": unit.id,
+                "chapter": unit.title,
+            }
+
+        return JsonResponse(
+            {
+                "ok": True,
+                "unit": unit.to_inline_dict(),
+                "session": new_session_data,
+            }
+        )

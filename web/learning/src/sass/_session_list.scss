@@ -1,0 +1,1246 @@
+@use '../../../studyflow/src/sass/abstracts/variables' as *;
+
+// =============================================================================
+// _session_list.scss — Sessions calendar / heat-map page (sl- namespace)
+// Design tokens come from :root (defined in _variables.scss).
+// =============================================================================
+
+// ---------------------------------------------------------------------------
+// Page shell
+// ---------------------------------------------------------------------------
+.sl-bg {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: $font-sans;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+.sl-page {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 34px 28px 48px;
+}
+
+// ---------------------------------------------------------------------------
+// Breadcrumb
+// ---------------------------------------------------------------------------
+.sl-crumbs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px;
+  font-family: $font-mono;
+  font-size: 0.72rem;
+  letter-spacing: 0.02em;
+  color: var(--ink-faint);
+  margin-bottom: 22px;
+
+  a {
+    color: var(--ink-soft);
+    text-decoration: none;
+    &:hover { color: var(--ink); }
+  }
+
+  &__sep { opacity: 0.5; }
+  &__cur { color: var(--ink); font-weight: 600; }
+}
+
+// ---------------------------------------------------------------------------
+// Page header
+// ---------------------------------------------------------------------------
+.sesshead {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+
+  &__title {
+    font-family: $font-display;
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1.05;
+  }
+
+  &__sub {
+    color: var(--ink-soft);
+    font-size: 1rem;
+    margin-top: 5px;
+  }
+}
+
+.btn-log {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: $font-sans;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #042b1d;
+  background: var(--emerald);
+  padding: 12px 20px;
+  border: 0;
+  border-radius: 100px;
+  text-decoration: none;
+  box-shadow: 0 1px 0 rgba(255,255,255,0.25) inset, 0 8px 22px -10px rgba(16,185,129,0.7);
+  transition: background 0.2s, transform 0.2s var(--ease-cv);
+  white-space: nowrap;
+
+  svg { width: 17px; height: 17px; display: block; flex-shrink: 0; }
+
+  &:hover {
+    background: var(--emerald-bright);
+    transform: translateY(-2px);
+    color: #042b1d;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Filter bar
+// ---------------------------------------------------------------------------
+.filterbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+
+  &__l {
+    font-family: $font-mono;
+    font-size: 0.62rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-right: 4px;
+  }
+}
+
+.fchip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: $font-sans;
+  font-weight: 600;
+  font-size: 0.84rem;
+  color: var(--ink-soft);
+  border: 1.5px solid var(--line);
+  border-radius: 100px;
+  padding: 7px 13px;
+  background: var(--field);
+  cursor: pointer;
+  transition: all 0.16s;
+
+  svg { width: 14px; height: 14px; display: block; }
+
+  &:hover {
+    border-color: color-mix(in srgb, var(--ink) 24%, transparent);
+    color: var(--ink);
+  }
+
+  &.on {
+    border-color: var(--emerald);
+    background: color-mix(in srgb, var(--emerald) 12%, transparent);
+    color: var(--emerald-deep);
+  }
+
+  [data-theme="dark"] &.on { color: var(--emerald-bright); }
+}
+
+// ---------------------------------------------------------------------------
+// Two-column grid
+// ---------------------------------------------------------------------------
+.sess-grid {
+  display: grid;
+  grid-template-columns: 1fr 400px;
+  gap: 22px;
+  align-items: start;
+}
+
+// ---------------------------------------------------------------------------
+// Calendar card
+// ---------------------------------------------------------------------------
+.calcard {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  box-shadow: 0 30px 60px -38px rgba(13,24,18,0.45), 0 2px 0 rgba(255,255,255,0.5) inset;
+  padding: 24px;
+
+  [data-theme="dark"] & {
+    box-shadow: 0 40px 80px -40px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.02) inset;
+  }
+}
+
+.cal__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.cal__month {
+  font-family: $font-display;
+  font-weight: 700;
+  font-size: 1.35rem;
+  letter-spacing: -0.025em;
+}
+
+.cal__summary {
+  font-family: $font-mono;
+  font-size: 0.74rem;
+  color: var(--ink-faint);
+  margin-top: 5px;
+}
+
+.cal__nav {
+  display: flex;
+  gap: 6px;
+}
+
+.cal__btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: 1.5px solid var(--line);
+  background: var(--field);
+  color: var(--ink-soft);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: all 0.16s;
+
+  svg { width: 16px; height: 16px; display: block; }
+
+  &:hover {
+    border-color: color-mix(in srgb, var(--ink) 24%, transparent);
+    color: var(--ink);
+  }
+}
+
+.cal__today {
+  font-family: $font-sans;
+  font-weight: 600;
+  font-size: 0.82rem;
+  color: var(--emerald-deep);
+  padding: 0 12px;
+  height: 34px;
+  border-radius: 10px;
+  border: 1.5px solid var(--line);
+  background: var(--field);
+  cursor: pointer;
+  transition: border-color 0.16s;
+
+  &:hover { border-color: var(--emerald); }
+
+  [data-theme="dark"] & { color: var(--emerald-bright); }
+}
+
+// DOW header
+.cal__dow {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+  margin-bottom: 8px;
+
+  span {
+    text-align: center;
+    font-family: $font-mono;
+    font-size: 0.64rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+}
+
+// Grid
+.cal__grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+}
+
+// Day cells
+.cell {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  border-radius: 12px;
+  border: 1.5px solid transparent;
+  background: color-mix(in srgb, var(--ink) 4%, transparent);
+  display: flex;
+  flex-direction: column;
+  padding: 8px 9px;
+  cursor: pointer;
+  transition: transform 0.14s, box-shadow 0.14s, border-color 0.14s;
+  overflow: hidden;
+
+  &.empty {
+    background: transparent;
+    cursor: default;
+    border: none;
+  }
+
+  &:not(.empty):hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 22px -12px rgba(13,24,18,0.4);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(16,185,129,0.18);
+  }
+
+  // Heat levels
+  &.l1 { background: color-mix(in srgb, var(--emerald) 16%, var(--card)); }
+  &.l2 { background: color-mix(in srgb, var(--emerald) 34%, var(--card)); }
+  &.l3 { background: color-mix(in srgb, var(--emerald) 58%, var(--card)); }
+  &.l4 { background: var(--emerald); }
+
+  &.l1 .cell__num,
+  &.l2 .cell__num { color: var(--emerald-deep); }
+
+  &.l3 .cell__num,
+  &.l4 .cell__num,
+  &.l3 .cell__mins,
+  &.l4 .cell__mins { color: #042b1d; }
+
+  [data-theme="dark"] &.l1 .cell__num,
+  [data-theme="dark"] &.l2 .cell__num { color: var(--emerald-bright); }
+
+  &.l1 .cell__mins,
+  &.l2 .cell__mins { color: var(--emerald-deep); }
+
+  [data-theme="dark"] &.l1 .cell__mins,
+  [data-theme="dark"] &.l2 .cell__mins { color: var(--emerald-bright); }
+
+  // State rings
+  &.today { border-color: var(--ink); }
+  [data-theme="dark"] &.today { border-color: var(--emerald-bright); }
+
+  &.sel {
+    border-color: var(--emerald);
+    box-shadow: 0 0 0 4px rgba(16,185,129,0.18);
+  }
+
+  // Planned-only (future intent, no done sessions) — green dashed
+  &.planned {
+    background: transparent;
+    border: 1.5px dashed color-mix(in srgb, var(--emerald) 55%, transparent);
+
+    .cell__num { color: var(--emerald-deep); }
+    [data-theme="dark"] & .cell__num { color: var(--emerald-bright); }
+  }
+
+  // Overdue (planned + past) — amber dashed border, amber tint background.
+  // Must override the heat-level (.l1–.l4) green backgrounds.
+  &.overdue,
+  &.overdue.l1,
+  &.overdue.l2,
+  &.overdue.l3,
+  &.overdue.l4 {
+    border: 1.5px dashed color-mix(in srgb, var(--amber) 70%, transparent);
+    background: color-mix(in srgb, var(--amber) 9%, var(--card));
+
+    .cell__num,
+    .cell__mins { color: color-mix(in srgb, var(--amber) 85%, var(--ink)); }
+
+    [data-theme="dark"] & .cell__num,
+    [data-theme="dark"] & .cell__mins { color: var(--amber); }
+  }
+}
+
+.cell__num {
+  font-family: $font-mono;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+  position: relative;
+  z-index: 2;
+}
+
+.cell__mins {
+  margin-top: auto;
+  font-family: $font-mono;
+  font-size: 0.66rem;
+  font-weight: 600;
+  position: relative;
+  z-index: 2;
+}
+
+.cell__plan {
+  margin-top: auto;
+  font-family: $font-mono;
+  font-size: 0.58rem;
+  font-weight: 600;
+  color: var(--emerald-deep);
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+
+  [data-theme="dark"] & { color: var(--emerald-bright); }
+
+  .cell.overdue & { color: color-mix(in srgb, var(--amber) 88%, var(--ink)); }
+}
+
+.cell__plandot {
+  position: absolute;
+  top: 7px;
+  right: 7px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  border: 1.5px dashed var(--emerald-deep);
+  z-index: 2;
+
+  [data-theme="dark"] & { border-color: var(--emerald-bright); }
+}
+
+.cell__dots {
+  display: flex;
+  gap: 3px;
+  margin-top: 3px;
+  position: relative;
+  z-index: 2;
+
+  i {
+    display: block;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: 0.5;
+  }
+}
+
+// Legend
+.cal__legend {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 18px;
+  font-size: 0.74rem;
+  color: var(--ink-faint);
+
+  .sw {
+    width: 15px;
+    height: 15px;
+    border-radius: 5px;
+    flex: 0 0 auto;
+
+    &.l0 { background: color-mix(in srgb, var(--ink) 4%, transparent); }
+    &.l1 { background: color-mix(in srgb, var(--emerald) 16%, var(--card)); }
+    &.l2 { background: color-mix(in srgb, var(--emerald) 34%, var(--card)); }
+    &.l3 { background: color-mix(in srgb, var(--emerald) 58%, var(--card)); }
+    &.l4 { background: var(--emerald); }
+  }
+
+  &__right {
+    margin-left: auto;
+    font-family: $font-mono;
+    font-size: 0.64rem;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Day panel
+// ---------------------------------------------------------------------------
+.daypanel {
+  position: sticky;
+  top: 88px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  box-shadow: 0 30px 60px -38px rgba(13,24,18,0.45), 0 2px 0 rgba(255,255,255,0.5) inset;
+  padding: 22px;
+  min-height: 180px;
+
+  [data-theme="dark"] & {
+    box-shadow: 0 40px 80px -40px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.02) inset;
+  }
+
+  &__head {
+    padding-bottom: 16px;
+    margin-bottom: 16px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  &__date {
+    font-family: $font-display;
+    font-weight: 700;
+    font-size: 1.2rem;
+    letter-spacing: -0.025em;
+  }
+
+  &__meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+    font-size: 0.84rem;
+    color: var(--ink-soft);
+    flex-wrap: wrap;
+
+    .chip {
+      font-family: $font-mono;
+      font-weight: 600;
+      font-size: 0.78rem;
+      color: var(--ink);
+      background: color-mix(in srgb, var(--emerald) 14%, transparent);
+      padding: 4px 10px;
+      border-radius: 8px;
+    }
+
+    .dot {
+      width: 3px;
+      height: 3px;
+      border-radius: 50%;
+      background: var(--ink-faint);
+      flex: 0 0 auto;
+    }
+  }
+
+  &__empty {
+    text-align: center;
+    padding: 30px 10px;
+    color: var(--ink-faint);
+
+    // Direct child only — keeps the calendar icon large without affecting
+    // the + SVG nested inside the .btn-log child.
+    > svg {
+      width: 34px;
+      height: 34px;
+      margin: 0 auto 12px;
+      display: block;
+      opacity: 0.5;
+    }
+
+    p { font-size: 0.88rem; margin-bottom: 18px; }
+
+    .btn-log {
+      font-size: 1rem;
+      padding: 16px 22px;
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Session list + rows
+// ---------------------------------------------------------------------------
+.slist {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+
+  & + & { margin-top: 9px; }
+}
+
+.srow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 15px;
+  padding: 13px 16px;
+  transition: border-color 0.18s, transform 0.18s;
+
+  &:hover {
+    border-color: color-mix(in srgb, var(--ink) 22%, transparent);
+    transform: translateY(-1px);
+  }
+
+  &__ic {
+    width: 40px;
+    height: 40px;
+    flex: 0 0 auto;
+    border-radius: 11px;
+    display: grid;
+    place-items: center;
+    background: color-mix(in srgb, var(--emerald) 14%, transparent);
+    color: var(--emerald-deep);
+
+    svg { width: 19px; height: 19px; display: block; }
+
+    [data-theme="dark"] & { color: var(--emerald-bright); }
+  }
+
+  &__main { flex: 1; min-width: 0; }
+
+  &__t {
+    font-weight: 600;
+    font-size: 0.96rem;
+    color: var(--ink);
+  }
+
+  &__meta {
+    font-size: 0.82rem;
+    color: var(--ink-soft);
+    margin-top: 2px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+
+    .dot {
+      width: 3px;
+      height: 3px;
+      border-radius: 50%;
+      background: var(--ink-faint);
+      flex: 0 0 auto;
+    }
+  }
+
+  &__res {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+
+    svg { width: 13px; height: 13px; opacity: 0.7; display: block; }
+  }
+
+  &__dur {
+    font-family: $font-mono;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--ink);
+    background: color-mix(in srgb, var(--ink) 6%, transparent);
+    padding: 6px 11px;
+    border-radius: 9px;
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+
+  // Clickable edit rows
+  &--edit {
+    cursor: pointer;
+
+    .srow__go {
+      width: 18px;
+      height: 18px;
+      flex: 0 0 auto;
+      color: var(--ink-faint);
+      opacity: 0;
+      transform: translateX(-4px);
+      transition: opacity 0.16s, transform 0.16s;
+      display: block;
+    }
+
+    &:hover {
+      .srow__go { opacity: 1; transform: none; }
+      .srow__t { color: var(--emerald-deep); }
+    }
+
+    [data-theme="dark"] &:hover .srow__t { color: var(--emerald-bright); }
+  }
+
+  // Planned row
+  &--planned {
+    border-style: dashed;
+    border-color: color-mix(in srgb, var(--emerald) 45%, transparent);
+    background: color-mix(in srgb, var(--emerald) 4%, transparent);
+    flex-wrap: wrap;
+
+    .srow__ic {
+      background: transparent;
+      border: 1.5px dashed color-mix(in srgb, var(--emerald) 45%, transparent);
+    }
+
+    .srow__done { flex: 1 1 100%; justify-content: center; margin-top: 4px; }
+  }
+
+  // Overdue row
+  &--overdue {
+    border-color: color-mix(in srgb, var(--amber) 55%, transparent);
+    background: color-mix(in srgb, var(--amber) 7%, transparent);
+
+    .srow__ic {
+      color: color-mix(in srgb, var(--amber) 85%, var(--ink));
+      border-color: color-mix(in srgb, var(--amber) 50%, transparent);
+      background: transparent;
+    }
+  }
+
+  // Mark-done / Reschedule action button on planned rows
+  &__done {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: $font-sans;
+    font-weight: 600;
+    font-size: 0.8rem;
+    color: #042b1d;
+    background: var(--emerald);
+    border: 0;
+    padding: 8px 13px;
+    border-radius: 100px;
+    flex: 0 0 auto;
+    cursor: pointer;
+    transition: background 0.18s;
+
+    svg { width: 14px; height: 14px; display: block; }
+
+    &:hover { background: var(--emerald-bright); }
+
+    &--ghost {
+      background: transparent;
+      color: var(--amber);
+      border: 1.5px solid color-mix(in srgb, var(--amber) 45%, transparent);
+
+      &:hover { background: color-mix(in srgb, var(--amber) 12%, transparent); }
+    }
+  }
+}
+
+// Plan / Missed tags
+.plan-tag {
+  font-family: $font-mono;
+  font-size: 0.56rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 100px;
+  vertical-align: middle;
+  flex: 0 0 auto;
+  background: color-mix(in srgb, var(--emerald) 16%, transparent);
+  color: var(--emerald-deep);
+
+  [data-theme="dark"] & { color: var(--emerald-bright); }
+
+  &--overdue {
+    background: color-mix(in srgb, var(--amber) 20%, transparent);
+    color: color-mix(in srgb, var(--amber) 88%, var(--ink));
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Edit sheet (modal)
+// ---------------------------------------------------------------------------
+.sheet-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  background: rgba(13,24,18,0.42);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+
+  &.open { display: flex; }
+
+  [data-theme="dark"] & { background: rgba(0,0,0,0.6); }
+}
+
+.sheet {
+  width: 100%;
+  max-width: 600px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  box-shadow: 0 40px 90px -30px rgba(13,24,18,0.6);
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: slSheetIn 0.24s var(--ease-cv);
+
+  @media (prefers-reduced-motion: reduce) { animation: none; }
+
+  &__head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 24px 26px 18px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  &__title {
+    font-family: $font-display;
+    font-size: 1.3rem;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    line-height: 1.05;
+  }
+
+  &__date {
+    font-family: $font-mono;
+    font-size: 0.76rem;
+    color: var(--ink-faint);
+    margin-top: 5px;
+  }
+
+  &__resource {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 6px;
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: var(--ink-soft);
+
+    svg { width: 13px; height: 13px; flex-shrink: 0; }
+  }
+
+  &__close {
+    width: 34px;
+    height: 34px;
+    flex: 0 0 auto;
+    border-radius: 10px;
+    border: 1.5px solid var(--line);
+    background: var(--field);
+    color: var(--ink-soft);
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    transition: all 0.16s;
+
+    svg { width: 16px; height: 16px; display: block; }
+
+    &:hover {
+      color: var(--ink);
+      border-color: color-mix(in srgb, var(--ink) 26%, transparent);
+    }
+  }
+
+  &__status {
+    font-family: $font-mono;
+    font-size: 0.6rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 5px 11px;
+    border-radius: 100px;
+    align-self: center;
+    background: color-mix(in srgb, var(--emerald) 16%, transparent);
+    color: var(--emerald-deep);
+
+    [data-theme="dark"] & { color: var(--emerald-bright); }
+
+    &.overdue {
+      background: color-mix(in srgb, var(--amber) 20%, transparent);
+      color: color-mix(in srgb, var(--amber) 88%, var(--ink));
+    }
+  }
+
+  &__body {
+    padding: 22px 26px;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 16px 22px 22px;
+    border-top: 1px solid var(--line);
+
+    .spacer { flex: 1; min-width: 0; }
+
+    // Tighter buttons so all four fit in the 480px sheet without overflow
+    .sl-btn {
+      padding: 10px 12px;
+      font-size: 0.87rem;
+
+      svg { width: 15px; height: 15px; }
+    }
+  }
+}
+
+@keyframes slSheetIn {
+  from { opacity: 0; transform: translateY(14px) scale(0.98); }
+  to   { opacity: 1; transform: none; }
+}
+
+// ---------------------------------------------------------------------------
+// Sheet inner components (field, actgrid, pillrow, control)
+// ---------------------------------------------------------------------------
+.sl-field {
+  &__label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    font-size: 0.92rem;
+    color: var(--ink);
+    margin-bottom: 9px;
+  }
+
+  &__hint {
+    font-size: 0.82rem;
+    color: var(--ink-faint);
+    margin-top: 8px;
+    line-height: 1.45;
+  }
+}
+
+.sl-actgrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 9px;
+}
+
+.sl-actchip {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  align-items: flex-start;
+  border: 1.5px solid var(--line);
+  border-radius: 13px;
+  padding: 13px 13px 12px;
+  background: var(--field);
+  cursor: pointer;
+  transition: border-color 0.16s, background 0.16s, transform 0.16s;
+  text-align: left;
+  font-family: $font-sans;
+
+  &:hover { border-color: color-mix(in srgb, var(--ink) 24%, transparent); }
+  &:active { transform: translateY(1px); }
+
+  &__ic {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    display: grid;
+    place-items: center;
+    background: color-mix(in srgb, var(--ink) 7%, transparent);
+    color: var(--ink-soft);
+    transition: all 0.16s;
+
+    svg { width: 18px; height: 18px; display: block; }
+  }
+
+  &__t {
+    font-weight: 600;
+    font-size: 0.9rem;
+    line-height: 1.2;
+    color: var(--ink);
+  }
+
+  &.on {
+    border-color: var(--emerald);
+    background: color-mix(in srgb, var(--emerald) 10%, transparent);
+    box-shadow: 0 0 0 4px rgba(16,185,129,0.18);
+
+    .sl-actchip__ic {
+      background: var(--emerald);
+      color: #042b1d;
+    }
+  }
+}
+
+.sl-pillrow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.sl-pill {
+  font-family: $font-sans;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--ink-soft);
+  border: 1.5px solid var(--line);
+  border-radius: 100px;
+  padding: 9px 16px;
+  background: var(--field);
+  cursor: pointer;
+  transition: all 0.16s;
+
+  &:hover {
+    border-color: color-mix(in srgb, var(--ink) 24%, transparent);
+    color: var(--ink);
+  }
+
+  &.on {
+    border-color: var(--emerald);
+    background: color-mix(in srgb, var(--emerald) 12%, transparent);
+    color: var(--emerald-deep);
+  }
+
+  [data-theme="dark"] &.on { color: var(--emerald-bright); }
+
+  &--custom {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+
+    svg { width: 14px; height: 14px; display: block; }
+  }
+}
+
+.sl-custom-min {
+  display: none;
+  align-items: center;
+  gap: 8px;
+
+  &.show { display: inline-flex; }
+
+  input {
+    width: 88px;
+    text-align: center;
+    padding: 9px 10px;
+  }
+
+  &__unit {
+    font-size: 0.86rem;
+    color: var(--ink-faint);
+    font-weight: 500;
+  }
+}
+
+.sl-control {
+  width: 100%;
+  background: var(--field);
+  border: 1.5px solid var(--line);
+  border-radius: 13px;
+  padding: 13px 15px;
+  font-family: $font-sans;
+  font-size: 1rem;
+  color: var(--ink);
+  transition: border-color 0.2s, box-shadow 0.2s;
+
+  [data-theme="dark"] &::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+  }
+
+  &::placeholder { color: var(--ink-faint); opacity: 0.6; }
+
+  &:focus {
+    outline: none;
+    border-color: var(--emerald);
+    box-shadow: 0 0 0 4px rgba(16,185,129,0.18);
+  }
+
+  &:hover:not(:focus) {
+    border-color: color-mix(in srgb, var(--ink) 22%, transparent);
+  }
+}
+
+// Tag chip input (matches create-page .ss-taginput / .ss-tag)
+.sl-taginput {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  width: 100%;
+  background: var(--field);
+  border: 1.5px solid var(--line);
+  border-radius: 13px;
+  padding: 8px 12px;
+  cursor: text;
+  transition: border-color 0.2s, box-shadow 0.2s;
+
+  &:focus-within {
+    border-color: var(--emerald);
+    box-shadow: 0 0 0 4px rgba(16,185,129,0.18);
+  }
+
+  input {
+    flex: 1;
+    min-width: 120px;
+    border: none;
+    background: transparent;
+    font-family: $font-sans;
+    font-size: 0.95rem;
+    color: var(--ink);
+    padding: 6px 2px;
+
+    &:focus { outline: none; }
+    &::placeholder { color: var(--ink-faint); opacity: 0.6; }
+  }
+}
+
+.sl-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  font-size: 0.82rem;
+  padding: 5px 6px 5px 11px;
+  border-radius: 100px;
+  background: color-mix(in srgb, var(--emerald) 13%, transparent);
+  color: var(--emerald-deep);
+
+  [data-theme="dark"] & { color: var(--emerald-bright); }
+
+  &__rm {
+    display: grid;
+    place-items: center;
+    width: 17px;
+    height: 17px;
+    border: none;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--emerald-deep) 18%, transparent);
+    color: inherit;
+    cursor: pointer;
+    padding: 0;
+
+    svg { width: 10px; height: 10px; }
+
+    &:hover { background: color-mix(in srgb, var(--emerald-deep) 30%, transparent); }
+  }
+}
+
+// Sheet action buttons (smaller variants of the shared btn styles)
+.sl-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  font-family: $font-sans;
+  font-weight: 600;
+  font-size: 0.92rem;
+  padding: 12px 20px;
+  border-radius: 100px;
+  border: 1.5px solid transparent;
+  cursor: pointer;
+  transition: all 0.22s var(--ease-cv);
+  white-space: nowrap;
+
+  svg { width: 17px; height: 17px; display: block; }
+
+  &--primary {
+    background: var(--emerald);
+    color: #042b1d;
+    box-shadow: 0 1px 0 rgba(255,255,255,0.25) inset, 0 8px 22px -10px rgba(16,185,129,0.7);
+
+    &:hover { background: var(--emerald-bright); transform: translateY(-1px); }
+  }
+
+  &--ghost {
+    background: transparent;
+    color: var(--ink-soft);
+    border-color: var(--line);
+
+    &:hover { color: var(--ink); border-color: color-mix(in srgb, var(--ink) 30%, transparent); }
+  }
+
+  &--danger {
+    background: transparent;
+    color: var(--rose);
+    border-color: color-mix(in srgb, var(--rose) 40%, transparent);
+
+    &:hover {
+      background: color-mix(in srgb, var(--rose) 10%, transparent);
+      border-color: var(--rose);
+    }
+  }
+
+  &--markdone {
+    background: var(--emerald);
+    color: #042b1d;
+    box-shadow: 0 1px 0 rgba(255,255,255,0.25) inset, 0 8px 22px -10px rgba(16,185,129,0.7);
+
+    &:hover { background: var(--emerald-bright); }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Responsive: single column below 940px
+// ---------------------------------------------------------------------------
+@media (max-width: 940px) {
+  .sess-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .sl-page { padding: 20px 16px 36px; }
+  .sesshead { gap: 14px; }
+  .sesshead__title { font-size: 1.6rem; }
+
+  // Calendar: tighter on narrow screens so cells breathe
+  .calcard { padding: 16px 14px; }
+
+  .cal__dow span { font-size: 0.62rem; }
+
+  .cal__grid { gap: 4px; }
+
+  .cell {
+    border-radius: 8px;
+    padding: 5px 5px;
+    align-items: center;
+    justify-content: center;
+
+    &__num { font-size: 0.72rem; }
+
+    // Hide content text on mobile — heat colour + icons tell the story
+    &__mins,
+    &__plan,
+    &__dots { display: none; }
+  }
+
+  .cal__legend { font-size: 0.68rem; gap: 5px; }
+  .cal__legend__right { display: none; }
+}
+
+// ---------------------------------------------------------------------------
+// Dark mode
+// ---------------------------------------------------------------------------
+[data-theme="dark"] {
+  // Calendar cells — base surface is near-invisible at 4% on a near-black page;
+  // lift it to 9% so cells have a visible shape, and use full --ink for numbers.
+  .cell {
+    background: rgba(238, 240, 243, 0.09);
+
+    &:not(.empty):hover {
+      box-shadow: 0 10px 22px -12px rgba(0, 0, 0, 0.7);
+    }
+
+    // Heat levels: mix against transparent (not --card) so the green reads
+    // clearly on the dark background instead of disappearing into near-black.
+    &.l1 { background: color-mix(in srgb, var(--emerald) 20%, transparent); }
+    &.l2 { background: color-mix(in srgb, var(--emerald) 40%, transparent); }
+    &.l3 { background: color-mix(in srgb, var(--emerald) 65%, transparent); }
+    &.l4 { background: var(--emerald); }
+
+    // Overdue — must come after l1–l4 to win the specificity tie.
+    // Compiles to [data-theme="dark"] .cell.overdue.lX → [0,4,0] > l4's [0,3,0].
+    &.overdue,
+    &.overdue.l1,
+    &.overdue.l2,
+    &.overdue.l3,
+    &.overdue.l4 {
+      background: color-mix(in srgb, var(--amber) 18%, transparent);
+    }
+  }
+
+  .cell__num {
+    color: var(--ink);
+  }
+
+  // "Log a session" / "Plan a session" — match the New button pattern exactly:
+  // base --emerald, brighten to --emerald-bright on hover, text stays dark.
+  .btn-log {
+    background: var(--emerald);
+    color: #042b1d;
+
+    &:hover {
+      background: var(--emerald-bright);
+      color: #042b1d;
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Reduced motion
+// ---------------------------------------------------------------------------
+@media (prefers-reduced-motion: reduce) {
+  .cell,
+  .srow,
+  .btn-log,
+  .fchip,
+  .sl-btn,
+  .sheet { transition: none !important; animation: none !important; }
+}

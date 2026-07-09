@@ -18,7 +18,7 @@ from django.views.generic import (
 from learning.forms import LearningResourceForm
 from learning.mixins import UserPermissionMixin
 from learning.models import LearningResource, LearningUnit, ResourceType
-from learning.services import get_resource_progress
+from learning.services import get_resource_progress, get_study_log_context
 
 logger = logging.getLogger(__name__)
 
@@ -145,6 +145,7 @@ class ResourceDetailView(BaseUserResourceView, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context.update(get_resource_progress(self.object))
+        context.update(get_study_log_context(self.object))
         return context
 
 
