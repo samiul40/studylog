@@ -43,7 +43,7 @@
     </li>
     {% for s in study_sessions_planned %}
     <li class="slog__row slog__row--planned{% if s.overdue %} slog__row--overdue{% endif %}">
-      <span class="slog__ic{% if s.overdue %} slog__ic--amber{% endif %}" data-act="{{ s.act }}"></span>
+      <span class="slog__ic{% if s.overdue %} slog__ic--amber{% endif %}">{% activity_icon s.act %}</span>
       <div class="slog__main">
         <div class="slog__t">{{ s.title }}</div>
         <div class="slog__meta">
@@ -89,7 +89,7 @@
     {% for s in study_sessions_logged %}
     {% if s.auto %}
     <li class="slog__row slog__row--auto" data-unit-id="{{ s.unit_id }}">
-      <span class="slog__ic slog__ic--sky" data-act="{{ s.act }}"></span>
+      <span class="slog__ic slog__ic--sky">{% activity_icon s.act %}</span>
       <div class="slog__main">
         <div class="slog__t">{{ s.title }}</div>
         <div class="slog__meta">
@@ -108,7 +108,7 @@
         data-mins="{{ s.mins }}"
         data-title="{{ s.title|escape }}"
         data-notes="{{ s.notes|escape }}">
-      <span class="slog__ic" data-act="{{ s.act }}"></span>
+      <span class="slog__ic">{% activity_icon s.act %}</span>
       <div class="slog__main">
         <div class="slog__t">{{ s.title }}</div>
         <div class="slog__meta">

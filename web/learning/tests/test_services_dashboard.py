@@ -56,7 +56,6 @@ class TestGetDashboardStatsReturnShape:
             "active_filter",
             "resource_types_with_counts",
             "weekly_summary",
-            # v3 keys
             "in_progress_count",
             "study_streak",
             "month_started",
@@ -66,12 +65,21 @@ class TestGetDashboardStatsReturnShape:
             "time_invested",
             "stale_resources",
             "momentum",
-            "heatmap",
             "resources_table",
-            "greeting_headline",
-            # v4 keys (simple/deep)
             "completed_resources_count",
             "resume_resource",
+            # v6 session-driven keys
+            "session_week_stats",
+            "session_weekly_chart",
+            "recent_sessions",
+            "heatmap_sessions",
+            "greeting_headline",
+            "greeting_units",
+            "greeting_sessions",
+            "combined_study_time_this_week",
+            "combined_study_time_this_week_html",
+            "session_time_this_week",
+            "resource_time_this_week",
         }
         assert expected_keys == set(result.keys())
 

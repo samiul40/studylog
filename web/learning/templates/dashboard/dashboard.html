@@ -7,6 +7,7 @@
 {% block alerts %}{% endblock %}
 
 {% block extra_head %}
+{# Set data-dash before first paint to avoid flash of wrong view #}
 <script nonce="{{ request.csp_nonce }}">try{var __dv=localStorage.getItem('sf-dash-view')||'simple';document.documentElement.setAttribute('data-dash',__dv);}catch(e){document.documentElement.setAttribute('data-dash','simple');}</script>
 {% endblock %}
 
@@ -17,9 +18,10 @@
   <header class="greet">
     <div class="greet__main">
       <h2 class="greet__title">{{ greeting }}, {{ first_name }}.</h2>
-      {% if greeting_headline %}
-      <p class="greet__sub">{{ greeting_headline }}</p>
-      {% endif %}
+      <p class="greet__sub">
+        You completed <strong>{{ greeting_units }} unit{{ greeting_units|pluralize }}</strong>
+        and logged <strong>{{ greeting_sessions }} session{{ greeting_sessions|pluralize }}</strong> this week.
+      </p>
     </div>
     <div class="greet__right">
       <div class="viewtoggle" role="tablist" aria-label="Dashboard detail level">
@@ -51,11 +53,9 @@
       </div>
 
       <div class="sstat">
-        {% with t=time_invested.all_time %}
-        <span class="sstat__value">{% if t == "—" %}—{% else %}{{ t }}{% endif %}</span>
-        {% endwith %}
-        <span class="sstat__label">Hours spent</span>
-        <span class="sstat__sub">total time logged</span>
+        <span class="sstat__value">{{ combined_study_time_this_week_html|safe }}</span>
+        <span class="sstat__label">Study time</span>
+        <span class="sstat__sub">this week &middot; resources + sessions</span>
       </div>
 
       <div class="sstat">
@@ -91,6 +91,28 @@
     </div>
     {% endif %}
 
+    {# ── Recent sessions feed ──────────────────────────────────────────── #}
+    <div class="recentcard">
+      <div class="recentcard__head">
+        <span class="recentcard__title">Recent sessions</span>
+        <a class="recentcard__link" href="{% url 'learning:session_list' %}">View all &rarr;</a>
+      </div>
+      {% if recent_sessions %}
+        {% for s in recent_sessions %}
+        <div class="rrow{% if s.is_resource %} rrow--resource{% endif %}">
+          <span class="rrow__ic">{% activity_icon s.activity_slug %}</span>
+          <span class="rrow__body">
+            <span class="rrow__t">{{ s.activity_name }}</span>
+            {% if s.topic %}<span class="rrow__meta">{{ s.topic }}</span>{% endif %}
+          </span>
+          <span class="rrow__dur">{{ s.duration_display }}</span>
+        </div>
+        {% endfor %}
+      {% else %}
+        <p class="recentcard__empty">No sessions logged yet. <a href="{% url 'learning:session_create' %}">Log one &rarr;</a></p>
+      {% endif %}
+    </div>
+
   </section>{# /simpleview #}
 
   {# ═══════════════════════════════════════════════════════════════════════ #}
@@ -102,7 +124,7 @@
 
     <div class="kpi-card">
       <div class="kpi-card__value">{{ total_resources }}</div>
-      <div class="kpi-card__label">Resources <span class="kpi-card__detail">· {{ in_progress_count }} in progress</span></div>
+      <div class="kpi-card__label">Resources <span class="kpi-card__detail">&middot; {{ in_progress_count }} in progress</span></div>
     </div>
 
     <div class="kpi-card">
@@ -127,7 +149,7 @@
 
     <div class="kpi-card">
       <div class="kpi-card__value">{{ study_streak }}<small>days</small></div>
-      <div class="kpi-card__label">Study streak</div>
+      <div class="kpi-card__label">Study streak <span class="kpi-card__detail">&middot; any day studied</span></div>
     </div>
 
   </div>{# /kpis #}
@@ -141,13 +163,13 @@
       <span class="dlead__d">Your recent activity and pace</span>
     </div>
 
-    {# Weekly area chart #}
+    {# Sessions logged per week — area/line chart #}
     <div class="dcard dcard--span8">
-      <div class="dcard__kicker kick">Units completed per week</div>
+      <div class="dcard__kicker kick">Sessions logged per week</div>
       {% if area_chart and area_chart.has_data %}
       <div class="wchart">
         <svg viewBox="0 0 800 205" role="img"
-             aria-label="Units completed per week area chart">
+             aria-label="Sessions logged per week, trailing 8 weeks">
           <defs>
             <linearGradient id="wcFill" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" style="stop-color: var(--emerald); stop-opacity: .28"></stop>
@@ -158,19 +180,16 @@
           <path class="wc-area" d="{{ area_chart.area_d }}"></path>
           <path class="wc-line" d="{{ area_chart.line_d }}"></path>
           {% for pt in area_chart.points %}
-          {% if pt.count %}
           <circle class="wc-dot" cx="{{ pt.x }}" cy="{{ pt.y }}" r="5"></circle>
           <text class="wc-val" x="{{ pt.x }}" y="{{ pt.val_y }}" text-anchor="middle">{{ pt.count }}</text>
-          {% endif %}
           {% endfor %}
           {% for pt in area_chart.points %}
-          <text class="wc-cap" x="{{ pt.x }}" y="196"
-                text-anchor="{% if forloop.first %}start{% elif forloop.last %}end{% else %}middle{% endif %}">{{ pt.label }}</text>
+          <text class="wc-cap" x="{{ pt.x }}" y="196" text-anchor="{{ pt.anchor }}">{{ pt.label }}</text>
           {% endfor %}
         </svg>
       </div>
       {% else %}
-      <p class="dcard__empty">No completed units in the last 8 weeks.</p>
+      <p class="dcard__empty">No sessions logged in the last 8 weeks.</p>
       {% endif %}
     </div>
 
@@ -181,39 +200,41 @@
 
         <div class="momentum-row">
           <div class="momentum-row__top">
-            <span class="momentum-row__label">Units completed</span>
-            {% if momentum.units_delta_dir != "new" %}
-            <span class="delta-pill delta-pill--{{ momentum.units_delta_dir }}">
-              {% if momentum.units_delta_dir == "up" %}▲{% else %}▼{% endif %}
-              {{ momentum.units_delta_pct }}%
-            </span>
-            {% else %}
+            <span class="momentum-row__label">Sessions logged</span>
+            {% if momentum.sess_delta_dir == "new" %}
             <span class="delta-pill delta-pill--new">new</span>
+            {% elif momentum.sess_delta_dir == "up" %}
+            <span class="delta-pill delta-pill--up">&#9650; {{ momentum.sess_delta_pct }}%</span>
+            {% elif momentum.sess_delta_dir == "down" %}
+            <span class="delta-pill delta-pill--down">&#9660; {{ momentum.sess_delta_pct }}%</span>
+            {% else %}
+            <span class="delta-pill">&#8212; 0%</span>
             {% endif %}
           </div>
-          <div class="momentum-row__val">{{ momentum.units_this_week }}</div>
+          <div class="momentum-row__val">{{ momentum.sess_this_week }}</div>
           <div class="momentum-bars">
             <div class="momentum-bar momentum-bar--last">
-              <div class="momentum-bar__fill" style="width: {{ momentum.units_last_pct }}%"></div>
-              {% if momentum.units_last_week %}<span>last wk &middot; {{ momentum.units_last_week }}</span>{% endif %}
+              <div class="momentum-bar__fill" style="width: {{ momentum.sess_last_pct }}%"></div>
+              {% if momentum.sess_last_week %}<span>last wk &middot; {{ momentum.sess_last_week }}</span>{% endif %}
             </div>
             <div class="momentum-bar momentum-bar--this">
-              <div class="momentum-bar__fill" style="width: {{ momentum.units_this_pct }}%"></div>
-              <span>this wk &middot; {{ momentum.units_this_week }}</span>
+              <div class="momentum-bar__fill" style="width: {{ momentum.sess_this_pct }}%"></div>
+              <span>this wk &middot; {{ momentum.sess_this_week }}</span>
             </div>
           </div>
         </div>
 
         <div class="momentum-row">
           <div class="momentum-row__top">
-            <span class="momentum-row__label">Time logged</span>
-            {% if momentum.time_delta_dir != "new" %}
-            <span class="delta-pill delta-pill--{{ momentum.time_delta_dir }}">
-              {% if momentum.time_delta_dir == "up" %}▲{% else %}▼{% endif %}
-              {{ momentum.time_delta_pct }}%
-            </span>
-            {% else %}
+            <span class="momentum-row__label">Study time</span>
+            {% if momentum.time_delta_dir == "new" %}
             <span class="delta-pill delta-pill--new">new</span>
+            {% elif momentum.time_delta_dir == "up" %}
+            <span class="delta-pill delta-pill--up">&#9650; {{ momentum.time_delta_pct }}%</span>
+            {% elif momentum.time_delta_dir == "down" %}
+            <span class="delta-pill delta-pill--down">&#9660; {{ momentum.time_delta_pct }}%</span>
+            {% else %}
+            <span class="delta-pill">&#8212; 0%</span>
             {% endif %}
           </div>
           <div class="momentum-row__val">{{ momentum.time_this_week_display }}</div>
@@ -272,17 +293,17 @@
         </span>
       </div>
       {% else %}
-      <p class="dcard__empty">No units yet — add some to track progress.</p>
+      <p class="dcard__empty">No units yet &mdash; add some to track progress.</p>
       {% endif %}
       <p class="dcard__footnote">Across all active resources</p>
     </div>
 
-    {# Time invested #}
+    {# Study time card — Resources + Sessions breakdown #}
     <div class="dcard dcard--span4">
-      <div class="dcard__kicker kick">Time invested &mdash; video &amp; audio</div>
+      <div class="dcard__kicker kick">Study time &mdash; resources + sessions</div>
       <div class="time-hero">
         <div class="time-hero__left">
-          <span class="time-hero__val">{{ time_invested.this_week }}</span>
+          <span class="time-hero__val">{{ combined_study_time_this_week }}</span>
           <span class="time-hero__period">this week</span>
         </div>
         <div class="time-hero__icon" aria-hidden="true">
@@ -295,15 +316,15 @@
       </div>
       <div class="time-cells">
         <div class="time-cell">
-          <span class="time-cell__label">This month</span>
-          <span class="time-cell__val">{{ time_invested.this_month }}</span>
+          <span class="time-cell__label">Resources</span>
+          <span class="time-cell__val">{{ resource_time_this_week }}</span>
         </div>
         <div class="time-cell">
-          <span class="time-cell__label">All time</span>
-          <span class="time-cell__val">{{ time_invested.all_time }}</span>
+          <span class="time-cell__label">Sessions</span>
+          <span class="time-cell__val">{{ session_time_this_week }}</span>
         </div>
       </div>
-      <p class="dcard__footnote">Watch / listen time across video &amp; audio resources</p>
+      <p class="dcard__footnote">Watch &amp; read time from resources plus logged sessions</p>
     </div>
 
     {# ── Band 3: History ───────────────────────────────────────────────── #}
@@ -312,15 +333,15 @@
       <span class="dlead__d">Your full activity record</span>
     </div>
 
-    {# Year heatmap #}
+    {# Year heatmap — shaded by daily session minutes #}
     <div class="dcard dcard--span12">
-      <div class="dcard__kicker kick">Activity &mdash; {{ heatmap.year }}</div>
+      <div class="dcard__kicker kick">Study log &mdash; {{ heatmap_sessions.year }}</div>
       <div class="heat-scroll">
         <div class="heat-inner">
           <div class="heat-months-row">
             <div class="heat-corner" aria-hidden="true"></div>
             <div class="heat-months" aria-hidden="true">
-              {% for ml in heatmap.month_labels %}
+              {% for ml in heatmap_sessions.month_labels %}
               <span class="heat-month" style="left: {{ ml.left_px }}px">{{ ml.label }}</span>
               {% endfor %}
             </div>
@@ -335,14 +356,15 @@
               <span></span>
               <span></span>
             </div>
-            <div class="heat-grid" role="grid" aria-label="Activity heatmap for {{ heatmap.year }}">
-              {% for week in heatmap.weeks %}
+            <div class="heat-grid" role="grid"
+                 aria-label="Activity heatmap for {{ heatmap_sessions.year }}">
+              {% for week in heatmap_sessions.weeks %}
               <div class="heat-col" role="row">
                 {% for cell in week %}
                 {% if cell.show %}
                 <div class="heat-cell heat-cell--l{{ cell.level }}"
                      role="gridcell"
-                     title="{% if cell.count %}{{ cell.label }}: {{ cell.count }} unit{{ cell.count|pluralize }}{% else %}{{ cell.label }}{% endif %}">
+                     title="{% if cell.mins %}{{ cell.label }}: {{ cell.mins }}m{% else %}{{ cell.label }}{% endif %}">
                 </div>
                 {% else %}
                 <div class="heat-cell heat-cell--empty" role="gridcell" aria-hidden="true"></div>
@@ -355,6 +377,9 @@
         </div>
       </div>
       <div class="heat-footer">
+        <span class="heat-footer__summary">
+          {{ heatmap_sessions.total_mins_display }} logged across {{ heatmap_sessions.active_days }} active day{{ heatmap_sessions.active_days|pluralize }} in {{ heatmap_sessions.year }}
+        </span>
         <div class="heat-legend" aria-label="Activity scale">
           <span class="heat-legend__label">Less</span>
           <div class="heat-legend__cells">
@@ -364,7 +389,7 @@
             <div class="heat-cell heat-cell--l3"></div>
             <div class="heat-cell heat-cell--l4"></div>
           </div>
-          <span class="heat-legend__label">More</span>
+          <span class="heat-legend__label">More &middot; study minutes / day</span>
         </div>
       </div>
     </div>
@@ -395,8 +420,6 @@
           <span class="pace-row__last {% if r.is_idle %}pace-row__last--idle{% endif %}">
             {{ r.last_activity }}{% if r.is_idle %} &mdash; {{ r.idle_days }}d idle{% endif %}
           </span>
-
-          {# Mobile label/value pairs (hidden on desktop) #}
           <div class="pace-row__mobile">
             <div class="pace-row__mobile-progress">
               <div class="pace-bar">
@@ -442,7 +465,9 @@
     });
   }
 
-  var saved = localStorage.getItem(STORE_KEY) || 'simple';
+  // Default to 'simple' on fresh session (no stored preference)
+  var saved = 'simple';
+  try { saved = localStorage.getItem(STORE_KEY) || 'simple'; } catch(e) {}
   applyView(saved);
 
   document.querySelectorAll('.viewtoggle__btn').forEach(function (btn) {

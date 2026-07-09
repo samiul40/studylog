@@ -10,7 +10,7 @@ from learning.services.dashboard import (
     _get_completed_resources_count,
     _get_resume_resource,
 )
-from learning.views.dashboard import _build_area_chart
+from learning.views.dashboard import _build_sessions_area_chart
 
 pytestmark = pytest.mark.django_db
 
@@ -167,7 +167,7 @@ class TestGetResumeResource:
 
 
 # ---------------------------------------------------------------------------
-# _build_area_chart
+# _build_sessions_area_chart
 # ---------------------------------------------------------------------------
 
 
@@ -179,52 +179,52 @@ class TestBuildAreaChart:
         ]
 
     def test_returns_none_for_empty_list(self):
-        assert _build_area_chart([]) is None
+        assert _build_sessions_area_chart([]) is None
 
     def test_returns_none_for_none(self):
-        assert _build_area_chart(None) is None
+        assert _build_sessions_area_chart(None) is None
 
     def test_has_data_false_when_all_zero(self):
         activity = self._make_activity([0, 0, 0, 0, 0, 0, 0, 0])
-        result = _build_area_chart(activity)
+        result = _build_sessions_area_chart(activity)
         assert result["has_data"] is False
 
     def test_has_data_true_when_any_nonzero(self):
         activity = self._make_activity([0, 0, 0, 0, 0, 11, 5, 1])
-        result = _build_area_chart(activity)
+        result = _build_sessions_area_chart(activity)
         assert result["has_data"] is True
 
     def test_returns_required_keys(self):
         activity = self._make_activity([0, 0, 0, 0, 0, 11, 5, 1])
-        result = _build_area_chart(activity)
+        result = _build_sessions_area_chart(activity)
         for key in ("line_d", "area_d", "points", "y_base", "has_data"):
             assert key in result, f"missing key: {key}"
 
     def test_points_length_matches_input(self):
         activity = self._make_activity([0, 0, 0, 0, 0, 11, 5, 1])
-        result = _build_area_chart(activity)
+        result = _build_sessions_area_chart(activity)
         assert len(result["points"]) == 8
 
     def test_first_point_x_is_20(self):
         activity = self._make_activity([1, 2, 3, 4, 5, 6, 7, 8])
-        result = _build_area_chart(activity)
+        result = _build_sessions_area_chart(activity)
         assert result["points"][0]["x"] == 20.0
 
     def test_last_point_x_is_780(self):
         activity = self._make_activity([1, 2, 3, 4, 5, 6, 7, 8])
-        result = _build_area_chart(activity)
+        result = _build_sessions_area_chart(activity)
         assert result["points"][-1]["x"] == 780.0
 
     def test_max_value_point_reaches_y_top(self):
         # The highest count should map to Y=20 (top of chart)
         activity = self._make_activity([0, 0, 0, 0, 0, 11, 0, 0])
-        result = _build_area_chart(activity)
+        result = _build_sessions_area_chart(activity)
         peak = next(p for p in result["points"] if p["count"] == 11)
         assert peak["y"] == 20.0
 
     def test_zero_count_points_at_baseline(self):
         activity = self._make_activity([0, 0, 0, 0, 0, 11, 0, 0])
-        result = _build_area_chart(activity)
+        result = _build_sessions_area_chart(activity)
         baseline = result["y_base"]
         zero_points = [p for p in result["points"] if p["count"] == 0]
         for p in zero_points:
@@ -232,16 +232,16 @@ class TestBuildAreaChart:
 
     def test_line_d_starts_with_M(self):
         activity = self._make_activity([0, 0, 0, 0, 0, 11, 5, 1])
-        result = _build_area_chart(activity)
+        result = _build_sessions_area_chart(activity)
         assert result["line_d"].startswith("M")
 
     def test_area_d_ends_with_Z(self):
         activity = self._make_activity([0, 0, 0, 0, 0, 11, 5, 1])
-        result = _build_area_chart(activity)
+        result = _build_sessions_area_chart(activity)
         assert result["area_d"].endswith("Z")
 
     def test_point_labels_match_input(self):
         activity = self._make_activity([1, 2, 3])
-        result = _build_area_chart(activity)
+        result = _build_sessions_area_chart(activity)
         assert result["points"][0]["label"] == "Week 1"
         assert result["points"][2]["label"] == "Week 3"
