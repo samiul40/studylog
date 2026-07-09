@@ -962,11 +962,6 @@
     return fetch(url, { method:'POST', headers:{'Content-Type':'application/json','X-CSRFToken':CSRF}, body:JSON.stringify(body) }).then(r=>r.json());
   }
 
-  // ── Inject icons into server-rendered icon tiles ──────────────────────────
-  document.querySelectorAll('.slog__ic[data-act]').forEach(el => {
-    el.innerHTML = SICON[el.dataset.act] || SICON_DEFAULT;
-  });
-
   // ── Mark done ─────────────────────────────────────────────────────────────
   document.querySelectorAll('.slog__done[data-sess]').forEach(btn => {
     btn.addEventListener('click', e => {

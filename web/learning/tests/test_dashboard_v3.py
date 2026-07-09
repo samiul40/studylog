@@ -11,19 +11,25 @@ import pytest
 from django.utils import timezone
 from model_bakery import baker
 
-from learning.models import LearningResource, LearningUnit, ResourceType
+from learning.models import (
+    Activity,
+    LearningResource,
+    LearningUnit,
+    ResourceType,
+    StudySession,
+)
 from learning.services.dashboard import (
-    _fmt_duration,
+    _build_greeting_headline,
     _get_backlog,
-    _get_greeting_headline,
-    _get_heatmap,
-    _get_momentum,
+    _get_heatmap_by_session_minutes,
+    _get_momentum_v2,
     _get_month_stats,
     _get_stale_resources,
-    _get_study_streak,
-    _get_time_invested,
+    _get_study_streak_unified,
+    _get_video_time_invested,
     _get_weekly_activity,
 )
+from learning.services.utils import fmt_duration as _fmt_duration
 
 pytestmark = pytest.mark.django_db
 
@@ -118,40 +124,40 @@ class TestFmtDuration:
 
 class TestStudyStreak:
     def test_no_activity_returns_zero(self, user, resource):
-        assert _get_study_streak(_user_unit_qs(user)) == 0
+        assert _get_study_streak_unified(_user_unit_qs(user), user) == 0
 
     def test_single_today_is_streak_of_1(self, user, resource):
         _completed(resource, timezone.now())
-        assert _get_study_streak(_user_unit_qs(user)) == 1
+        assert _get_study_streak_unified(_user_unit_qs(user), user) == 1
 
     def test_consecutive_days_counted(self, user, resource):
         for n in range(4):
             _completed(resource, _days_ago(n))
-        assert _get_study_streak(_user_unit_qs(user)) == 4
+        assert _get_study_streak_unified(_user_unit_qs(user), user) == 4
 
     def test_gap_breaks_streak(self, user, resource):
         # Day 0, 1, then skip 2, day 3 — streak from today = 2
         _completed(resource, _days_ago(0))
         _completed(resource, _days_ago(1))
         _completed(resource, _days_ago(3))
-        assert _get_study_streak(_user_unit_qs(user)) == 2
+        assert _get_study_streak_unified(_user_unit_qs(user), user) == 2
 
     def test_streak_starts_yesterday_when_today_empty(self, user, resource):
         # Yesterday and two days ago active, but not today
         _completed(resource, _days_ago(1))
         _completed(resource, _days_ago(2))
-        assert _get_study_streak(_user_unit_qs(user)) == 2
+        assert _get_study_streak_unified(_user_unit_qs(user), user) == 2
 
     def test_multiple_units_same_day_count_once(self, user, resource):
         now = timezone.now()
         _completed(resource, now)
         _completed(resource, now)
-        assert _get_study_streak(_user_unit_qs(user)) == 1
+        assert _get_study_streak_unified(_user_unit_qs(user), user) == 1
 
     def test_future_completed_at_not_counted(self, user, resource):
         future = timezone.now() + datetime.timedelta(days=2)
         _completed(resource, future)
-        assert _get_study_streak(_user_unit_qs(user)) == 0
+        assert _get_study_streak_unified(_user_unit_qs(user), user) == 0
 
     def test_video_progress_today_counts_as_active(self, user, resource):
         unit = baker.make(
@@ -163,7 +169,7 @@ class TestStudyStreak:
         LearningUnit.objects.filter(pk=unit.pk).update(
             video_progress_minutes=5, updated_at=timezone.now()
         )
-        assert _get_study_streak(_user_unit_qs(user)) == 1
+        assert _get_study_streak_unified(_user_unit_qs(user), user) == 1
 
     def test_video_progress_consecutive_days_builds_streak(self, user, resource):
         for n in range(3):
@@ -176,7 +182,7 @@ class TestStudyStreak:
             LearningUnit.objects.filter(pk=unit.pk).update(
                 video_progress_minutes=10, updated_at=_days_ago(n)
             )
-        assert _get_study_streak(_user_unit_qs(user)) == 3
+        assert _get_study_streak_unified(_user_unit_qs(user), user) == 3
 
     def test_zero_progress_not_counted(self, user, resource):
         unit = baker.make(
@@ -188,7 +194,7 @@ class TestStudyStreak:
         LearningUnit.objects.filter(pk=unit.pk).update(
             video_progress_minutes=0, updated_at=timezone.now()
         )
-        assert _get_study_streak(_user_unit_qs(user)) == 0
+        assert _get_study_streak_unified(_user_unit_qs(user), user) == 0
 
     def test_progress_and_completion_on_different_days_union(self, user, resource):
         # Completion 2 days ago, video progress yesterday — should give streak of 2
@@ -202,7 +208,23 @@ class TestStudyStreak:
         LearningUnit.objects.filter(pk=unit.pk).update(
             video_progress_minutes=15, updated_at=_days_ago(1)
         )
-        assert _get_study_streak(_user_unit_qs(user)) == 2
+        assert _get_study_streak_unified(_user_unit_qs(user), user) == 2
+
+    def test_logged_session_today_builds_streak(self, user, resource):
+        """A logged session alone (no unit activity) counts toward the streak."""
+        act, _ = Activity.objects.get_or_create(
+            slug="flashcards",
+            defaults={"name": "Flashcards / Anki", "is_system": True},
+        )
+        baker.make(
+            StudySession,
+            user=user,
+            activity=act,
+            status="logged",
+            date=datetime.date.today(),
+            duration_minutes=30,
+        )
+        assert _get_study_streak_unified(_user_unit_qs(user), user) == 1
 
 
 # ---------------------------------------------------------------------------
@@ -354,13 +376,13 @@ class TestBacklog:
 
 
 # ---------------------------------------------------------------------------
-# _get_time_invested
+# _get_video_time_invested
 # ---------------------------------------------------------------------------
 
 
 class TestTimeInvested:
     def test_none_user_returns_dashes(self):
-        t = _get_time_invested(None)
+        t = _get_video_time_invested(None)
         assert t["this_week"] == "—"
         assert t["this_month"] == "—"
         assert t["all_time"] == "—"
@@ -373,8 +395,8 @@ class TestTimeInvested:
             duration_minutes=90,
         )
         LearningUnit.objects.filter(pk=unit.pk).update(completed_at=timezone.now())
-        t = _get_time_invested(user)
-        assert t["this_week_raw"] == 90
+        t = _get_video_time_invested(user)
+        assert t["resource_this_week"] == 90
         assert t["this_week"] == "1h 30m"
 
     def test_excludes_reading_type(self, user, reading_rt):
@@ -385,8 +407,8 @@ class TestTimeInvested:
             LearningUnit, resource=r, status="completed", duration_minutes=60
         )
         LearningUnit.objects.filter(pk=unit.pk).update(completed_at=timezone.now())
-        t = _get_time_invested(user)
-        assert t["this_week_raw"] == 0
+        t = _get_video_time_invested(user)
+        assert t["resource_this_week"] == 0
 
 
 # ---------------------------------------------------------------------------
@@ -420,45 +442,59 @@ class TestWeeklyActivity:
 # ---------------------------------------------------------------------------
 
 
+def _make_session(user, date, duration_minutes=60):
+    """Helper: create a logged StudySession for heatmap/streak tests."""
+    act, _ = Activity.objects.get_or_create(
+        slug="flashcards",
+        defaults={"name": "Flashcards / Anki", "is_system": True},
+    )
+    return baker.make(
+        StudySession,
+        user=user,
+        activity=act,
+        status="logged",
+        date=date,
+        duration_minutes=duration_minutes,
+    )
+
+
 class TestHeatmap:
-    def test_has_correct_year(self, user, resource):
-        h = _get_heatmap(_user_unit_qs(user))
+    def test_has_correct_year(self, user):
+        h = _get_heatmap_by_session_minutes(user)
         assert h["year"] == timezone.localdate().year
 
-    def test_has_12_month_labels(self, user, resource):
-        h = _get_heatmap(_user_unit_qs(user))
+    def test_has_12_month_labels(self, user):
+        h = _get_heatmap_by_session_minutes(user)
         assert len(h["month_labels"]) == 12
 
-    def test_each_week_has_7_days(self, user, resource):
-        h = _get_heatmap(_user_unit_qs(user))
+    def test_each_week_has_7_days(self, user):
+        h = _get_heatmap_by_session_minutes(user)
         assert all(len(week) == 7 for week in h["weeks"])
 
-    def test_completed_unit_increments_count(self, user, resource):
-        _completed(resource, timezone.now())
-        h = _get_heatmap(_user_unit_qs(user))
-        total = sum(cell["count"] for week in h["weeks"] for cell in week)
-        assert total == 1
+    def test_session_today_increments_active_days(self, user):
+        _make_session(user, datetime.date.today(), duration_minutes=45)
+        h = _get_heatmap_by_session_minutes(user)
+        assert h["active_days"] == 1
 
-    def test_level_buckets(self, user, resource):
-        today = timezone.localtime()
-        for _ in range(4):
-            _completed(resource, today)
-        h = _get_heatmap(_user_unit_qs(user))
+    def test_level_thresholds(self, user):
+        today = datetime.date.today()
+        # 45m < 90 → level 2
+        _make_session(user, today, duration_minutes=45)
+        h = _get_heatmap_by_session_minutes(user)
         todays_cell = next(
             cell
             for week in h["weeks"]
             for cell in week
-            if cell["date"] == today.date().isoformat()
+            if cell["date"] == today.isoformat()
         )
-        assert todays_cell["level"] == 4
+        assert todays_cell["level"] == 2
 
-    def test_future_cells_are_level_zero(self, user, resource):
-        future = timezone.localtime() + datetime.timedelta(days=5)
-        _completed(resource, future)
-        h = _get_heatmap(_user_unit_qs(user))
+    def test_future_cells_are_level_zero(self, user):
+        future = datetime.date.today() + datetime.timedelta(days=5)
+        h = _get_heatmap_by_session_minutes(user)
         for week in h["weeks"]:
             for cell in week:
-                if cell.get("date") == future.date().isoformat():
+                if cell.get("date") == future.isoformat():
                     assert cell["level"] == 0
 
 
@@ -468,34 +504,39 @@ class TestHeatmap:
 
 
 class TestMomentum:
-    def _week_start(self):
-        now = timezone.localtime()
-        return (now - datetime.timedelta(days=now.weekday())).replace(
-            hour=0, minute=0, second=0, microsecond=0
-        )
+    """Tests for _get_momentum_v2 (sessions-based momentum card)."""
 
-    def test_zero_last_week_gives_new(self, user, resource):
-        _completed(resource, timezone.now())
-        m = _get_momentum(_user_unit_qs(user))
-        assert m["units_delta_dir"] == "new"
+    def _stats(self, this_count, last_count, this_mins=0, last_mins=0):
+        return {
+            "this_week_count": this_count,
+            "last_week_count": last_count,
+            "this_week_mins": this_mins,
+            "last_week_mins": last_mins,
+        }
 
-    def test_improvement_gives_up(self, user, resource):
-        ws = self._week_start()
-        _completed(resource, ws + datetime.timedelta(hours=1))
-        _completed(resource, ws + datetime.timedelta(hours=2))
-        _completed(resource, ws - datetime.timedelta(hours=1))  # last week
-        m = _get_momentum(_user_unit_qs(user))
-        assert m["units_delta_dir"] == "up"
-        assert m["units_this_week"] == 2
-        assert m["units_last_week"] == 1
+    def test_zero_last_week_gives_new(self):
+        m = _get_momentum_v2(self._stats(3, 0), 0, 0)
+        assert m["sess_delta_dir"] == "new"
 
-    def test_regression_gives_down(self, user, resource):
-        ws = self._week_start()
-        _completed(resource, ws + datetime.timedelta(hours=1))  # this wk
-        _completed(resource, ws - datetime.timedelta(hours=1))  # last wk
-        _completed(resource, ws - datetime.timedelta(hours=2))  # last wk
-        m = _get_momentum(_user_unit_qs(user))
-        assert m["units_delta_dir"] == "down"
+    def test_improvement_gives_up(self):
+        m = _get_momentum_v2(self._stats(5, 3), 0, 0)
+        assert m["sess_delta_dir"] == "up"
+        assert m["sess_this_week"] == 5
+        assert m["sess_last_week"] == 3
+
+    def test_regression_gives_down(self):
+        m = _get_momentum_v2(self._stats(1, 4), 0, 0)
+        assert m["sess_delta_dir"] == "down"
+
+    def test_combined_time_sums_resource_and_session(self):
+        # 60 resource + 30 session = 90 total this week
+        m = _get_momentum_v2(self._stats(2, 2, this_mins=30), 60, 0)
+        assert m["time_this_week"] == 90
+
+    def test_bar_widths_proportional(self):
+        m = _get_momentum_v2(self._stats(4, 2), 0, 0)
+        assert m["sess_this_pct"] == 100
+        assert m["sess_last_pct"] == 50
 
 
 # ---------------------------------------------------------------------------
@@ -504,28 +545,29 @@ class TestMomentum:
 
 
 class TestGreetingHeadline:
-    def test_none_when_no_activity(self, user, resource):
-        qs = _user_unit_qs(user)
-        assert _get_greeting_headline(qs) is None
+    def test_zero_zero_shows_plural(self):
+        h = _build_greeting_headline(0, 0)
+        assert "0 units" in h
+        assert "0 sessions" in h
 
-    def test_units_this_week_headline(self, user, resource):
-        _completed(resource, timezone.now())
-        qs = _user_unit_qs(user)
-        headline = _get_greeting_headline(qs)
-        assert headline == "You completed 1 unit this week."
+    def test_singular_unit(self):
+        h = _build_greeting_headline(1, 3)
+        assert "1 unit" in h
+        assert "3 sessions" in h
 
-    def test_plural_units(self, user, resource):
-        for _ in range(5):
-            _completed(resource, timezone.now())
-        qs = _user_unit_qs(user)
-        headline = _get_greeting_headline(qs)
-        assert headline == "You completed 5 units this week."
+    def test_singular_session(self):
+        h = _build_greeting_headline(2, 1)
+        assert "2 units" in h
+        assert "1 session" in h
 
-    def test_no_units_this_week_returns_none(self, user, resource):
-        _completed(resource, _weeks_ago(1))
-        qs = _user_unit_qs(user)
-        headline = _get_greeting_headline(qs)
-        assert headline is None
+    def test_plural_both(self):
+        h = _build_greeting_headline(5, 7)
+        assert "5 units" in h
+        assert "7 sessions" in h
+
+    def test_includes_this_week(self):
+        h = _build_greeting_headline(1, 1)
+        assert "this week" in h
 
 
 # ---------------------------------------------------------------------------
