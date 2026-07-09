@@ -100,13 +100,13 @@
 }
 
 // ---------------------------------------------------------------------------
-// Filter bar
+// Filter bar — single dropdown trigger (no wrap)
 // ---------------------------------------------------------------------------
 .filterbar {
   display: flex;
   align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
+  gap: 10px;
+  flex-wrap: nowrap;
   margin-bottom: 18px;
 
   &__l {
@@ -116,39 +116,157 @@
     letter-spacing: 0.08em;
     text-transform: uppercase;
     color: var(--ink-faint);
-    margin-right: 4px;
+    flex: 0 0 auto;
   }
 }
 
-.fchip {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-family: $font-sans;
-  font-weight: 600;
-  font-size: 0.84rem;
-  color: var(--ink-soft);
-  border: 1.5px solid var(--line);
-  border-radius: 100px;
-  padding: 7px 13px;
-  background: var(--field);
-  cursor: pointer;
-  transition: all 0.16s;
+// Filter dropdown wrapper
+.filtersel {
+  position: relative;
+  flex: 0 1 auto;
+  min-width: 0;
 
-  svg { width: 14px; height: 14px; display: block; }
+  // Trigger pill button
+  &__btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    max-width: 100%;
+    font-family: $font-sans;
+    font-weight: 600;
+    font-size: 0.84rem;
+    color: var(--ink-soft);
+    border: 1.5px solid var(--line);
+    border-radius: 100px;
+    padding: 7px 11px 7px 13px;
+    background: var(--card);
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s, background 0.15s;
+    white-space: nowrap;
 
-  &:hover {
-    border-color: color-mix(in srgb, var(--ink) 24%, transparent);
-    color: var(--ink);
+    &:hover {
+      border-color: color-mix(in srgb, var(--ink) 24%, transparent);
+      color: var(--ink);
+    }
   }
 
-  &.on {
+  // Active state: a specific activity (not "All") is chosen
+  &.active &__btn {
     border-color: var(--emerald);
     background: color-mix(in srgb, var(--emerald) 12%, transparent);
     color: var(--emerald-deep);
   }
 
-  [data-theme="dark"] &.on { color: var(--emerald-bright); }
+  [data-theme="dark"] &.active &__btn { color: var(--emerald-bright); }
+
+  // Icon slot inside trigger
+  &__ic {
+    display: flex;
+    flex: 0 0 auto;
+    svg { width: 14px; height: 14px; display: block; }
+  }
+
+  // Label inside trigger (truncates if very long)
+  &__label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  // Chevron — rotates 180° when open
+  &__caret {
+    width: 14px;
+    height: 14px;
+    flex: 0 0 auto;
+    margin-left: 1px;
+    color: var(--ink-faint);
+    display: block;
+    transition: transform 0.2s var(--ease-cv);
+  }
+
+  &.open &__caret { transform: rotate(180deg); }
+  &.active &__caret { color: currentColor; }
+
+  // Popover panel
+  &__panel {
+    display: none;
+    position: absolute;
+    left: 0;
+    top: calc(100% + 8px);
+    min-width: 232px;
+    max-width: 280px;
+    max-height: 340px;
+    overflow-y: auto;
+    background: var(--field);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    box-shadow: 0 24px 48px -20px rgba(13,24,18,0.28);
+    padding: 6px;
+    z-index: 20;
+
+    [data-theme="dark"] & { box-shadow: 0 24px 48px -20px rgba(0,0,0,0.7); }
+  }
+
+  &.open &__panel { display: block; }
+
+  // Each option row
+  &__opt {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    text-align: left;
+    padding: 9px 10px;
+    border-radius: 10px;
+    font-family: $font-sans;
+    font-weight: 600;
+    font-size: 0.86rem;
+    color: var(--ink-soft);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: background 0.14s, color 0.14s;
+
+    &:hover {
+      background: color-mix(in srgb, var(--emerald) 11%, transparent);
+      color: var(--ink);
+    }
+
+    &.on { color: var(--emerald-deep); }
+    [data-theme="dark"] &.on { color: var(--emerald-bright); }
+  }
+
+  // Icon inside option
+  &__optic {
+    display: flex;
+    flex: 0 0 auto;
+    svg { width: 15px; height: 15px; display: block; }
+  }
+
+  // Label inside option (truncates)
+  &__optt {
+    flex: 1 1 auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  // Checkmark on the selected option
+  &__check {
+    width: 15px;
+    height: 15px;
+    flex: 0 0 auto;
+    display: block;
+    color: var(--emerald-deep);
+    [data-theme="dark"] & { color: var(--emerald-bright); }
+  }
+
+  // Divider between "All activity" and the activity list
+  &__divider {
+    height: 1px;
+    background: var(--line-soft);
+    margin: 5px 6px;
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -1285,7 +1403,9 @@
   .cell,
   .srow,
   .btn-log,
-  .fchip,
+  .filtersel__btn,
+  .filtersel__caret,
+  .filtersel__opt,
   .sl-btn,
   .sheet { transition: none !important; animation: none !important; }
 }
