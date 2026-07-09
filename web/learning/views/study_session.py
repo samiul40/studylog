@@ -6,7 +6,7 @@ from django.contrib import messages
 from django.db.models import Q
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, render
-from django.urls import reverse_lazy
+from django.urls import reverse, reverse_lazy
 from django.utils import timezone as dj_timezone
 from django.utils.text import slugify
 from django.views import View
@@ -81,7 +81,12 @@ class StudySessionCreateView(UserPermissionMixin, CreateView):
     model = StudySession
     form_class = StudySessionForm
     template_name = "sessions/session_create.html"
-    success_url = reverse_lazy("learning:session_list")
+
+    def get_success_url(self):
+        next_url = self.request.GET.get("next", "")
+        if next_url and next_url.startswith("/"):
+            return next_url
+        return reverse("learning:session_list")
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()

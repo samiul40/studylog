@@ -11,6 +11,7 @@ from learning.models import (
     StudySession,
 )
 from learning.services.types import CalendarData, DayData
+from learning.services.utils import when_label
 
 
 def upsert_resource_session(
@@ -178,3 +179,54 @@ def get_day_sessions(
         day_total_minutes=sum(s["duration_minutes"] for s in done_sessions),
         day_planned_count=len(planned_sessions),
     )
+
+
+def get_study_log_context(resource: LearningResource) -> dict:
+    """
+    Return template context for the study log panel on a resource detail page.
+
+    Splits sessions into planned (sorted overdue-first) and logged, and
+    computes summary counters used by the subtotal strip.
+    """
+    today = datetime.date.today()
+    sessions_qs = (
+        StudySession.objects.filter(resource=resource)
+        .select_related("activity", "unit")
+        .order_by("-date", "-created_at")
+    )
+    planned = []
+    logged = []
+    total_mins = 0
+    for s in sessions_qs:
+        fallback = (s.unit.title if s.unit else "") or s.activity.name
+        is_planned = s.status == StudySession.Status.PLANNED
+        is_overdue = is_planned and s.date < today
+        mins = s.duration_minutes or 0
+        data = {
+            "id": s.id,
+            "title": s.title or fallback,
+            "act": s.activity.slug,
+            "act_label": s.activity.name,
+            "mins": mins,
+            "when": when_label(s.date, today),
+            "date": s.date.isoformat(),
+            "overdue": is_overdue,
+            "notes": s.notes or "",
+            "auto": s.is_auto,
+            "unit_id": s.unit_id,
+        }
+        if is_planned:
+            planned.append(data)
+        else:
+            logged.append(data)
+            total_mins += mins
+    planned.sort(key=lambda x: not x["overdue"])
+    overdue_count = sum(1 for p in planned if p["overdue"])
+    return {
+        "study_sessions_planned": planned,
+        "study_sessions_logged": logged,
+        "study_log_total_mins": total_mins,
+        "study_log_done_count": len(logged),
+        "study_log_planned_count": len(planned),
+        "study_log_overdue_count": overdue_count,
+    }

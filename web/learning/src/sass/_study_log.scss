@@ -1,0 +1,642 @@
+@use '../../../studyflow/src/sass/abstracts/variables' as *;
+
+// =============================================================================
+// _study_log.scss — Study Log card on resource detail page
+// =============================================================================
+
+// ---------------------------------------------------------------------------
+// Card wrapper — uses rd-card shell; padding mirrors the units card
+// ---------------------------------------------------------------------------
+.sessions {
+  padding: 6px 22px 20px;
+
+  &__hd {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 18px 0 14px;
+    border-bottom: 1px solid var(--line);
+    flex-wrap: wrap;
+
+    h3 {
+      font-family: $font-display;
+      font-size: 1.2rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--ink);
+      margin: 0 0 6px;
+    }
+  }
+
+  &__sub {
+    font-size: 0.88rem;
+    color: var(--ink-soft);
+    margin: 0;
+    max-width: 54ch;
+    text-wrap: pretty;
+    line-height: 1.55;
+
+    b { color: var(--ink); font-weight: 600; }
+  }
+
+  // Emerald-tinted subtotal bar
+  &__subtotal {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin: 16px 0 2px;
+    padding: 13px 16px;
+    border-radius: 13px;
+    background: color-mix(in srgb, var(--emerald) 8%, transparent);
+    border: 1px solid color-mix(in srgb, var(--emerald) 22%, transparent);
+
+    > svg {
+      width: 17px;
+      height: 17px;
+      color: var(--emerald-deep);
+      flex: 0 0 auto;
+    }
+
+    .txt {
+      font-size: 0.9rem;
+      color: var(--ink-soft);
+      flex: 1;
+      min-width: 170px;
+
+      b { color: var(--ink); font-weight: 600; }
+    }
+
+    .note {
+      font-family: $font-mono;
+      font-size: 0.64rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+      flex: 0 0 auto;
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Session list
+// ---------------------------------------------------------------------------
+.slog {
+  list-style: none;
+  padding: 0;
+  margin: 4px 0 0;
+}
+
+// Section dividers ("Planned", "Logged …")
+.slog__section {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 22px 2px 9px;
+  font-family: $font-mono;
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  cursor: default;
+
+  &:first-child { padding-top: 6px; }
+
+  .count {
+    color: var(--ink-soft);
+    letter-spacing: 0.03em;
+  }
+
+  &--over .count {
+    color: color-mix(in srgb, var(--amber) 82%, var(--ink));
+  }
+}
+
+// Shared row shell
+.slog__row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 6px;
+  margin: 0 -6px;
+  border-top: 1px solid var(--line-soft);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.15s;
+
+  &:first-child { border-top: none; }
+  &:hover { background: color-mix(in srgb, var(--ink) 3%, transparent); }
+
+  // Hover state: title tints emerald, chevron slides in
+  &:hover .slog__t { color: var(--emerald-deep); }
+  &:hover .slog__go { opacity: 1; transform: none; }
+
+  // Planned dashed card
+  &--planned {
+    border: 1.5px dashed color-mix(in srgb, var(--emerald) 42%, transparent);
+    background: color-mix(in srgb, var(--emerald) 4%, transparent);
+    padding: 13px 14px;
+    margin: 8px 0 0;
+    border-radius: 12px;
+    cursor: default;
+
+    &:first-child { border-top: 1.5px dashed color-mix(in srgb, var(--emerald) 42%, transparent); }
+    &:hover { background: color-mix(in srgb, var(--emerald) 4%, transparent); }
+    &:hover .slog__t { color: var(--ink); }
+
+    .slog__ic {
+      background: transparent;
+      border: 1.5px dashed color-mix(in srgb, var(--emerald) 42%, transparent);
+    }
+  }
+
+  // Overdue variant (overrides planned)
+  &--overdue {
+    border-color: color-mix(in srgb, var(--amber) 52%, transparent);
+    background: color-mix(in srgb, var(--amber) 7%, transparent);
+
+    &:first-child {
+      border-top: 1.5px dashed color-mix(in srgb, var(--amber) 52%, transparent);
+    }
+
+    &:hover {
+      background: color-mix(in srgb, var(--amber) 10%, transparent);
+    }
+
+    .slog__ic {
+      background: transparent;
+      border: 1.5px dashed color-mix(in srgb, var(--amber) 52%, transparent);
+      color: var(--amber);
+    }
+  }
+
+  // Auto (watch/read) rows are read-only
+  &--auto {
+    cursor: default;
+    &:hover { background: transparent; }
+    &:hover .slog__t { color: var(--ink); }
+  }
+}
+
+// Icon tile
+.slog__ic {
+  width: 40px;
+  height: 40px;
+  flex: 0 0 auto;
+  border-radius: 11px;
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--emerald) 13%, transparent);
+  color: var(--emerald-deep);
+
+  svg { width: 19px; height: 19px; }
+
+  &--sky {
+    background: color-mix(in srgb, var(--sky) 14%, transparent);
+    color: var(--sky);
+  }
+}
+
+// Row body
+.slog__main {
+  flex: 1;
+  min-width: 0;
+}
+
+.slog__t {
+  font-weight: 600;
+  font-size: 1rem;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  transition: color 0.15s;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.slog__meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 0.82rem;
+  color: var(--ink-soft);
+  margin-top: 2px;
+
+  .dot {
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    background: var(--ink-faint);
+    flex-shrink: 0;
+  }
+}
+
+// Tag pills inside meta
+.slog__ptag {
+  font-family: $font-mono;
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 100px;
+  background: color-mix(in srgb, var(--emerald) 16%, transparent);
+  color: var(--emerald-deep);
+  flex: 0 0 auto;
+}
+
+.slog__otag {
+  font-family: $font-mono;
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 100px;
+  background: color-mix(in srgb, var(--amber) 20%, transparent);
+  color: color-mix(in srgb, var(--amber) 82%, var(--ink));
+  flex: 0 0 auto;
+}
+
+.slog__autotag {
+  font-family: $font-mono;
+  font-size: 0.56rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 100px;
+  background: color-mix(in srgb, var(--sky) 13%, transparent);
+  color: var(--sky);
+  flex: 0 0 auto;
+}
+
+// Note dot (inline, in meta)
+.slog__note-dot {
+  display: inline-flex;
+  align-items: center;
+  color: var(--emerald-deep);
+
+  svg { width: 13px; height: 13px; }
+}
+
+// Duration chip (logged rows, flush-right)
+.slog__dur {
+  font-family: $font-mono;
+  font-weight: 600;
+  font-size: 0.88rem;
+  color: var(--ink);
+  background: color-mix(in srgb, var(--ink) 6%, transparent);
+  padding: 6px 11px;
+  border-radius: 9px;
+  flex: 0 0 auto;
+  min-width: 58px;
+  text-align: center;
+}
+
+// Duration in planned meta (no chip, just mono text)
+.slog__metadur {
+  font-family: $font-mono;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+// Hover chevron (manual logged rows)
+.slog__go {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+  color: var(--ink-faint);
+  opacity: 0;
+  transform: translateX(-4px);
+  transition: opacity 0.15s, transform 0.15s;
+}
+
+// Overdue amber text in subtotal strip
+.sess-overdue {
+  color: color-mix(in srgb, var(--amber) 82%, var(--ink));
+  font-weight: 600;
+}
+
+// ---------------------------------------------------------------------------
+// Planned row actions cluster
+// ---------------------------------------------------------------------------
+.slog__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+// Reschedule ghost button (overdue only)
+.slog__resched {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: $font-sans;
+  font-weight: 600;
+  font-size: 0.82rem;
+  color: var(--ink);
+  background: var(--field);
+  border: 1.5px solid var(--line);
+  padding: 8px 13px;
+  border-radius: 100px;
+  flex: 0 0 auto;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+
+  svg { width: 14px; height: 14px; }
+
+  &:hover {
+    border-color: color-mix(in srgb, var(--amber) 55%, transparent);
+    background: color-mix(in srgb, var(--amber) 8%, transparent);
+  }
+}
+
+// Mark done primary button
+.slog__done {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: $font-sans;
+  font-weight: 600;
+  font-size: 0.82rem;
+  color: #042b1d;
+  background: var(--emerald);
+  border: 0;
+  padding: 8px 14px;
+  border-radius: 100px;
+  flex: 0 0 auto;
+  cursor: pointer;
+  transition: background 0.18s;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.25) inset,
+              0 8px 22px -12px rgba(16, 185, 129, 0.7);
+
+  svg { width: 14px; height: 14px; }
+  &:hover { background: var(--emerald-bright); }
+}
+
+// ---------------------------------------------------------------------------
+// Empty state
+// ---------------------------------------------------------------------------
+.slog__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 22px 4px 8px;
+  color: var(--ink-soft);
+  font-size: 0.92rem;
+}
+
+// ---------------------------------------------------------------------------
+// Reschedule modal
+// ---------------------------------------------------------------------------
+.sresched-title {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--ink);
+  margin: 0;
+}
+
+.modal-field-hint {
+  font-size: 0.82rem;
+  color: var(--ink-soft);
+  margin: 6px 0 0;
+}
+
+// ---------------------------------------------------------------------------
+// Session edit modal fields
+// ---------------------------------------------------------------------------
+.sactgrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.sact {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 10px 12px;
+  border-radius: 11px;
+  border: 1.5px solid var(--line);
+  background: var(--field);
+  color: var(--ink-soft);
+  font-family: $font-sans;
+  font-weight: 600;
+  font-size: 0.86rem;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: left;
+
+  svg { width: 16px; height: 16px; flex: 0 0 auto; }
+
+  &:hover {
+    border-color: color-mix(in srgb, var(--ink) 26%, transparent);
+    color: var(--ink);
+  }
+
+  &.sel {
+    border-color: var(--emerald);
+    background: color-mix(in srgb, var(--emerald) 10%, transparent);
+    color: var(--emerald-deep);
+  }
+}
+
+.sinput--ta {
+  resize: vertical;
+  min-height: 84px;
+  line-height: 1.5;
+}
+
+.sfield + .sfield { margin-top: 18px; }
+
+// ---------------------------------------------------------------------------
+// Dark mode
+// ---------------------------------------------------------------------------
+[data-theme="dark"] {
+  // Tell the browser to render native date-picker controls in dark mode
+  // so the calendar icon is visible against the dark input background.
+  #sessReschedDate {
+    color-scheme: dark;
+  }
+
+  .slog__ic--sky { color: var(--sky); }
+
+  .slog__dur {
+    background: color-mix(in srgb, var(--ink) 10%, transparent);
+  }
+
+  .slog__otag {
+    color: var(--amber);
+  }
+
+  .sess-overdue {
+    color: var(--amber);
+  }
+
+  .slog__ptag { color: var(--emerald); }
+
+  .slog__autotag { color: var(--sky); }
+
+  .slog__row--planned {
+    border-color: color-mix(in srgb, var(--emerald) 35%, transparent);
+    background: color-mix(in srgb, var(--emerald) 6%, transparent);
+
+    .slog__ic {
+      border-color: color-mix(in srgb, var(--emerald) 35%, transparent);
+    }
+  }
+
+  .slog__row--overdue {
+    border-color: color-mix(in srgb, var(--amber) 45%, transparent);
+    background: color-mix(in srgb, var(--amber) 9%, transparent);
+
+    .slog__ic {
+      border-color: color-mix(in srgb, var(--amber) 45%, transparent);
+    }
+  }
+
+  .slog__resched {
+    background: var(--field);
+    border-color: var(--line);
+    color: var(--ink);
+  }
+
+  .sact {
+    background: var(--field);
+    border-color: var(--line);
+    color: var(--ink-soft);
+
+    &.sel {
+      color: var(--emerald);
+      background: color-mix(in srgb, var(--emerald) 12%, transparent);
+    }
+  }
+
+  .sessions__subtotal {
+    background: color-mix(in srgb, var(--emerald) 10%, transparent);
+    border-color: color-mix(in srgb, var(--emerald) 25%, transparent);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Reduced motion
+// ---------------------------------------------------------------------------
+@media (prefers-reduced-motion: reduce) {
+  .slog__row        { transition: none; }
+  .slog__go         { transition: none; }
+  .slog__t          { transition: none; }
+  .slog__done       { transition: none; }
+  .slog__resched    { transition: none; }
+}
+
+// ---------------------------------------------------------------------------
+// Responsive
+// ---------------------------------------------------------------------------
+@media (max-width: 640px) {
+  // Card breathing room
+  .sessions {
+    padding: 4px 14px 18px;
+  }
+
+  // Header: stack button below text
+  .sessions__hd {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+
+    .rdbtn { align-self: flex-start; }
+  }
+
+  // Subtotal: hide mono caption, let text wrap naturally
+  .sessions__subtotal {
+    gap: 8px;
+    padding: 11px 13px;
+
+    .note { display: none; }
+
+    .txt { font-size: 0.85rem; }
+  }
+
+  // Planned rows: two-line layout
+  // Line 1: icon + title/meta
+  // Line 2: full-width action buttons
+  .slog__row--planned {
+    flex-wrap: wrap;
+    column-gap: 12px;
+    row-gap: 0;
+    padding: 14px 16px 14px;
+
+    .slog__ic {
+      width: 36px;
+      height: 36px;
+      flex-shrink: 0;
+      align-self: flex-start;
+      margin-top: 2px;
+    }
+
+    .slog__main {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .slog__t {
+      white-space: normal;
+      font-size: 0.95rem;
+    }
+
+    .slog__meta {
+      flex-wrap: wrap;
+      row-gap: 4px;
+    }
+
+    // Actions drop to a full-width second row
+    .slog__actions {
+      width: 100%;
+      margin-top: 12px;
+      padding-top: 10px;
+      border-top: 1px solid color-mix(in srgb, var(--line) 50%, transparent);
+      gap: 8px;
+
+      .slog__resched,
+      .slog__done {
+        flex: 1;
+        justify-content: center;
+        font-size: 0.85rem;
+        padding: 9px 10px;
+      }
+    }
+  }
+
+  // Logged rows: tighter, hide chevron
+  .slog__row:not(.slog__row--planned) {
+    padding: 12px 4px;
+    gap: 11px;
+
+    .slog__ic {
+      width: 36px;
+      height: 36px;
+    }
+
+    .slog__t { font-size: 0.93rem; }
+
+    .slog__go { display: none; }
+
+    .slog__dur {
+      font-size: 0.82rem;
+      padding: 5px 9px;
+      min-width: 46px;
+    }
+  }
+
+  // Modal activity grid: single column
+  .sactgrid {
+    grid-template-columns: 1fr;
+  }
+}

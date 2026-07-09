@@ -197,44 +197,12 @@
   {# ── 3. Learning units card ──────────────────────────────────────────── #}
   {% include "resources/partials/_learning_unit_list.html" with resource=resource %}
 
+  {# ── 4. Study Log card ───────────────────────────────────────────────── #}
+  {% include "resources/partials/_study_log.html" with resource=resource %}
+
 </div>{# /.rd-page #}
 
-{# ── Delete resource modal ──────────────────────────────────────────────── #}
-<div class="modal fade modal--rd" id="deleteModal" tabindex="-1">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--rose)">
-            <path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
-          </svg>
-          Delete resource
-        </h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <p style="color:var(--ink-soft);margin:0 0 8px">Are you sure you want to delete <strong style="color:var(--ink)">{{ resource.title }}</strong>?</p>
-        <p style="color:var(--rose);margin:0;font-size:.875rem;display:flex;align-items:center;gap:6px">
-          <svg style="width:14px;height:14px;flex-shrink:0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M10.3 3.3 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.3a2 2 0 0 0-3.4 0z"></path>
-            <path d="M12 9v4M12 17h.01"></path>
-          </svg>
-          This will also delete all {{ total_units }} learning unit{{ total_units|pluralize }}.
-        </p>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="rdbtn rdbtn--ghost" data-bs-dismiss="modal">Cancel</button>
-        <form method="post" action="{% url 'learning:resource_delete' resource.pk %}">
-          {% csrf_token %}
-          <button type="submit" class="rdbtn rdbtn--danger">
-            <span class="btn-text">Delete resource</span>
-            <span class="spinner-border spinner-border-sm d-none"></span>
-          </button>
-        </form>
-      </div>
-    </div>
-  </div>
-</div>
+{% include "resources/partials/_delete_resource_modal.html" %}
 
 {% include "resources/partials/_learning_unit_create_modal.html" %}
 {% include "resources/partials/_learning_unit_note_modal.html" %}
@@ -295,6 +263,7 @@
     const u = units.find(x => x.id === resp.unit.id);
     if (!u) return;
     Object.assign(u, resp.unit);
+    if (resp.cleared_unit_id) window.__studyLog?.removeAutoSession(resp.cleared_unit_id);
   }
 
   // ── Ring animation on load ─────────────────────────────────────────────
@@ -806,6 +775,7 @@
       body: JSON.stringify({ duration_minutes: durationMins }),
     }).then(r => r.json());
     applyResponse(resp);
+    if (resp.session) window.__studyLog?.addAutoSession(resp.session);
     bootstrap.Modal.getInstance(document.getElementById('logReadingModal'))?.hide();
     renderUnits();
   }
@@ -954,6 +924,198 @@
     });
   }
   renderDesc(false);
+})();
+</script>
+
+{# ── Study Log JS ───────────────────────────────────────────────────────── #}
+<script nonce="{{ request.csp_nonce }}">
+(function () {
+  const CSRF = '{{ csrf_token }}';
+  const PATCH_URL = '{% url "learning:session_patch"       0 %}'.replace('/0/', '/__ID__/');
+  const DONE_URL  = '{% url "learning:session_mark_done"   0 %}'.replace('/0/', '/__ID__/');
+  const DEL_URL   = '{% url "learning:session_delete_ajax" 0 %}'.replace('/0/', '/__ID__/');
+
+  // ── SVG icons (used for activity grid in edit modal + JS-inserted auto rows) ──
+  const SICON = {
+    flashcards: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="14" height="12" rx="2"></rect><path d="M7 4h13a1 1 0 0 1 1 1v11"></path></svg>',
+    practice:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>',
+    pastpapers: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6M8 13h8M8 17h5"></path></svg>',
+    review:     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4h7a3 3 0 0 1 3 3v13a2.5 2.5 0 0 0-2.5-2.5H2z"></path><path d="M22 4h-7a3 3 0 0 0-3 3v13a2.5 2.5 0 0 1 2.5-2.5H22z"></path></svg>',
+    writing:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"></path></svg>',
+    watch:      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="3"></rect><path d="M10 9l5 3-5 3z"></path></svg>',
+    read:       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5a2 2 0 0 1 2-2h12v16H6a2 2 0 0 0-2 2z"></path><path d="M4 19a2 2 0 0 0 2 2h12"></path></svg>',
+  };
+  const SICON_DEFAULT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>';
+  const SLABEL = { flashcards:'Flashcards / Anki', practice:'Practice problems', pastpapers:'Past papers', review:'Review notes', writing:'Writing / essays', watch:'Watched', read:'Read' };
+  const EDIT_ACTS = ['flashcards', 'practice', 'pastpapers', 'review', 'writing'];
+
+  function esc(s) { return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+  function fmt(m) { m=+m||0; const h=Math.floor(m/60),mm=m%60; return h>0?(mm?h+'h '+mm+'m':h+'h'):mm+'m'; }
+  function parseDur(str) {
+    str=String(str||'').toLowerCase();
+    const hm=str.match(/(\d+)\s*h/),mm=str.match(/(\d+)\s*m/);
+    let h=hm?+hm[1]:0,m=mm?+mm[1]:0;
+    if(!hm&&!mm){const n=parseInt(str,10);if(!isNaN(n))m=n;}
+    return h*60+m;
+  }
+  function post(url, body) {
+    return fetch(url, { method:'POST', headers:{'Content-Type':'application/json','X-CSRFToken':CSRF}, body:JSON.stringify(body) }).then(r=>r.json());
+  }
+
+  // ── Inject icons into server-rendered icon tiles ──────────────────────────
+  document.querySelectorAll('.slog__ic[data-act]').forEach(el => {
+    el.innerHTML = SICON[el.dataset.act] || SICON_DEFAULT;
+  });
+
+  // ── Mark done ─────────────────────────────────────────────────────────────
+  document.querySelectorAll('.slog__done[data-sess]').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      btn.disabled = true;
+      post(DONE_URL.replace('__ID__', btn.dataset.sess), {})
+        .then(r => { if (r.ok) location.reload(); else btn.disabled = false; });
+    });
+  });
+
+  // ── Reschedule modal ──────────────────────────────────────────────────────
+  const reschedModalEl  = document.getElementById('sessReschedModal');
+  const reschedDateInput = document.getElementById('sessReschedDate');
+  const reschedTitleEl  = document.getElementById('sessReschedTitle');
+  const reschedSaveBtn  = document.getElementById('sessReschedSave');
+  let reschedSessId     = null;
+
+  document.querySelectorAll('.slog__resched[data-sess]').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      reschedSessId = btn.dataset.sess;
+      if (reschedTitleEl) reschedTitleEl.textContent = btn.dataset.title || '';
+      if (reschedDateInput) {
+        // Default to tomorrow if current date is today or past
+        const cur = btn.dataset.date;
+        const today = new Date().toISOString().split('T')[0];
+        reschedDateInput.value = (cur && cur > today) ? cur : (() => {
+          const d = new Date(); d.setDate(d.getDate() + 1); return d.toISOString().split('T')[0];
+        })();
+        reschedDateInput.min = today;
+      }
+      bootstrap.Modal.getOrCreateInstance(reschedModalEl).show();
+    });
+  });
+
+  if (reschedSaveBtn) {
+    reschedSaveBtn.addEventListener('click', () => {
+      if (!reschedSessId || !reschedDateInput?.value) return;
+      reschedSaveBtn.disabled = true;
+      post(PATCH_URL.replace('__ID__', reschedSessId), { date: reschedDateInput.value })
+        .then(r => { if (r.ok) { bootstrap.Modal.getInstance(reschedModalEl)?.hide(); location.reload(); } else reschedSaveBtn.disabled = false; });
+    });
+  }
+
+  if (reschedModalEl) {
+    reschedModalEl.addEventListener('hidden.bs.modal', () => { reschedSessId = null; });
+  }
+
+  // ── Edit modal ────────────────────────────────────────────────────────────
+  const modalEl   = document.getElementById('sessEditModal');
+  const actGrid   = document.getElementById('sessActGrid');
+  const durInput  = document.getElementById('sessDurInput');
+  const titleInput = document.getElementById('sessTitleInput');
+  const notesInput = document.getElementById('sessNotesInput');
+  const saveBtn   = document.getElementById('sessSaveBtn');
+  const delBtn    = document.getElementById('sessDeleteBtn');
+  let editSessId  = null;
+  let editAct     = null;
+
+  if (actGrid) {
+    actGrid.innerHTML = EDIT_ACTS.map(a =>
+      `<button type="button" class="sact" data-act="${a}">${SICON[a]||''}${esc(SLABEL[a])}</button>`
+    ).join('');
+    actGrid.addEventListener('click', e => {
+      const b = e.target.closest('.sact');
+      if (!b) return;
+      editAct = b.dataset.act;
+      actGrid.querySelectorAll('.sact').forEach(x => x.classList.toggle('sel', x === b));
+    });
+  }
+
+  document.querySelectorAll('.slog__row[data-sess][role="button"]').forEach(row => {
+    const open = () => {
+      editSessId = row.dataset.sess;
+      editAct    = row.dataset.act;
+      if (actGrid) actGrid.querySelectorAll('.sact').forEach(b => b.classList.toggle('sel', b.dataset.act === editAct));
+      if (durInput)    durInput.value    = fmt(+row.dataset.mins);
+      if (titleInput)  titleInput.value  = row.dataset.title || '';
+      if (notesInput)  notesInput.value  = row.dataset.notes || '';
+      bootstrap.Modal.getOrCreateInstance(modalEl).show();
+    };
+    row.addEventListener('click', open);
+    row.addEventListener('keydown', e => { if (e.key==='Enter'||e.key===' '){e.preventDefault();open();} });
+  });
+
+  if (saveBtn) {
+    saveBtn.addEventListener('click', () => {
+      if (!editSessId) return;
+      saveBtn.disabled = true;
+      post(PATCH_URL.replace('__ID__', editSessId), {
+        activity_slug:    editAct,
+        duration_minutes: Math.max(1, parseDur(durInput?.value) || 1),
+        title:            titleInput?.value.trim() || '',
+        notes:            notesInput?.value.trim() || '',
+      }).then(r => { if (r.ok) { bootstrap.Modal.getInstance(modalEl)?.hide(); location.reload(); } else saveBtn.disabled=false; });
+    });
+  }
+
+  if (delBtn) {
+    delBtn.addEventListener('click', () => {
+      if (!editSessId) return;
+      delBtn.disabled = true;
+      post(DEL_URL.replace('__ID__', editSessId), {})
+        .then(r => { if (r.ok) { bootstrap.Modal.getInstance(modalEl)?.hide(); location.reload(); } else delBtn.disabled=false; });
+    });
+  }
+
+  if (modalEl) {
+    modalEl.addEventListener('hidden.bs.modal', () => { editSessId=null; editAct=null; });
+  }
+
+  // ── Public API — called from units JS after chapter completion / uncheck ──
+  window.__studyLog = {
+    addAutoSession(session) {
+      if (!session) return;
+      // Remove any existing auto row for this unit (re-log updates it)
+      if (session.unit_id) {
+        document.querySelector(`.slog__row--auto[data-unit-id="${session.unit_id}"]`)?.remove();
+      }
+      const li = document.createElement('li');
+      li.className = 'slog__row slog__row--auto';
+      if (session.unit_id) li.dataset.unitId = session.unit_id;
+      li.innerHTML =
+        `<span class="slog__ic slog__ic--sky">${SICON[session.act]||SICON_DEFAULT}</span>`
+        +`<div class="slog__main"><div class="slog__t">${esc(session.title)}</div>`
+        +`<div class="slog__meta"><span>${esc(session.act_label||'Read')}</span>`
+        +`<span class="slog__autotag">Auto · from chapter</span>`
+        +`<span class="dot"></span><span>${esc(session.when||'Today')}</span></div></div>`
+        +`<span class="slog__dur">${esc(fmt(session.mins))}</span>`;
+      const slog = document.getElementById('slog');
+      if (!slog) return;
+      // Insert after the "Logged" section header, or append if not present
+      const loggedHdr = slog.querySelector('.slog__section--logged');
+      if (loggedHdr) {
+        loggedHdr.insertAdjacentElement('afterend', li);
+      } else {
+        // Create the section header first
+        const hdr = document.createElement('li');
+        hdr.className = 'slog__section slog__section--logged';
+        hdr.innerHTML = 'Logged';
+        slog.appendChild(hdr);
+        slog.appendChild(li);
+      }
+    },
+    removeAutoSession(unitId) {
+      if (!unitId) return;
+      document.querySelector(`.slog__row--auto[data-unit-id="${unitId}"]`)?.remove();
+    },
+  };
 })();
 </script>
 {% endblock %}

@@ -270,6 +270,7 @@ class LearningUnitInlinePatchView(UserPermissionMixin, View):
             return JsonResponse({"ok": False, "error": str(e)}, status=400)
 
         # Reading chapter unchecked — delete its per-unit session.
+        cleared_unit_id = None
         if is_reading_uncheck:
             read_activity = Activity.objects.filter(
                 slug=_READ_SLUG, is_system=True
@@ -280,6 +281,7 @@ class LearningUnitInlinePatchView(UserPermissionMixin, View):
                     unit=unit,
                     activity=read_activity,
                 ).delete()
+                cleared_unit_id = unit.id
 
         # Auto-log a watch session when video progress changes.
         if "video_progress_minutes" in data and unit.video_progress_minutes is not None:
@@ -305,7 +307,13 @@ class LearningUnitInlinePatchView(UserPermissionMixin, View):
                     duration_minutes=0,
                 ).delete()
 
-        return JsonResponse({"ok": True, "unit": unit.to_inline_dict()})
+        return JsonResponse(
+            {
+                "ok": True,
+                "unit": unit.to_inline_dict(),
+                "cleared_unit_id": cleared_unit_id,
+            }
+        )
 
 
 class LearningUnitCompleteReadingView(UserPermissionMixin, UserUnitMixin, View):
@@ -333,18 +341,41 @@ class LearningUnitCompleteReadingView(UserPermissionMixin, UserUnitMixin, View):
         unit.save()
 
         # One session per chapter — update on re-log, create on first log.
+        today = datetime.date.today()
         read_activity = Activity.objects.filter(slug=_READ_SLUG, is_system=True).first()
+        new_session_data = None
         if read_activity:
-            StudySession.objects.update_or_create(
+            session, _ = StudySession.objects.update_or_create(
                 user=request.user,
                 unit=unit,
                 activity=read_activity,
                 defaults={
                     "resource": unit.resource,
-                    "date": datetime.date.today(),
+                    "date": today,
                     "duration_minutes": new_duration,
                     "status": StudySession.Status.LOGGED,
                 },
             )
+            new_session_data = {
+                "id": session.id,
+                "title": unit.title,
+                "act": _READ_SLUG,
+                "act_label": read_activity.name,
+                "mins": new_duration,
+                "when": "Today",
+                "date": today.isoformat(),
+                "status": "done",
+                "overdue": False,
+                "notes": session.notes,
+                "auto": True,
+                "unit_id": unit.id,
+                "chapter": unit.title,
+            }
 
-        return JsonResponse({"ok": True, "unit": unit.to_inline_dict()})
+        return JsonResponse(
+            {
+                "ok": True,
+                "unit": unit.to_inline_dict(),
+                "session": new_session_data,
+            }
+        )

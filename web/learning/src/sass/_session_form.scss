@@ -420,6 +420,10 @@ select.ss-control--select {
   &:hover:not(:focus) {
     border-color: color-mix(in srgb, var(--ink) 22%, transparent);
   }
+
+  [data-theme="dark"] & {
+    color-scheme: dark;
+  }
 }
 
 // Custom-duration inline input

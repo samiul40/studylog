@@ -5,7 +5,6 @@
 
 {% block main_class %}sl-bg{% endblock %}
 {% block breadcrumbs %}{% endblock %}
-{% block alerts %}{% endblock %}
 
 {% block content %}
 <div class="sl-page">
@@ -729,8 +728,11 @@
     const dateInput = document.getElementById('js-sheet-dateinput');
     dateField.hidden = !planned;
     if (planned) {
-      dateInput.value = session.date;
+      dateInput.min   = TODAY_ISO;
+      dateInput.value = session.date < TODAY_ISO ? TODAY_ISO : session.date;
       if (focusDate) setTimeout(() => dateInput.focus(), 80);
+    } else {
+      dateInput.removeAttribute('min');
     }
 
     // Mark-done button (planned only)

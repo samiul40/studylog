@@ -75,6 +75,11 @@ class StudySession(models.Model):
     def get_absolute_url(self):
         return reverse("learning:session_list")
 
+    @property
+    def is_auto(self) -> bool:
+        """True for system-created sessions (unit-linked read/watch activities)."""
+        return self.unit_id is not None and self.activity.slug in ("read", "watch")
+
     def display_label(self):
         """Human-readable label: title if set, else activity (+ resource)."""
         if self.title:

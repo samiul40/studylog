@@ -1,0 +1,150 @@
+{% load learning_filters %}
+{# ── Study Log card ─────────────────────────────────────────────────────────── #}
+<div class="rd-card sessions" id="studyLogCard">
+  <div class="sessions__hd">
+    <div>
+      <h3>Study log</h3>
+      <p class="sessions__sub">
+        <b>Everything you do on this resource logs here as a session</b> —
+        mark a chapter complete and a "Read" session is created automatically
+        from the time you enter. Flashcards, past papers and notes sit in the
+        same log.
+      </p>
+    </div>
+    <a class="rdbtn rdbtn--primary rdbtn--sm"
+       href="{% url 'learning:session_create' %}?resource={{ resource.title|urlencode }}&next={{ request.path|urlencode }}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+           stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 5v14M5 12h14"></path>
+      </svg>
+      Log a session
+    </a>
+  </div>
+
+  {# Subtotal strip #}
+  <div class="sessions__subtotal" id="sessSubtotal">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+         stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path>
+    </svg>
+    <span class="txt">
+      <b>{{ study_log_total_mins|format_duration }}</b> logged across
+      <b>{{ study_log_done_count }} session{{ study_log_done_count|pluralize }}</b>{% if study_log_planned_count %} · {{ study_log_planned_count }} planned{% endif %}{% if study_log_overdue_count %} · <span class="sess-overdue">{{ study_log_overdue_count }} to reschedule</span>{% endif %}
+    </span>
+    <span class="note">Watching + Active study · One log</span>
+  </div>
+
+  <ul class="slog" id="slog">
+
+    {# ── Planned sessions ─────────────────────────────────────────────────── #}
+    {% if study_sessions_planned %}
+    <li class="slog__section{% if study_log_overdue_count %} slog__section--over{% endif %}">
+      Planned{% if study_log_overdue_count %} <span class="count">· {{ study_log_overdue_count }} to reschedule</span>{% endif %}
+    </li>
+    {% for s in study_sessions_planned %}
+    <li class="slog__row slog__row--planned{% if s.overdue %} slog__row--overdue{% endif %}">
+      <span class="slog__ic{% if s.overdue %} slog__ic--amber{% endif %}" data-act="{{ s.act }}"></span>
+      <div class="slog__main">
+        <div class="slog__t">{{ s.title }}</div>
+        <div class="slog__meta">
+          {% if s.overdue %}
+          <span class="slog__otag">Overdue</span>
+          {% else %}
+          <span class="slog__ptag">Planned</span>
+          {% endif %}
+          <span>{{ s.act_label }}</span>
+          <span class="dot"></span>
+          <span>{{ s.when }}</span>
+          <span class="dot"></span>
+          <span class="slog__metadur">{{ s.mins|format_duration }}</span>
+        </div>
+      </div>
+      <div class="slog__actions">
+        {% if s.overdue %}
+        <button type="button" class="slog__resched" data-sess="{{ s.id }}" data-date="{{ s.date }}" data-title="{{ s.title|escape }}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 12a9 9 0 1 0 3-6.7L3 8"></path><path d="M3 3v5h5"></path>
+          </svg>
+          Reschedule
+        </button>
+        {% endif %}
+        <button type="button" class="slog__done" data-sess="{{ s.id }}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 6L9 17l-5-5"></path>
+          </svg>
+          Mark done
+        </button>
+      </div>
+    </li>
+    {% endfor %}
+    {% endif %}
+
+    {# ── Logged sessions ──────────────────────────────────────────────────── #}
+    {% if study_sessions_logged %}
+    <li class="slog__section slog__section--logged">
+      Logged <span class="count">· {{ study_log_total_mins|format_duration }} across {{ study_log_done_count }}</span>
+    </li>
+    {% for s in study_sessions_logged %}
+    {% if s.auto %}
+    <li class="slog__row slog__row--auto" data-unit-id="{{ s.unit_id }}">
+      <span class="slog__ic slog__ic--sky" data-act="{{ s.act }}"></span>
+      <div class="slog__main">
+        <div class="slog__t">{{ s.title }}</div>
+        <div class="slog__meta">
+          <span>{{ s.act_label }}</span>
+          <span class="slog__autotag">Auto · from chapter</span>
+          <span class="dot"></span>
+          <span>{{ s.when }}</span>
+        </div>
+      </div>
+      <span class="slog__dur">{{ s.mins|format_duration }}</span>
+    </li>
+    {% else %}
+    <li class="slog__row" role="button" tabindex="0"
+        data-sess="{{ s.id }}"
+        data-act="{{ s.act }}"
+        data-mins="{{ s.mins }}"
+        data-title="{{ s.title|escape }}"
+        data-notes="{{ s.notes|escape }}">
+      <span class="slog__ic" data-act="{{ s.act }}"></span>
+      <div class="slog__main">
+        <div class="slog__t">{{ s.title }}</div>
+        <div class="slog__meta">
+          <span>{{ s.act_label }}</span>
+          <span class="dot"></span>
+          <span>{{ s.when }}</span>
+          {% if s.notes %}
+          <span class="dot"></span>
+          <span class="slog__note-dot" title="Has a note">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <path d="M14 2v6h6"></path>
+            </svg>
+          </span>
+          {% endif %}
+        </div>
+      </div>
+      <svg class="slog__go" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M9 18l6-6-6-6"></path>
+      </svg>
+      <span class="slog__dur">{{ s.mins|format_duration }}</span>
+    </li>
+    {% endif %}
+    {% endfor %}
+    {% endif %}
+
+    {# ── Empty state ──────────────────────────────────────────────────────── #}
+    {% if not study_sessions_planned and not study_sessions_logged %}
+    <li class="slog__empty">No sessions logged yet — use "Log a session" to add your first entry.</li>
+    {% endif %}
+
+  </ul>
+</div>
+
+{% include "resources/partials/_reschedule_modal.html" %}
+
+{% include "resources/partials/_sess_edit_modal.html" %}

@@ -5,7 +5,6 @@
 
 {% block main_class %}ss-bg{% endblock %}
 {% block breadcrumbs %}{% endblock %}
-{% block alerts %}{% endblock %}
 
 {% block content %}
 <div class="ss-page">
@@ -686,6 +685,19 @@
       : "Counts toward your <strong>dashboard time &amp; streak stats</strong> — whether or not you link a resource.";
     if (submitLabel) submitLabel.textContent = plan ? 'Plan session' : 'Log session';
     if (durPrefix)   durPrefix.textContent   = plan ? 'Planning' : 'Logging';
+    // Enforce future-only dates in plan mode; lift restriction in log mode
+    if (dateInput) {
+      if (plan) {
+        dateInput.min = todayISO;
+        if (dateInput.value && dateInput.value < todayISO) {
+          dateInput.value = todayISO;
+          $$('#ss-dategroup [data-date]').forEach(function(p) { p.classList.remove('on'); });
+          document.getElementById('ss-date-today')?.classList.add('on');
+        }
+      } else {
+        dateInput.removeAttribute('min');
+      }
+    }
   }
 
   applyMode(INIT_STA);
@@ -699,6 +711,12 @@
   var dateInput = document.getElementById('id_date');
   var today     = new Date();
   var todayISO  = today.toISOString().slice(0, 10);
+
+  // Apply min constraint now that todayISO is available
+  if (dateInput && statusInput.value === 'planned') {
+    dateInput.min = todayISO;
+    if (dateInput.value && dateInput.value < todayISO) dateInput.value = todayISO;
+  }
 
   function isoDate(d) { return d.toISOString().slice(0, 10); }
 

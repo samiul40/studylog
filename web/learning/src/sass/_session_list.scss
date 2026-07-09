@@ -327,7 +327,7 @@
     box-shadow: 0 0 0 4px rgba(16,185,129,0.18);
   }
 
-  // Planned-only (future intent, no done sessions)
+  // Planned-only (future intent, no done sessions) — green dashed
   &.planned {
     background: transparent;
     border: 1.5px dashed color-mix(in srgb, var(--emerald) 55%, transparent);
@@ -336,11 +336,21 @@
     [data-theme="dark"] & .cell__num { color: var(--emerald-bright); }
   }
 
-  // Overdue (planned + past)
-  &.overdue {
-    border-color: color-mix(in srgb, var(--amber) 70%, transparent);
-    background: color-mix(in srgb, var(--amber) 9%, transparent);
-    border-style: dashed;
+  // Overdue (planned + past) — amber dashed border, amber tint background.
+  // Must override the heat-level (.l1–.l4) green backgrounds.
+  &.overdue,
+  &.overdue.l1,
+  &.overdue.l2,
+  &.overdue.l3,
+  &.overdue.l4 {
+    border: 1.5px dashed color-mix(in srgb, var(--amber) 70%, transparent);
+    background: color-mix(in srgb, var(--amber) 9%, var(--card));
+
+    .cell__num,
+    .cell__mins { color: color-mix(in srgb, var(--amber) 85%, var(--ink)); }
+
+    [data-theme="dark"] & .cell__num,
+    [data-theme="dark"] & .cell__mins { color: var(--amber); }
   }
 }
 
@@ -1194,6 +1204,16 @@
     &.l2 { background: color-mix(in srgb, var(--emerald) 40%, transparent); }
     &.l3 { background: color-mix(in srgb, var(--emerald) 65%, transparent); }
     &.l4 { background: var(--emerald); }
+
+    // Overdue — must come after l1–l4 to win the specificity tie.
+    // Compiles to [data-theme="dark"] .cell.overdue.lX → [0,4,0] > l4's [0,3,0].
+    &.overdue,
+    &.overdue.l1,
+    &.overdue.l2,
+    &.overdue.l3,
+    &.overdue.l4 {
+      background: color-mix(in srgb, var(--amber) 18%, transparent);
+    }
   }
 
   .cell__num {
