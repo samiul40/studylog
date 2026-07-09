@@ -31,7 +31,7 @@
       </div>
       <div>
         <h1 class="ss-card__title" id="ss-card-title">Log a study session</h1>
-        <p class="ss-card__sub" id="ss-card-sub">Record time you spent studying — Anki, revision, past papers, anything.</p>
+        <p class="ss-card__sub" id="ss-card-sub" aria-live="polite"></p>
       </div>
     </div>
 
@@ -105,35 +105,18 @@
           <span class="ss-fsection__kicker">When &amp; how long</span>
         </div>
 
-        {# Mode toggle #}
-        <div class="ss-field">
-          <div class="ss-segmented" id="ss-mode" role="group" aria-label="Session mode">
-            <button type="button" class="on" data-modeval="logged" id="ss-btn-log">Log now</button>
-            <button type="button" data-modeval="planned" id="ss-btn-plan">Plan for later</button>
-          </div>
-          <div class="ss-field__hint" id="ss-mode-hint">Recording something you've already studied.</div>
+        {# Hidden date field — value comes from URL ?date= param, status set by JS #}
+        <input type="hidden" name="date" id="id_date"
+               value="{% if form.is_bound %}{{ form.data.date }}{% elif date_prefill %}{{ date_prefill }}{% else %}{{ today_iso }}{% endif %}">
+        {% if form.date.errors %}
+        <div class="ss-field__err" role="alert">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
+               stroke-linecap="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="10"/><path d="M12 8v5M12 16h.01"/>
+          </svg>
+          {% for err in form.date.errors %}{{ err }}{% endfor %}
         </div>
-
-        {# Date #}
-        <div class="ss-field">
-          <label class="ss-field__label" id="ss-date-label" for="id_date">Date</label>
-          <div class="ss-pillrow" id="ss-dategroup">
-            <button type="button" class="ss-pill{% if not date_prefill or date_prefill == today_iso %} on{% endif %}" data-date="today" id="ss-date-today">Today</button>
-            <button type="button" class="ss-pill" data-date="alt" id="ss-date-alt">Yesterday</button>
-            <input type="date" name="date" id="id_date" class="ss-dateinput"
-                   value="{% if form.is_bound %}{{ form.data.date }}{% elif date_prefill %}{{ date_prefill }}{% else %}{{ today_iso }}{% endif %}"
-                   aria-label="Specific date">
-          </div>
-          {% if form.date.errors %}
-          <div class="ss-field__err" role="alert">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
-                 stroke-linecap="round" aria-hidden="true">
-              <circle cx="12" cy="12" r="10"/><path d="M12 8v5M12 16h.01"/>
-            </svg>
-            {% for err in form.date.errors %}{{ err }}{% endfor %}
-          </div>
-          {% endif %}
-        </div>
+        {% endif %}
 
         {# Duration #}
         <div class="ss-field">
@@ -177,108 +160,116 @@
         </div>
       </div>
 
-      {# ── Section C: Link a resource ──────────────────────────────────── #}
-      <div class="ss-fsection">
-        <div class="ss-fsection__head">
-          <span class="ss-fsection__kicker">Link a resource</span>
-          <span class="ss-fsection__note">Optional</span>
-        </div>
-        <div class="ss-field">
-          <div class="ss-combo" id="ss-combo">
-            <div class="ss-combo__control" id="ss-combo-control">
-              <span class="ss-combo__ic" id="ss-combo-ic" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                     stroke-linecap="round" stroke-linejoin="round">
-                  <circle cx="12" cy="12" r="9"/><path d="M8 12h8"/>
-                </svg>
-              </span>
-              <input type="text" id="ss-combo-input" role="combobox"
-                     aria-autocomplete="list" aria-expanded="false"
-                     aria-controls="ss-combo-panel"
-                     placeholder="Search a course, video or book… or leave blank"
-                     spellcheck="false" autocomplete="off">
-              <span class="ss-combo__tag" id="ss-combo-tag" style="display:none;" aria-live="polite"></span>
-              <span class="ss-combo__chev" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
-                     stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M6 9l6 6 6-6"/>
-                </svg>
-              </span>
+      {# ── Details toggle ───────────────────────────────────────────────── #}
+      <button type="button" class="ss-details-toggle{% if form.is_bound %} is-open{% endif %}" id="ss-details-toggle"
+              aria-expanded="{% if form.is_bound %}true{% else %}false{% endif %}" aria-controls="ss-details-panel">
+        <span class="ss-details-toggle__ic" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 5v14M5 12h14"/>
+          </svg>
+        </span>
+        <span id="ss-details-toggle-label">{% if form.is_bound %}Hide resource, title, tags or notes{% else %}Link a resource, add a title, tags or notes{% endif %}</span>
+        <span class="ss-details-toggle__chev" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 9l6 6 6-6"/>
+          </svg>
+        </span>
+      </button>
+
+      {# ── Collapsible details panel ─────────────────────────────────────── #}
+      <div id="ss-details-panel" class="ss-details-panel"{% if not form.is_bound %} hidden{% endif %}>
+
+        {# Link a resource #}
+        <div class="ss-fsection">
+          <div class="ss-fsection__head">
+            <span class="ss-fsection__kicker">Link a resource</span>
+            <span class="ss-fsection__note">Optional</span>
+          </div>
+          <div class="ss-field">
+            <div class="ss-combo" id="ss-combo">
+              <div class="ss-combo__control" id="ss-combo-control">
+                <span class="ss-combo__ic" id="ss-combo-ic" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                       stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="9"/><path d="M8 12h8"/>
+                  </svg>
+                </span>
+                <input type="text" id="ss-combo-input" role="combobox"
+                       aria-autocomplete="list" aria-expanded="false"
+                       aria-controls="ss-combo-panel"
+                       placeholder="Search a course, video or book… or leave blank"
+                       spellcheck="false" autocomplete="off">
+                <span class="ss-combo__tag" id="ss-combo-tag" style="display:none;" aria-live="polite"></span>
+                <span class="ss-combo__chev" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                       stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M6 9l6 6 6-6"/>
+                  </svg>
+                </span>
+              </div>
+              <div class="ss-combo__panel" id="ss-combo-panel" role="listbox"></div>
             </div>
-            <div class="ss-combo__panel" id="ss-combo-panel" role="listbox"></div>
-          </div>
-          <div class="ss-field__hint">
-            Studying <strong>on top of</strong> a resource — flashcards, past papers or notes from a lecture or book.
-            It won't change the resource's watch/read progress; it's logged as extra study.
-          </div>
-        </div>
-      </div>
-
-      {# ── Section C2: Learning unit (shown when resource selected) ────── #}
-      <div class="ss-fsection" id="ss-unit-section" style="display:none;">
-        <div class="ss-fsection__head">
-          <span class="ss-fsection__kicker">Learning unit</span>
-          <span class="ss-fsection__note">Optional</span>
-        </div>
-        <div class="ss-field">
-          <select id="ss-unit-select" class="ss-control ss-control--select">
-            <option value="">— No specific unit —</option>
-          </select>
-          <div class="ss-field__hint">Which chapter or video in this resource did you study?</div>
-        </div>
-      </div>
-
-      {# ── Section D: Details ──────────────────────────────────────────── #}
-      <div class="ss-fsection">
-        <div class="ss-fsection__head">
-          <span class="ss-fsection__kicker">Details</span>
-          <span class="ss-fsection__note">Optional context for future-you</span>
-        </div>
-
-        {# Title — first field in Details #}
-        <div class="ss-field" id="ss-title-field">
-          <label class="ss-field__label" for="id_title">
-            Title
-            <span class="ss-opt">Optional</span>
-          </label>
-          <input type="text" name="title" id="id_title" class="ss-control"
-                 placeholder="e.g. June 2019 Chem Paper 2" spellcheck="false"
-                 value="{{ form.title.value|default:'' }}">
-          <div class="ss-field__hint">
-            Name this session so it's easy to spot later. Leave blank and we'll label it from the activity.
+            <div class="ss-field__hint">
+              Studying <strong>on top of</strong> a resource — flashcards, past papers or notes from a lecture or book.
+              It won't change the resource's watch/read progress; it's logged as extra study.
+            </div>
           </div>
         </div>
 
-        {# Topic / tags #}
-        <div class="ss-field">
-          <label class="ss-field__label" id="ss-tags-label">
-            Topic / tags
-            <span class="ss-opt">Optional</span>
-          </label>
-          <div class="ss-taginput" id="ss-taginput" role="group"
-               aria-labelledby="ss-tags-label">
-            <input type="text" id="ss-tag-input"
-                   placeholder="Type a topic and press Enter…"
-                   aria-label="Add a topic tag">
+        {# Learning unit — shown only when a resource is selected #}
+        <div class="ss-fsection ss-unit-section" id="ss-unit-section" hidden>
+          <div class="ss-fsection__head">
+            <span class="ss-fsection__kicker">Learning unit</span>
+            <span class="ss-fsection__note">Optional</span>
           </div>
-          <div class="ss-field__hint">
-            e.g. Glycolysis, Chapter 4, Weak areas — group sessions by what you covered.
+          <div class="ss-field">
+            <select id="ss-unit-select" class="ss-control ss-control--select">
+              <option value="">— No specific unit —</option>
+            </select>
           </div>
-          {# Hidden field synced from tag chips — kept inside ss-field to preserve sibling margins #}
-          <input type="hidden" name="topic" id="id_topic"
-                 value="{{ form.topic.value|default:'' }}">
         </div>
 
-        {# Notes #}
-        <div class="ss-field">
-          <label class="ss-field__label" for="id_notes">
-            Notes
-            <span class="ss-opt">Optional</span>
-          </label>
-          <textarea name="notes" id="id_notes" class="ss-control"
-                    placeholder="How did it go? What to revisit next time?">{{ form.notes.value|default:'' }}</textarea>
+        {# Details — Title, Topic/tags, Notes (hints removed; placeholders carry the guidance) #}
+        <div class="ss-fsection">
+          <div class="ss-fsection__head">
+            <span class="ss-fsection__kicker">Details</span>
+            <span class="ss-fsection__note">Optional</span>
+          </div>
+
+          <div class="ss-field" id="ss-title-field">
+            <label class="ss-field__label" for="id_title">
+              Title <span class="ss-opt">Optional</span>
+            </label>
+            <input type="text" name="title" id="id_title" class="ss-control"
+                   placeholder="e.g. June 2019 Chem Paper 2 (optional)" spellcheck="false"
+                   value="{{ form.title.value|default:'' }}">
+          </div>
+
+          <div class="ss-field">
+            <label class="ss-field__label" id="ss-tags-label">
+              Topic / tags <span class="ss-opt">Optional</span>
+            </label>
+            <div class="ss-taginput" id="ss-taginput" role="group" aria-labelledby="ss-tags-label">
+              <input type="text" id="ss-tag-input"
+                     placeholder="Type a topic and press Enter… (optional)"
+                     aria-label="Add a topic tag">
+            </div>
+            <input type="hidden" name="topic" id="id_topic"
+                   value="{{ form.topic.value|default:'' }}">
+          </div>
+
+          <div class="ss-field">
+            <label class="ss-field__label" for="id_notes">
+              Notes <span class="ss-opt">Optional</span>
+            </label>
+            <textarea name="notes" id="id_notes" class="ss-control"
+                      placeholder="How did it go? What to revisit next time? (optional)">{{ form.notes.value|default:'' }}</textarea>
+          </div>
         </div>
-      </div>
+
+      </div>{# /ss-details-panel #}
 
       {# ── Contribution note ────────────────────────────────────────────── #}
       <div class="ss-contrib">
@@ -659,84 +650,44 @@
   }
 
   /* ═══════════════════════════════════════════════════════════════════════
-     MODE TOGGLE (log / plan)
+     DATE & STATUS — auto-determined from the date passed via URL param
   ═══════════════════════════════════════════════════════════════════════ */
   var statusInput = document.getElementById('id_status');
-  var altPill     = document.getElementById('ss-date-alt');
-  var dateLabel   = document.getElementById('ss-date-label');
-  var modeHint    = document.getElementById('ss-mode-hint');
+  var dateInput   = document.getElementById('id_date');
   var contribText = document.getElementById('ss-contrib-text');
   var submitLabel = document.getElementById('ss-submit-label');
   var durPrefix   = document.getElementById('ss-dur-prefix');
+  var cardTitle   = document.getElementById('ss-card-title');
+  var cardSub     = document.getElementById('ss-card-sub');
 
-  function applyMode(mode) {
-    var plan = (mode === 'planned');
-    statusInput.value = mode;
-    $$('#ss-mode button').forEach(function(b) {
-      b.classList.toggle('on', b.dataset.modeval === mode);
+  var today    = new Date();
+  var todayISO = today.toISOString().slice(0, 10);
+
+  function fmtDisplayDate(iso) {
+    var parts = iso.split('-').map(Number);
+    var dt = new Date(Date.UTC(parts[0], parts[1] - 1, parts[2]));
+    return dt.toLocaleDateString('en-GB', {
+      weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC'
     });
-    if (altPill)     altPill.textContent   = plan ? 'Tomorrow' : 'Yesterday';
-    if (dateLabel)   dateLabel.textContent = plan ? 'Plan for' : 'Date';
-    if (modeHint)    modeHint.textContent  = plan
-      ? "Scheduling something to do — mark it done when you finish."
-      : "Recording something you've already studied.";
-    if (contribText) contribText.innerHTML = plan
+  }
+
+  function applyDateMode() {
+    var iso  = dateInput.value || todayISO;
+    var plan = iso > todayISO;
+    statusInput.value = plan ? 'planned' : 'logged';
+
+    if (cardTitle)   cardTitle.textContent  = plan ? 'Plan a study session' : 'Log a study session';
+    if (cardSub)     cardSub.textContent    = plan
+      ? 'Schedule a session for ' + fmtDisplayDate(iso) + ' — mark it done when you finish.'
+      : 'Record study time for ' + fmtDisplayDate(iso) + ' — Anki, revision, past papers, anything.';
+    if (contribText) contribText.innerHTML  = plan
       ? "Planned sessions <strong>don't count toward your stats</strong> until you mark them done."
       : "Counts toward your <strong>dashboard time &amp; streak stats</strong> — whether or not you link a resource.";
     if (submitLabel) submitLabel.textContent = plan ? 'Plan session' : 'Log session';
     if (durPrefix)   durPrefix.textContent   = plan ? 'Planning' : 'Logging';
-    // Enforce future-only dates in plan mode; lift restriction in log mode
-    if (dateInput) {
-      if (plan) {
-        dateInput.min = todayISO;
-        if (dateInput.value && dateInput.value < todayISO) {
-          dateInput.value = todayISO;
-          $$('#ss-dategroup [data-date]').forEach(function(p) { p.classList.remove('on'); });
-          document.getElementById('ss-date-today')?.classList.add('on');
-        }
-      } else {
-        dateInput.removeAttribute('min');
-      }
-    }
   }
 
-  applyMode(INIT_STA);
-  $$('#ss-mode button').forEach(function(b) {
-    b.addEventListener('click', function() { applyMode(b.dataset.modeval); });
-  });
-
-  /* ═══════════════════════════════════════════════════════════════════════
-     DATE PILLS
-  ═══════════════════════════════════════════════════════════════════════ */
-  var dateInput = document.getElementById('id_date');
-  var today     = new Date();
-  var todayISO  = today.toISOString().slice(0, 10);
-
-  // Apply min constraint now that todayISO is available
-  if (dateInput && statusInput.value === 'planned') {
-    dateInput.min = todayISO;
-    if (dateInput.value && dateInput.value < todayISO) dateInput.value = todayISO;
-  }
-
-  function isoDate(d) { return d.toISOString().slice(0, 10); }
-
-  $$('#ss-dategroup [data-date]').forEach(function(pill) {
-    pill.addEventListener('click', function() {
-      $$('#ss-dategroup [data-date]').forEach(function(p) { p.classList.remove('on'); });
-      pill.classList.add('on');
-      if (pill.dataset.date === 'today') {
-        dateInput.value = todayISO;
-      } else {
-        var offset = (statusInput.value === 'planned') ? 1 : -1;
-        var d = new Date(today);
-        d.setDate(d.getDate() + offset);
-        dateInput.value = isoDate(d);
-      }
-    });
-  });
-  dateInput.addEventListener('focus', function() {
-    $$('#ss-dategroup [data-date]').forEach(function(p) { p.classList.remove('on'); });
-  });
+  applyDateMode();
 
   /* ═══════════════════════════════════════════════════════════════════════
      DURATION PILLS + READOUT
@@ -854,11 +805,11 @@
       unitSelect.appendChild(opt);
     });
     if (INIT_UNIT) { unitSelect.value = INIT_UNIT; unitInput.value = unitSelect.value; }
-    unitSection.style.display = '';
+    unitSection.hidden = false;
   }
 
   function hideUnitSection() {
-    unitSection.style.display = 'none';
+    unitSection.hidden = true;
     unitSelect.innerHTML = '<option value="">— No specific unit —</option>';
     unitInput.value = '';
   }
@@ -953,12 +904,37 @@
   });
   document.addEventListener('click', function(e) { if (!combo.contains(e.target)) closeCombo(); });
 
+  /* ═══════════════════════════════════════════════════════════════════════
+     DETAILS TOGGLE (progressive disclosure)
+  ═══════════════════════════════════════════════════════════════════════ */
+  var detailsToggle = document.getElementById('ss-details-toggle');
+  var detailsPanel  = document.getElementById('ss-details-panel');
+  var detailsLabel  = document.getElementById('ss-details-toggle-label');
+
+  function openDetails() {
+    detailsPanel.hidden = false;
+    detailsToggle.classList.add('is-open');
+    detailsToggle.setAttribute('aria-expanded', 'true');
+    detailsLabel.textContent = 'Hide resource, title, tags or notes';
+  }
+
+  function closeDetails() {
+    detailsPanel.hidden = true;
+    detailsToggle.classList.remove('is-open');
+    detailsToggle.setAttribute('aria-expanded', 'false');
+    detailsLabel.textContent = 'Link a resource, add a title, tags or notes';
+  }
+
+  detailsToggle.addEventListener('click', function() {
+    if (detailsPanel.hidden) { openDetails(); } else { closeDetails(); }
+  });
+
   /* Pre-fill from Django re-render or ?resource= param */
   (function initResource() {
     var prefill = "{{ resource_prefill|escapejs }}";
     if (INIT_RES) {
       var r = RESOURCES.find(function(x) { return String(x.id) === INIT_RES; });
-      if (r) { selectResource(r); return; }
+      if (r) { selectResource(r); openDetails(); return; }
     }
     if (prefill) {
       var r2 = RESOURCES.find(function(x) {
@@ -966,8 +942,7 @@
       });
       if (r2) {
         selectResource(r2);
-        var sub = document.getElementById('ss-card-sub');
-        if (sub) sub.innerHTML = 'Extra study on top of <strong>' + esc(r2.name) + '</strong> — flashcards, past papers or reviewing notes.';
+        openDetails();
       }
     }
   })();

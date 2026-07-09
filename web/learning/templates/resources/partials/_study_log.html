@@ -11,13 +11,14 @@
         same log.
       </p>
     </div>
+    {% now "Y-m-d" as today_date %}
     <a class="rdbtn rdbtn--primary rdbtn--sm"
-       href="{% url 'learning:session_create' %}?resource={{ resource.title|urlencode }}&next={{ request.path|urlencode }}">
+       href="{% url 'learning:session_create' %}?date={{ today_date }}&resource={{ resource.title|urlencode }}&next={{ request.path|urlencode }}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
            stroke-linecap="round" stroke-linejoin="round">
         <path d="M12 5v14M5 12h14"></path>
       </svg>
-      Log a session
+      Log session
     </a>
   </div>
 
@@ -139,7 +140,7 @@
 
     {# ── Empty state ──────────────────────────────────────────────────────── #}
     {% if not study_sessions_planned and not study_sessions_logged %}
-    <li class="slog__empty">No sessions logged yet — use "Log a session" to add your first entry.</li>
+    <li class="slog__empty">No sessions logged yet — use "Log session" to add your first entry.</li>
     {% endif %}
 
   </ul>

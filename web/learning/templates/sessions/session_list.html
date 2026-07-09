@@ -22,13 +22,6 @@
       <h1 class="sesshead__title">Study log</h1>
       <p class="sesshead__sub">Anki, past papers, revision — log the time you put in.</p>
     </div>
-    <a href="{% url 'learning:session_create' %}" class="btn-log">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
-           stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M12 5v14M5 12h14"/>
-      </svg>
-      Log a session
-    </a>
   </div>
 
   {# ── Activity filter bar ─────────────────────────────────────────────── #}
@@ -466,6 +459,16 @@
     } else {
       if (planned.length) body += `<div class="slist">${planned.map(planRow).join('')}</div>`;
       if (done.length)    body += `<div class="slist">${done.map(doneRow).join('')}</div>`;
+      const canLog = past || selDate === TODAY_ISO;
+      body += `<div class="daypanel__addrow">
+        <a href="${URL_CREATE}?date=${encodeURIComponent(selDate)}" class="daypanel__addbtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 5v14M5 12h14"/>
+          </svg>
+          ${canLog ? 'Log a session' : 'Plan a session'}
+        </a>
+      </div>`;
     }
 
     el.innerHTML = `

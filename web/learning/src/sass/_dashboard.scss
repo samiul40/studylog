@@ -1275,7 +1275,7 @@ html[data-dash="deep"] .simple-only { display: none !important; }
 
   .greet__date { display: none; }
 
-  .sstats { grid-template-columns: 1fr; }
+  .sstats { grid-template-columns: repeat(2, 1fr); }
 
   .scontinue {
     flex-direction: column;

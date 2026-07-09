@@ -506,6 +506,45 @@
     }
   }
 
+  &__addrow {
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid var(--line-soft);
+  }
+
+  &__addbtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 11px 16px;
+    border: 1px dashed var(--line);
+    border-radius: 12px;
+    background: transparent;
+    color: var(--ink-soft);
+    font-family: $font-sans;
+    font-size: 0.88rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: border-color 0.18s, background 0.18s, color 0.18s;
+
+    svg {
+      width: 14px;
+      height: 14px;
+      flex: 0 0 auto;
+    }
+
+    &:hover {
+      border-color: var(--emerald);
+      border-style: solid;
+      color: var(--emerald-deep);
+      background: color-mix(in srgb, var(--emerald) 6%, transparent);
+
+      [data-theme="dark"] & { color: var(--emerald-bright); }
+    }
+  }
+
   &__empty {
     text-align: center;
     padding: 30px 10px;
