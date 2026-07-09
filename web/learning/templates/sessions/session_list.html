@@ -11,7 +11,7 @@
 
   {# ── Breadcrumb ─────────────────────────────────────────────────────── #}
   <nav class="sl-crumbs" aria-label="Breadcrumb">
-    <a href="{% url 'learning:dashboard' %}">Dashboard</a>
+    <a href="{% url 'learning:dashboard' %}">Home</a>
     <span class="sl-crumbs__sep" aria-hidden="true">/</span>
     <span class="sl-crumbs__cur" aria-current="page">Log</span>
   </nav>
@@ -126,6 +126,13 @@
                  placeholder="Type a topic and press Enter…"
                  aria-label="Add a topic tag">
         </div>
+      </div>
+
+      {# Notes #}
+      <div id="js-sheet-notes-field">
+        <div class="sl-field__label">Notes</div>
+        <textarea class="sl-control sl-control--ta" id="js-sheet-notes"
+                  rows="4" placeholder="Add a takeaway or what to revisit…"></textarea>
       </div>
     </div>
 
@@ -642,6 +649,11 @@
     });
     tagWrapEl.addEventListener('click', () => tagInpEl.focus());
 
+    // Notes input
+    document.getElementById('js-sheet-notes').addEventListener('input', function() {
+      sheetDraft.notes = this.value;
+    });
+
     // Close handlers
     document.getElementById('js-sheet-close').addEventListener('click', closeSheet);
     document.getElementById('js-sheet-cancel').addEventListener('click', closeSheet);
@@ -667,6 +679,7 @@
       activity_slug:    session.activity_type,  // to_dict returns slug as activity_type
       duration_minutes: session.duration_minutes,
       topic:            session.topic || '',
+      notes:            session.notes || '',
       date:             session.date,
     };
 
@@ -725,6 +738,9 @@
     const tagWrap3 = document.getElementById('js-sheet-taginput');
     tagWrap3.querySelectorAll('.sl-tag').forEach(t => t.remove());
     (session.topic || '').split(',').filter(t => t.trim()).forEach(t => addSheetTag(t));
+
+    // Notes
+    document.getElementById('js-sheet-notes').value = session.notes || '';
 
     // Reschedule date field (planned only)
     const dateField = document.getElementById('js-sheet-datefield');

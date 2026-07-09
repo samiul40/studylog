@@ -1066,6 +1066,12 @@
   }
 }
 
+.sl-control--ta {
+  resize: vertical;
+  min-height: 96px;
+  line-height: 1.5;
+}
+
 // Tag chip input (matches create-page .ss-taginput / .ss-tag)
 .sl-taginput {
   display: flex;
