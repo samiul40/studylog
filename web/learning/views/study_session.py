@@ -338,6 +338,9 @@ class StudySessionPatchView(BaseStudySessionView, View):
         if "topic" in data:
             session.topic = str(data["topic"]).strip()
 
+        if "notes" in data:
+            session.notes = str(data["notes"]).strip()
+
         if "date" in data:
             d = _parse_date(data["date"])
             if d is None:
@@ -379,6 +382,9 @@ class StudySessionMarkDoneView(BaseStudySessionView, View):
 
         if "topic" in data:
             session.topic = str(data["topic"]).strip()
+
+        if "notes" in data:
+            session.notes = str(data["notes"]).strip()
 
         if "date" in data:
             d = _parse_date(data["date"])

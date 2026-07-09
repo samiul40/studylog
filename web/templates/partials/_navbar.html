@@ -11,7 +11,7 @@
            class="appbar__lockup appbar__lockup--dark">
     </a>
 
-    {# ── Center nav (destinations only; create actions live in + New) ─────── #}
+    {# ── Center nav ────────────────────────────────────────────────────────── #}
     <nav class="appbar__nav" aria-label="Main navigation">
       {% if perms.learning.view_dashboard %}
       <a class="navlink {% if view == 'learning:dashboard' %}navlink--on{% endif %}"
@@ -42,54 +42,8 @@
       {% endif %}
     </nav>
 
-    {# ── Right cluster: + New + user pill ──────────────────────────────────── #}
+    {# ── Right cluster: user pill ──────────────────────────────────────────── #}
     <div class="appbar__end">
-
-      {# ── + New dropdown ──────────────────────────────────────────────────── #}
-      <div class="newmenu" id="js-newmenu">
-        <button class="btn-new" id="js-newmenu-btn" type="button"
-                aria-haspopup="true" aria-expanded="false" aria-controls="js-newmenu-panel">
-          <svg class="btn-new__plus" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-               stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M12 5v14M5 12h14"/>
-          </svg>
-          New
-          <svg class="btn-new__caret" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-               stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M6 9l6 6 6-6"/>
-          </svg>
-        </button>
-        <div class="newmenu__panel" id="js-newmenu-panel" role="menu">
-          {% if perms.learning.add_studysession %}
-          <a class="newmenu__item" href="{% url 'learning:session_create' %}" role="menuitem">
-            <span class="newmenu__ic" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                   stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 1.5M9 2h6M12 5V2"/>
-              </svg>
-            </span>
-            <span>
-              <span class="newmenu__t">Session</span>
-              <span class="newmenu__d">Anki, past papers, revision</span>
-            </span>
-          </a>
-          {% endif %}
-          {% if perms.learning.add_learningresource %}
-          <a class="newmenu__item" href="{% url 'learning:resource_create' %}" role="menuitem">
-            <span class="newmenu__ic" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                   stroke-linecap="round" stroke-linejoin="round">
-                <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-              </svg>
-            </span>
-            <span>
-              <span class="newmenu__t">Resource</span>
-              <span class="newmenu__d">Course, video, book</span>
-            </span>
-          </a>
-          {% endif %}
-        </div>
-      </div>
 
       {# ── User pill ───────────────────────────────────────────────────────── #}
       <div class="dropdown">
@@ -135,29 +89,4 @@
   </div>
 </header>
 
-<script nonce="{{ request.csp_nonce }}">
-(function () {
-  var menu = document.getElementById('js-newmenu');
-  var btn  = document.getElementById('js-newmenu-btn');
-  if (!menu || !btn) return;
-  btn.addEventListener('click', function (e) {
-    e.stopPropagation();
-    var open = menu.classList.toggle('open');
-    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
-  });
-  document.addEventListener('click', function (e) {
-    if (!menu.contains(e.target)) {
-      menu.classList.remove('open');
-      btn.setAttribute('aria-expanded', 'false');
-    }
-  });
-  document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape' && menu.classList.contains('open')) {
-      menu.classList.remove('open');
-      btn.setAttribute('aria-expanded', 'false');
-      btn.focus();
-    }
-  });
-})();
-</script>
 {% endwith %}
