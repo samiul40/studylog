@@ -1033,6 +1033,18 @@ select.ss-control--select {
   .ss-actgrid {
     grid-template-columns: repeat(2, 1fr);
   }
+
+  .ss-actchip {
+    align-items: center;
+    text-align: center;
+    padding: 10px 10px 12px;
+    gap: 7px;
+
+    &__ic {
+      width: 40px;
+      height: 40px;
+    }
+  }
 }
 
 // ---------------------------------------------------------------------------

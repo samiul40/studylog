@@ -58,6 +58,13 @@
           <span>{{ s.when }}</span>
           <span class="dot"></span>
           <span class="slog__metadur">{{ s.mins|format_duration }}</span>
+          {% if s.topic %}
+          <span class="dot"></span>
+          <span class="srow__res">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0l-7.2-7.2a2 2 0 0 1-.6-1.4V4a2 2 0 0 1 2-2h8a2 2 0 0 1 1.4.6l6.4 6.4a2 2 0 0 1 0 2.8z"></path><circle cx="7.5" cy="7.5" r="1.2" fill="currentColor" stroke="none"></circle></svg>
+            {{ s.topic }}
+          </span>
+          {% endif %}
         </div>
       </div>
       <div class="slog__actions">
@@ -106,9 +113,12 @@
     <li class="slog__row" role="button" tabindex="0"
         data-sess="{{ s.id }}"
         data-act="{{ s.act }}"
+        data-act-label="{{ s.act_label|escape }}"
         data-mins="{{ s.mins }}"
         data-title="{{ s.title|escape }}"
-        data-notes="{{ s.notes|escape }}">
+        data-topic="{{ s.topic|escape }}"
+        data-notes="{{ s.notes|escape }}"
+        data-when="{{ s.when|escape }}">
       <span class="slog__ic">{% activity_icon s.act %}</span>
       <div class="slog__main">
         <div class="slog__t">{{ s.title }}</div>
@@ -116,6 +126,13 @@
           <span>{{ s.act_label }}</span>
           <span class="dot"></span>
           <span>{{ s.when }}</span>
+          {% if s.topic %}
+          <span class="dot"></span>
+          <span class="srow__res">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0l-7.2-7.2a2 2 0 0 1-.6-1.4V4a2 2 0 0 1 2-2h8a2 2 0 0 1 1.4.6l6.4 6.4a2 2 0 0 1 0 2.8z"></path><circle cx="7.5" cy="7.5" r="1.2" fill="currentColor" stroke="none"></circle></svg>
+            {{ s.topic }}
+          </span>
+          {% endif %}
           {% if s.notes %}
           <span class="dot"></span>
           <span class="slog__note-dot" title="Has a note">
