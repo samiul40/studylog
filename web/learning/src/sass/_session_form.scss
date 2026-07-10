@@ -820,10 +820,16 @@ select.ss-control--select {
     box-shadow: 0 1px 0 rgba(255, 255, 255, 0.25) inset,
                 0 8px 22px -10px rgba(16, 185, 129, 0.7);
 
-    &:hover {
+    &:hover:not(:disabled) {
       background: var(--emerald-bright);
       color: #042b1d;
       transform: translateY(-2px);
+    }
+
+    &:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      box-shadow: none;
     }
   }
 

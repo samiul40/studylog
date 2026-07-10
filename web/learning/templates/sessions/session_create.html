@@ -481,6 +481,20 @@
   function $(sel, ctx) { return (ctx || document).querySelector(sel); }
   function $$(sel, ctx) { return Array.from((ctx || document).querySelectorAll(sel)); }
 
+  /* ─── Submit button state ───────────────────────────────────────────────── */
+  var submitBtn = document.getElementById('ss-submit');
+
+  function hasActivitySelected() {
+    if (isOtherMode) {
+      return !!(actInput.value || (actComboInput && actComboInput.value.trim()) || newActInput.value);
+    }
+    return selActId !== null;
+  }
+
+  function updateSubmitState() {
+    submitBtn.disabled = !hasActivitySelected();
+  }
+
   /* ─── Initial state from Django ─────────────────────────────────────────── */
   const INIT_ACT_ID = document.getElementById('id_activity').value || '';
   const INIT_DUR    = parseInt(document.getElementById('id_duration_minutes').value, 10) || 30;
@@ -546,6 +560,7 @@
       customActWrap.style.display = 'none';
       closeActCombo();
     }
+    updateSubmitState();
   }
 
   /* ── Activity combobox (Other… path) ─────────────────────────────────── */
@@ -622,6 +637,7 @@
     actComboInput.value = a.name;
     actComboTag.style.display = 'none';
     closeActCombo();
+    updateSubmitState();
   }
 
   function commitTypedAct() {
@@ -652,13 +668,14 @@
       newActInput.value = '';
       openActCombo();
       updateActTag();
+      updateSubmitState();
     });
     actComboInput.addEventListener('keydown', function(e) {
-      if (e.key === 'Enter') { e.preventDefault(); commitTypedAct(); closeActCombo(); }
+      if (e.key === 'Enter') { e.preventDefault(); commitTypedAct(); closeActCombo(); updateSubmitState(); }
     });
     actComboPanel.addEventListener('click', function(e) {
       if (e.target.closest('[data-ac-create]')) {
-        commitTypedAct(); closeActCombo(); return;
+        commitTypedAct(); closeActCombo(); updateSubmitState(); return;
       }
       var opt = e.target.closest('[data-acv]');
       if (!opt) return;
@@ -682,6 +699,7 @@
       selCustomActId = initAct.id;
     }
   }
+  updateSubmitState();
 
   /* ═══════════════════════════════════════════════════════════════════════
      DATE & STATUS — auto-determined from the date passed via URL param
