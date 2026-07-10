@@ -121,42 +121,76 @@
         {# Duration #}
         <div class="ss-field">
           <label class="ss-field__label">Duration</label>
-          <div class="ss-pillrow" id="ss-durgroup">
-            <button type="button" class="ss-pill" data-dur="15">15m</button>
-            <button type="button" class="ss-pill on" data-dur="30">30m</button>
-            <button type="button" class="ss-pill" data-dur="45">45m</button>
-            <button type="button" class="ss-pill" data-dur="60">60m</button>
-            <button type="button" class="ss-pill" data-dur="90">90m</button>
-            <button type="button" class="ss-pill ss-pill--custom" data-dur="custom">
+
+          <div class="ss-segmented ss-durmode" id="ss-durmode">
+            <button type="button" class="on" data-durmode="preset">Set duration</button>
+            <button type="button" data-durmode="timer" id="ss-timer-toggle">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                    stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/>
+                <circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 1.5M9 2h6M12 5V2"/>
               </svg>
-              Custom
+              Time it
             </button>
-            <span class="ss-custom-min" id="ss-custom-min" aria-live="polite">
-              <input type="number" min="1" max="600" class="ss-control ss-custom-min__input"
-                     id="ss-custom-input" placeholder="90" aria-label="Custom duration in minutes">
-              <span class="ss-custom-min__unit">min</span>
-            </span>
           </div>
-          <div class="ss-dur-readout" aria-live="polite">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>
-            </svg>
-            <span id="ss-dur-prefix">Logging</span>
-            <strong id="ss-dur-readout">30m</strong>
+          <div class="ss-durmode-hint" id="ss-durmode-hint" hidden>
+            Timing live is only available when logging a session for today.
           </div>
-          {% if form.duration_minutes.errors %}
-          <div class="ss-field__err" role="alert">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
-                 stroke-linecap="round" aria-hidden="true">
-              <circle cx="12" cy="12" r="10"/><path d="M12 8v5M12 16h.01"/>
-            </svg>
-            {% for err in form.duration_minutes.errors %}{{ err }}{% endfor %}
+
+          {# ── existing preset pills + readout, now wrapped so JS can hide the whole pane ── #}
+          <div id="ss-dur-preset">
+            <div class="ss-pillrow" id="ss-durgroup">
+              <button type="button" class="ss-pill" data-dur="15">15m</button>
+              <button type="button" class="ss-pill on" data-dur="30">30m</button>
+              <button type="button" class="ss-pill" data-dur="45">45m</button>
+              <button type="button" class="ss-pill" data-dur="60">60m</button>
+              <button type="button" class="ss-pill" data-dur="90">90m</button>
+              <button type="button" class="ss-pill ss-pill--custom" data-dur="custom">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/>
+                </svg>
+                Custom
+              </button>
+              <span class="ss-custom-min" id="ss-custom-min" aria-live="polite">
+                <input type="number" min="1" max="600" class="ss-control ss-custom-min__input"
+                       id="ss-custom-input" placeholder="90" aria-label="Custom duration in minutes">
+                <span class="ss-custom-min__unit">min</span>
+              </span>
+            </div>
+            <div class="ss-dur-readout" aria-live="polite">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>
+              </svg>
+              <span id="ss-dur-prefix">Logging</span>
+              <strong id="ss-dur-readout">30m</strong>
+            </div>
+            {% if form.duration_minutes.errors %}
+            <div class="ss-field__err" role="alert">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
+                   stroke-linecap="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="10"/><path d="M12 8v5M12 16h.01"/>
+              </svg>
+              {% for err in form.duration_minutes.errors %}{{ err }}{% endfor %}
+            </div>
+            {% endif %}
           </div>
-          {% endif %}
+
+          {# ── new: live stopwatch pane, today-only ── #}
+          <div class="ss-timerbox" id="ss-dur-timer" hidden>
+            <div class="ss-timerbox__display" id="ss-timer-display">00:00</div>
+            <div class="ss-timerbox__controls">
+              <button type="button" class="ss-btn ss-btn--primary ss-timerbox__btn" id="ss-timer-startpause">
+                <svg viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><path d="M7 4.5v15l13-7.5z"/></svg>
+                <span>Start</span>
+              </button>
+              <button type="button" class="ss-btn ss-btn--ghost ss-timerbox__btn" id="ss-timer-reset" hidden>Reset</button>
+            </div>
+            <div class="ss-timerbox__note">
+              <span class="ss-timerbox__dot" id="ss-timer-dot"></span>
+              <span id="ss-timer-note">Not started</span>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -685,6 +719,7 @@
       : "Counts toward your <strong>dashboard time &amp; streak stats</strong> — whether or not you link a resource.";
     if (submitLabel) submitLabel.textContent = plan ? 'Plan session' : 'Log session';
     if (durPrefix)   durPrefix.textContent   = plan ? 'Planning' : 'Logging';
+    updateTimerAvailability();
   }
 
   applyDateMode();
@@ -731,6 +766,115 @@
     var v = parseInt(customInput.value, 10) || 0;
     durInput.value = v || '';
     setDurReadout(v);
+  });
+
+  /* ═══════════════════════════════════════════════════════════════════════
+     DURATION MODE — "Set duration" vs. live "Time it" stopwatch (today only)
+  ═══════════════════════════════════════════════════════════════════════ */
+  var TIMER_KEY       = 'studylog.activeTimer';
+  var durMode         = 'preset';
+  var presetPane      = document.getElementById('ss-dur-preset');
+  var timerPane       = document.getElementById('ss-dur-timer');
+  var timerHint       = document.getElementById('ss-durmode-hint');
+  var timerToggleBtn  = document.getElementById('ss-timer-toggle');
+  var timerDisplay    = document.getElementById('ss-timer-display');
+  var timerStartPause = document.getElementById('ss-timer-startpause');
+  var timerReset      = document.getElementById('ss-timer-reset');
+  var timerNote       = document.getElementById('ss-timer-note');
+
+  var ICPlay  = '<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M7 4.5v15l13-7.5z"/></svg>';
+  var ICPause = '<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><rect x="6" y="4.5" width="4.5" height="15" rx="1"/><rect x="13.5" y="4.5" width="4.5" height="15" rx="1"/></svg>';
+
+  function loadTimer() {
+    try { return JSON.parse(localStorage.getItem(TIMER_KEY)) || null; } catch (e) { return null; }
+  }
+  function saveTimer(t) {
+    try { t ? localStorage.setItem(TIMER_KEY, JSON.stringify(Object.assign({}, t, { savedDate: todayISO }))) : localStorage.removeItem(TIMER_KEY); } catch (e) {}
+  }
+  var _stored = loadTimer();
+  if (_stored && _stored.savedDate !== todayISO) { saveTimer(null); _stored = null; }
+  var timer = _stored || { running: false, elapsedMs: 0, startedAt: null };
+
+  function elapsedNow() {
+    return timer.elapsedMs + (timer.running ? Date.now() - timer.startedAt : 0);
+  }
+  function fmtClock(ms) {
+    var totalSec = Math.floor(ms / 1000);
+    var h = Math.floor(totalSec / 3600), m = Math.floor((totalSec % 3600) / 60), s = totalSec % 60;
+    function pad(n) { return String(n).padStart(2, '0'); }
+    return h > 0 ? (pad(h) + ':' + pad(m) + ':' + pad(s)) : (pad(m) + ':' + pad(s));
+  }
+  function timerMins() {
+    var e = elapsedNow();
+    return e > 0 ? Math.max(1, Math.round(e / 60000)) : 0;
+  }
+  function renderTimer() {
+    timerDisplay.textContent = fmtClock(elapsedNow());
+    timerPane.classList.toggle('is-running', timer.running);
+    timerStartPause.innerHTML = timer.running
+      ? (ICPause + '<span>Pause</span>')
+      : (ICPlay + '<span>' + (timer.elapsedMs > 0 ? 'Resume' : 'Start') + '</span>');
+    timerReset.hidden = timer.elapsedMs === 0 && !timer.running;
+    timerNote.textContent = timer.running
+      ? 'Timing…'
+      : (elapsedNow() > 0 ? ('Logging ' + fmt(timerMins())) : 'Not started');
+  }
+  var timerRAF = null;
+  function tickTimer() {
+    if (timer.running) { renderTimer(); timerRAF = requestAnimationFrame(tickTimer); }
+  }
+  timerStartPause.addEventListener('click', function () {
+    if (timer.running) {
+      timer.elapsedMs = elapsedNow(); timer.running = false; timer.startedAt = null;
+      if (timerRAF) cancelAnimationFrame(timerRAF);
+    } else {
+      timer.running = true; timer.startedAt = Date.now(); tickTimer();
+    }
+    saveTimer(timer); renderTimer();
+    if (durMode === 'timer') durInput.value = timerMins() || '';
+  });
+  timerReset.addEventListener('click', function () {
+    timer = { running: false, elapsedMs: 0, startedAt: null };
+    if (timerRAF) cancelAnimationFrame(timerRAF);
+    saveTimer(null); renderTimer();
+    if (durMode === 'timer') durInput.value = '';
+  });
+  if (timer.running) tickTimer(); else renderTimer();
+
+  function setDurMode(v) {
+    durMode = v;
+    $$('#ss-durmode button').forEach(function (b) { b.classList.toggle('on', b.dataset.durmode === v); });
+    presetPane.hidden = v !== 'preset';
+    timerPane.hidden = v !== 'timer';
+    if (v === 'timer') {
+      durInput.value = timerMins() || '';
+      setDurReadout(timerMins());
+    } else {
+      var on = $('#ss-durgroup .on');
+      if (on) selectDur(on.dataset.dur);
+    }
+  }
+  timerToggleBtn.addEventListener('click', function () { if (!timerToggleBtn.disabled) setDurMode('timer'); });
+  document.querySelector('#ss-durmode [data-durmode="preset"]').addEventListener('click', function () { setDurMode('preset'); });
+
+  function updateTimerAvailability() {
+    if (!timerToggleBtn) return; // guard: early call from applyDateMode() before DURATION MODE vars are assigned
+    var iso = dateInput.value || todayISO;
+    var available = statusInput.value === 'logged' && iso === todayISO;
+    document.getElementById('ss-durmode').hidden = !available;
+    timerHint.hidden = true; // hint is redundant now that the toggle hides entirely
+    if (!available && durMode === 'timer') setDurMode('preset');
+  }
+  updateTimerAvailability();
+
+  window.addEventListener('pagehide', function() {
+    if (timer.running) {
+      timer.elapsedMs = elapsedNow();
+      timer.running = false;
+      timer.startedAt = null;
+      if (timerRAF) cancelAnimationFrame(timerRAF);
+      saveTimer(timer);
+    }
   });
 
   /* ═══════════════════════════════════════════════════════════════════════
@@ -951,6 +1095,12 @@
      SUBMIT VALIDATION + UX flourish
   ═══════════════════════════════════════════════════════════════════════ */
   document.getElementById('ss-form').addEventListener('submit', function(e) {
+    /* Block submit if "Time it" is active but nothing has been timed yet */
+    if (durMode === 'timer' && timerMins() === 0) {
+      e.preventDefault();
+      timerStartPause.focus();
+      return;
+    }
     /* Ensure activity is resolved before submit */
     if (isOtherMode && !actInput.value && !newActInput.value) {
       if (!commitTypedAct()) {
@@ -958,6 +1108,12 @@
         if (actComboInput) { actComboInput.focus(); openActCombo(); }
         return;
       }
+    }
+    /* Clear persisted timer state on successful submit */
+    if (durMode === 'timer') {
+      timer = { running: false, elapsedMs: 0, startedAt: null };
+      if (timerRAF) cancelAnimationFrame(timerRAF);
+      saveTimer(null);
     }
     var btn = document.getElementById('ss-submit');
     var label = document.getElementById('ss-submit-label');
