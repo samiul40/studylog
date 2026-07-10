@@ -1,0 +1,25 @@
+{# ── Shared session edit fields (used in sheet + resource detail modal) ────── #}
+{# IDs: js-sheet-durrow / js-sheet-taginput / js-sheet-tag-input / js-sheet-notes #}
+
+{# Duration #}
+<div>
+  <div class="sl-field__label">Duration</div>
+  <div class="sl-pillrow" id="js-sheet-durrow"></div>
+</div>
+
+{# Topic / tags #}
+<div>
+  <div class="sl-field__label">Topic / tags</div>
+  <div class="sl-taginput" id="js-sheet-taginput" role="group" aria-label="Topic tags">
+    <input type="text" id="js-sheet-tag-input"
+           placeholder="Type a topic and press Enter…"
+           aria-label="Add a topic tag">
+  </div>
+</div>
+
+{# Notes #}
+<div>
+  <div class="sl-field__label">Notes</div>
+  <textarea class="sl-control sl-control--ta" id="js-sheet-notes"
+            rows="4" placeholder="Add a takeaway or what to revisit…"></textarea>
+</div>

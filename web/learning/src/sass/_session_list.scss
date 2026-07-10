@@ -736,6 +736,13 @@
     color: var(--ink);
   }
 
+  &__sub {
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: var(--ink-faint);
+    margin-top: 1px;
+  }
+
   &__meta {
     font-size: 0.82rem;
     color: var(--ink-soft);
@@ -878,6 +885,57 @@
 }
 
 // ---------------------------------------------------------------------------
+// Shared session inline title editing (used in sheet + resource detail modal)
+// ---------------------------------------------------------------------------
+.sess-titlerow {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+
+  &:hover .sess-editbtn { opacity: 1; }
+}
+
+.sess-editbtn {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  border: none;
+  background: transparent;
+  color: var(--ink-faint);
+  display: grid;
+  place-items: center;
+  opacity: 0;
+  transition: opacity 0.15s, color 0.15s, background 0.15s;
+  cursor: pointer;
+  flex-shrink: 0;
+
+  svg { width: 14px; height: 14px; }
+
+  &:hover {
+    color: var(--ink);
+    background: color-mix(in srgb, var(--ink) 6%, transparent);
+    opacity: 1;
+  }
+}
+
+@media (hover: none) { .sess-editbtn { opacity: 0.7; } }
+
+.sess-titleinput {
+  font-family: $font-display;
+  font-weight: 700;
+  font-size: 1.25rem;
+  letter-spacing: -0.025em;
+  border: 1.5px solid var(--emerald);
+  border-radius: 8px;
+  padding: 4px 10px;
+  background: var(--field);
+  color: var(--ink);
+  outline: none;
+  width: 100%;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--emerald) 16%, transparent);
+}
+
+// ---------------------------------------------------------------------------
 // Edit sheet (modal)
 // ---------------------------------------------------------------------------
 .sheet-overlay {
@@ -925,6 +983,15 @@
     font-weight: 700;
     letter-spacing: -0.025em;
     line-height: 1.05;
+    cursor: text;
+  }
+
+  &__actbadge {
+    display: block;
+    margin-top: 3px;
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--ink-faint);
   }
 
   &__date {

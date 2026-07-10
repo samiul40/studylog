@@ -212,6 +212,7 @@ def get_study_log_context(resource: LearningResource) -> dict:
             "date": s.date.isoformat(),
             "overdue": is_overdue,
             "notes": s.notes or "",
+            "topic": s.topic or "",
             "auto": s.is_auto,
             "unit_id": s.unit_id,
         }
