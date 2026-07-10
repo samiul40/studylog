@@ -811,13 +811,15 @@
   function renderTimer() {
     timerDisplay.textContent = fmtClock(elapsedNow());
     timerPane.classList.toggle('is-running', timer.running);
-    timerStartPause.innerHTML = timer.running
-      ? (ICPause + '<span>Pause</span>')
-      : (ICPlay + '<span>' + (timer.elapsedMs > 0 ? 'Resume' : 'Start') + '</span>');
     timerReset.hidden = timer.elapsedMs === 0 && !timer.running;
     timerNote.textContent = timer.running
       ? 'Timing…'
       : (elapsedNow() > 0 ? ('Logging ' + fmt(timerMins())) : 'Not started');
+  }
+  function renderTimerBtn() {
+    timerStartPause.innerHTML = timer.running
+      ? (ICPause + '<span>Pause</span>')
+      : (ICPlay + '<span>' + (timer.elapsedMs > 0 ? 'Resume' : 'Start') + '</span>');
   }
   var timerRAF = null;
   function tickTimer() {
@@ -830,16 +832,17 @@
     } else {
       timer.running = true; timer.startedAt = Date.now(); tickTimer();
     }
-    saveTimer(timer); renderTimer();
+    saveTimer(timer); renderTimer(); renderTimerBtn();
     if (durMode === 'timer') durInput.value = timerMins() || '';
   });
   timerReset.addEventListener('click', function () {
     timer = { running: false, elapsedMs: 0, startedAt: null };
     if (timerRAF) cancelAnimationFrame(timerRAF);
-    saveTimer(null); renderTimer();
+    saveTimer(null); renderTimer(); renderTimerBtn();
     if (durMode === 'timer') durInput.value = '';
   });
   if (timer.running) tickTimer(); else renderTimer();
+  renderTimerBtn();
 
   function setDurMode(v) {
     durMode = v;
