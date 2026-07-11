@@ -1296,6 +1296,12 @@
     border-top: 1px solid var(--line-soft);
     padding: 14px 18px;
     gap: 9px;
+    flex-wrap: nowrap;
+    align-items: center;
+
+    @media (max-width: 400px) {
+      .rdbtn { padding-left: 11px; padding-right: 11px; }
+    }
   }
 
   // Log reading time modal footer

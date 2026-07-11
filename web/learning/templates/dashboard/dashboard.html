@@ -55,7 +55,7 @@
       <div class="sstat">
         <span class="sstat__value">{{ combined_study_time_this_week_html|safe }}</span>
         <span class="sstat__label">Study time</span>
-        <span class="sstat__sub">this week &middot; resources + sessions</span>
+        <span class="sstat__sub">this week</span>
       </div>
 
       <div class="sstat">
@@ -298,9 +298,9 @@
       <p class="dcard__footnote">Across all active resources</p>
     </div>
 
-    {# Study time card — Resources + Sessions breakdown #}
+    {# Study time card #}
     <div class="dcard dcard--span4">
-      <div class="dcard__kicker kick">Study time &mdash; resources + sessions</div>
+      <div class="dcard__kicker kick">Study time</div>
       <div class="time-hero">
         <div class="time-hero__left">
           <span class="time-hero__val">{{ combined_study_time_this_week }}</span>
@@ -314,17 +314,7 @@
           </svg>
         </div>
       </div>
-      <div class="time-cells">
-        <div class="time-cell">
-          <span class="time-cell__label">Resources</span>
-          <span class="time-cell__val">{{ resource_time_this_week }}</span>
-        </div>
-        <div class="time-cell">
-          <span class="time-cell__label">Sessions</span>
-          <span class="time-cell__val">{{ session_time_this_week }}</span>
-        </div>
-      </div>
-      <p class="dcard__footnote">Watch &amp; read time from resources plus logged sessions</p>
+      <p class="dcard__footnote">Total logged session time this week</p>
     </div>
 
     {# ── Band 3: History ───────────────────────────────────────────────── #}

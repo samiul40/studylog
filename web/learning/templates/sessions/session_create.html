@@ -305,18 +305,7 @@
 
       </div>{# /ss-details-panel #}
 
-      {# ── Contribution note ────────────────────────────────────────────── #}
-      <div class="ss-contrib">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M3 3v18h18"/><path d="M7 14l3-3 3 2 4-5"/>
-        </svg>
-        <span id="ss-contrib-text">
-          Counts toward your <strong>dashboard time &amp; streak stats</strong> — whether or not you link a resource.
-        </span>
-      </div>
-
-      {# ── Actions ─────────────────────────────────────────────────────── #}
+{# ── Actions ─────────────────────────────────────────────────────── #}
       <div class="ss-card__actions">
         <a href="{% url 'learning:session_list' %}" class="ss-btn ss-btn--ghost">Cancel</a>
         <button type="submit" class="ss-btn ss-btn--primary" id="ss-submit">
@@ -706,14 +695,12 @@
   ═══════════════════════════════════════════════════════════════════════ */
   var statusInput = document.getElementById('id_status');
   var dateInput   = document.getElementById('id_date');
-  var contribText = document.getElementById('ss-contrib-text');
   var submitLabel = document.getElementById('ss-submit-label');
   var durPrefix   = document.getElementById('ss-dur-prefix');
   var cardTitle   = document.getElementById('ss-card-title');
   var cardSub     = document.getElementById('ss-card-sub');
 
-  var today    = new Date();
-  var todayISO = today.toISOString().slice(0, 10);
+  var todayISO = "{{ today_iso }}";
 
   function fmtDisplayDate(iso) {
     var parts = iso.split('-').map(Number);
@@ -732,9 +719,6 @@
     if (cardSub)     cardSub.textContent    = plan
       ? 'Schedule a session for ' + fmtDisplayDate(iso) + ' — mark it done when you finish.'
       : 'Record study time for ' + fmtDisplayDate(iso) + ' — Anki, revision, past papers, anything.';
-    if (contribText) contribText.innerHTML  = plan
-      ? "Planned sessions <strong>don't count toward your stats</strong> until you mark them done."
-      : "Counts toward your <strong>dashboard time &amp; streak stats</strong> — whether or not you link a resource.";
     if (submitLabel) submitLabel.textContent = plan ? 'Plan session' : 'Log session';
     if (durPrefix)   durPrefix.textContent   = plan ? 'Planning' : 'Logging';
     updateTimerAvailability();

@@ -76,19 +76,13 @@ def get_dashboard_stats(user=None, resource_type=None) -> DashboardStats:
     completed_resources_count = _get_completed_resources_count(resource_qs)
     resume_resource = _get_resume_resource(resource_qs)
 
-    momentum = _get_momentum_v2(
-        session_week_stats=session_week_stats,
-        resource_time_this_week=time_invested["resource_this_week"],
-        resource_time_last_week=time_invested["resource_last_week"],
-    )
+    momentum = _get_momentum_v2(session_week_stats=session_week_stats)
 
     units_this_week = weekly_summary["units_completed"]
     sessions_this_week = session_week_stats["this_week_count"]
     greeting_headline = _build_greeting_headline(units_this_week, sessions_this_week)
 
-    combined_this_week = (
-        time_invested["resource_this_week"] + session_week_stats["this_week_mins"]
-    )
+    combined_this_week = session_week_stats["this_week_mins"]
 
     # Unit-based chart kept for admin dashboard compatibility
     weekly_activity = _get_weekly_activity(unit_qs)

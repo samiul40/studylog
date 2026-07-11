@@ -57,13 +57,13 @@ class StudySession(models.Model):
             models.Index(fields=["user", "date"], name="ss_user_date_idx"),
         ]
         constraints = [
-            # Safety net: one auto-logged session per unit per day (watch/read).
-            # The upsert service owns deduplication logic; the FK can't be used
-            # in a partial index by slug so we key on unit + date instead.
+            # Prevent duplicate auto-logged sessions for the same unit+activity on
+            # the same day. Including activity allows a manual session (e.g. Anki)
+            # to co-exist with an auto-logged Watch session on the same unit.
             UniqueConstraint(
-                fields=["unit", "date"],
+                fields=["unit", "date", "activity"],
                 condition=Q(status="logged", unit__isnull=False),
-                name="ss_unit_date_logged_uniq",
+                name="ss_unit_date_activity_logged_uniq",
             ),
         ]
 
