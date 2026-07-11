@@ -242,17 +242,13 @@ def _get_study_streak_unified(unit_qs, user) -> int:
     return streak
 
 
-def _get_momentum_v2(
-    session_week_stats: dict,
-    resource_time_this_week: int,
-    resource_time_last_week: int,
-) -> dict:
-    """Momentum card: sessions logged + combined study time, this vs last week."""
+def _get_momentum_v2(session_week_stats: dict) -> dict:
+    """Momentum card: sessions logged + study time this vs last week."""
 
     sess_this = session_week_stats["this_week_count"]
     sess_last = session_week_stats["last_week_count"]
-    time_this = resource_time_this_week + session_week_stats["this_week_mins"]
-    time_last = resource_time_last_week + session_week_stats["last_week_mins"]
+    time_this = session_week_stats["this_week_mins"]
+    time_last = session_week_stats["last_week_mins"]
 
     def _delta(this, last):
         if last == 0:

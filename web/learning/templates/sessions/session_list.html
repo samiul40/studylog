@@ -325,7 +325,7 @@
     document.getElementById('js-cal-month').textContent = d.month_name;
 
     const summary = d.active_days
-      ? fmt(d.total_minutes) + ' across ' + d.active_days + ' day' + (d.active_days > 1 ? 's' : '')
+      ? fmt(d.total_minutes) + ' on ' + d.active_days + ' day' + (d.active_days > 1 ? 's' : '')
         + (filter ? ' · ' + (ACT_MAP[filter] ? ACT_MAP[filter].name.toLowerCase() : '') : '')
       : 'No sessions this month' + (filter ? ' · ' + (ACT_MAP[filter] ? ACT_MAP[filter].name.toLowerCase() : '') : '');
     document.getElementById('js-cal-summary').textContent = summary;

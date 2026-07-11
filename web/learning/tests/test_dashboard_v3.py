@@ -515,26 +515,26 @@ class TestMomentum:
         }
 
     def test_zero_last_week_gives_new(self):
-        m = _get_momentum_v2(self._stats(3, 0), 0, 0)
+        m = _get_momentum_v2(self._stats(3, 0))
         assert m["sess_delta_dir"] == "new"
 
     def test_improvement_gives_up(self):
-        m = _get_momentum_v2(self._stats(5, 3), 0, 0)
+        m = _get_momentum_v2(self._stats(5, 3))
         assert m["sess_delta_dir"] == "up"
         assert m["sess_this_week"] == 5
         assert m["sess_last_week"] == 3
 
     def test_regression_gives_down(self):
-        m = _get_momentum_v2(self._stats(1, 4), 0, 0)
+        m = _get_momentum_v2(self._stats(1, 4))
         assert m["sess_delta_dir"] == "down"
 
-    def test_combined_time_sums_resource_and_session(self):
-        # 60 resource + 30 session = 90 total this week
-        m = _get_momentum_v2(self._stats(2, 2, this_mins=30), 60, 0)
-        assert m["time_this_week"] == 90
+    def test_time_comes_from_sessions(self):
+        m = _get_momentum_v2(self._stats(2, 2, this_mins=30, last_mins=20))
+        assert m["time_this_week"] == 30
+        assert m["time_last_week"] == 20
 
     def test_bar_widths_proportional(self):
-        m = _get_momentum_v2(self._stats(4, 2), 0, 0)
+        m = _get_momentum_v2(self._stats(4, 2))
         assert m["sess_this_pct"] == 100
         assert m["sess_last_pct"] == 50
 

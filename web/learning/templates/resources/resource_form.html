@@ -456,7 +456,7 @@
   function updateUnitLabel() {
     if (!unitCountLabel || !unitCountHint) return;
     const kind = selectedType ? selectedType.kind : null;
-    const word = kind === 'reading' ? 'chapters' : 'units';
+    const word = kind === 'reading' ? 'chapters' : kind === 'video' ? 'videos' : 'units';
     unitCountLabel.innerHTML = `Number of ${word} <span class="rf-opt">Optional</span>`;
     unitCountHint.textContent = `We'll create this many empty ${word} you can tick off as you go.`;
   }
