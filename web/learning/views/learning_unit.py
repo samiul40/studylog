@@ -1,4 +1,3 @@
-import datetime
 import json
 import logging
 
@@ -8,6 +7,7 @@ from django.db.models import Case, IntegerField, When
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
+from django.utils import timezone
 from django.views import View
 from django.views.generic import CreateView, DeleteView, UpdateView
 
@@ -294,7 +294,7 @@ class LearningUnitInlinePatchView(UserPermissionMixin, View):
                     user=request.user,
                     resource=unit.resource,
                     unit=unit,
-                    date=datetime.date.today(),
+                    date=timezone.localdate(),
                     activity=watch_activity,
                     delta_minutes=delta,
                 )
@@ -341,7 +341,7 @@ class LearningUnitCompleteReadingView(UserPermissionMixin, UserUnitMixin, View):
         unit.save()
 
         # One session per chapter — update on re-log, create on first log.
-        today = datetime.date.today()
+        today = timezone.localdate()
         read_activity = Activity.objects.filter(slug=_READ_SLUG, is_system=True).first()
         new_session_data = None
         if read_activity:

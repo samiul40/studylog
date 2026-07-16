@@ -1,7 +1,6 @@
-import datetime
-
 from django import forms
 from django.db.models import Q
+from django.utils import timezone
 from django.utils.text import slugify
 
 from .models.activity import Activity
@@ -118,7 +117,7 @@ class StudySessionForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self._user = user
         if not self.instance.pk:
-            self.fields["date"].initial = datetime.date.today()
+            self.fields["date"].initial = timezone.localdate()
         # activity can be empty when the user is creating a new custom one
         self.fields["activity"].required = False
         if user is not None:
@@ -198,7 +197,7 @@ class StudySessionForm(forms.ModelForm):
         status = self.cleaned_data.get("status")
         if (
             date
-            and date > datetime.date.today()
+            and date > timezone.localdate()
             and status != StudySession.Status.PLANNED
         ):
             raise forms.ValidationError(

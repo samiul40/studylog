@@ -3,6 +3,7 @@ import datetime
 
 from django.db.models import Count, F, QuerySet, Sum, Value
 from django.db.models.functions import Greatest
+from django.utils import timezone
 
 from learning.models import (
     Activity,
@@ -86,7 +87,7 @@ def get_month_calendar(
     them into a flat list of per-day objects. The caller can serialise this
     directly to JSON for both the SSR page and AJAX month-navigation.
     """
-    today = datetime.date.today()
+    today = timezone.localdate()
 
     done_qs = session_qs.filter(status=StudySession.Status.LOGGED)
     daily_done_mins: dict[datetime.date, int] = {}
@@ -157,7 +158,7 @@ def get_day_sessions(
     """
     Return all sessions for a given date, annotated with overdue status.
     """
-    today = datetime.date.today()
+    today = timezone.localdate()
     sessions = list(
         session_qs.filter(date=date)
         .select_related("resource", "activity")
@@ -188,7 +189,7 @@ def get_study_log_context(resource: LearningResource) -> dict:
     Splits sessions into planned (sorted overdue-first) and logged, and
     computes summary counters used by the subtotal strip.
     """
-    today = datetime.date.today()
+    today = timezone.localdate()
     sessions_qs = (
         StudySession.objects.filter(resource=resource)
         .select_related("activity", "unit")

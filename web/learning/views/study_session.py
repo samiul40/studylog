@@ -33,7 +33,7 @@ def _user_today(request) -> datetime.date:
         tz = zoneinfo.ZoneInfo(tz_name)
         return dj_timezone.now().astimezone(tz).date()
     except Exception:
-        return datetime.date.today()
+        return dj_timezone.localdate()
 
 
 def _find_or_create_activity(name: str, user) -> Activity | None:
