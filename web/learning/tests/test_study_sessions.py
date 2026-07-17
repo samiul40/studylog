@@ -11,7 +11,11 @@ from learning.models import (
     LearningUnit,
     StudySession,
 )
-from learning.services.sessions import upsert_resource_session
+from learning.services.sessions import (
+    get_tag_suggestions,
+    get_title_suggestions,
+    upsert_resource_session,
+)
 
 pytestmark = pytest.mark.django_db
 
@@ -178,6 +182,62 @@ class TestUpsertResourceSession:
 
         assert result is None
         assert not StudySession.objects.filter(user=user, resource=resource).exists()
+
+
+# ---------------------------------------------------------------------------
+# Title / tag suggestions
+# ---------------------------------------------------------------------------
+
+
+class TestGetTitleSuggestions:
+    def test_ranks_by_frequency(self, user):
+        make_session(user, title="Chem Paper 2")
+        make_session(user, title="Chem Paper 2")
+        make_session(user, title="Bio Paper 1")
+
+        assert get_title_suggestions(user) == ["Chem Paper 2", "Bio Paper 1"]
+
+    def test_excludes_blank_titles(self, user):
+        make_session(user, title="")
+
+        assert get_title_suggestions(user) == []
+
+    def test_excludes_other_users_titles(self, user):
+        other = baker.make("auth.User")
+        make_session(other, title="Someone else's paper")
+
+        assert get_title_suggestions(user) == []
+
+    def test_respects_limit(self, user):
+        for i in range(5):
+            make_session(user, title=f"Title {i}")
+
+        assert len(get_title_suggestions(user, limit=3)) == 3
+
+
+class TestGetTagSuggestions:
+    def test_splits_and_ranks_comma_separated_tags(self, user):
+        make_session(user, topic="Momentum, Energy")
+        make_session(user, topic="Momentum")
+
+        assert get_tag_suggestions(user) == ["Momentum", "Energy"]
+
+    def test_groups_case_insensitively_uses_most_common_casing(self, user):
+        make_session(user, topic="momentum")
+        make_session(user, topic="momentum")
+        make_session(user, topic="Momentum")
+
+        assert get_tag_suggestions(user) == ["momentum"]
+
+    def test_excludes_blank_topics(self, user):
+        make_session(user, topic="")
+
+        assert get_tag_suggestions(user) == []
+
+    def test_respects_limit(self, user):
+        make_session(user, topic="a, b, c, d, e")
+
+        assert len(get_tag_suggestions(user, limit=2)) == 2
 
 
 # ---------------------------------------------------------------------------
@@ -351,6 +411,16 @@ class TestCompleteReadingView:
 
 
 class TestStudySessionCreateView:
+    def test_get_includes_title_and_tag_suggestions(self, client_logged_in, user):
+        make_session(user, title="Chem Paper 2", topic="Kinematics")
+        make_session(user, title="Chem Paper 2", topic="Kinematics")
+        url = reverse("learning:session_create")
+
+        resp = client_logged_in.get(url)
+
+        assert json.loads(resp.context["title_suggestions_json"]) == ["Chem Paper 2"]
+        assert json.loads(resp.context["tag_suggestions_json"]) == ["Kinematics"]
+
     def test_creates_session_for_current_user(self, client_logged_in, user):
         activity = Activity.objects.get(slug="flashcards", is_system=True)
         url = reverse("learning:session_create")

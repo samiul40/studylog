@@ -276,19 +276,25 @@
             <label class="ss-field__label" for="id_title">
               Title <span class="ss-opt">Optional</span>
             </label>
-            <input type="text" name="title" id="id_title" class="ss-control"
-                   placeholder="e.g. June 2019 Chem Paper 2 (optional)" spellcheck="false"
-                   value="{{ form.title.value|default:'' }}">
+            <div class="ss-suggest" id="ss-title-suggest">
+              <input type="text" name="title" id="id_title" class="ss-control"
+                     placeholder="e.g. June 2019 Chem Paper 2 (optional)" spellcheck="false"
+                     value="{{ form.title.value|default:'' }}">
+              <div class="ss-suggest__panel" id="ss-title-suggest-panel" role="listbox" aria-label="Title suggestions"></div>
+            </div>
           </div>
 
           <div class="ss-field">
             <label class="ss-field__label" id="ss-tags-label">
               Topic / tags <span class="ss-opt">Optional</span>
             </label>
-            <div class="ss-taginput" id="ss-taginput" role="group" aria-labelledby="ss-tags-label">
-              <input type="text" id="ss-tag-input"
-                     placeholder="Type a topic and press Enter… (optional)"
-                     aria-label="Add a topic tag">
+            <div class="ss-suggest" id="ss-tag-suggest">
+              <div class="ss-taginput" id="ss-taginput" role="group" aria-labelledby="ss-tags-label">
+                <input type="text" id="ss-tag-input"
+                       placeholder="Type a topic and press Enter… (optional)"
+                       aria-label="Add a topic tag">
+              </div>
+              <div class="ss-suggest__panel" id="ss-tag-suggest-panel" role="listbox" aria-label="Tag suggestions"></div>
             </div>
             <input type="hidden" name="topic" id="id_topic"
                    value="{{ form.topic.value|default:'' }}">
@@ -435,6 +441,8 @@
   const RESOURCES = {{ resources_json|safe }};
   const UNITS_BY_RESOURCE = {{ units_by_resource_json|safe }};
   const ACTIVITIES = {{ activities_json|safe }};
+  const TITLE_SUGGESTIONS = {{ title_suggestions_json|safe }};
+  const TAG_SUGGESTIONS = {{ tag_suggestions_json|safe }};
 
   /* System activity slugs that get chip tiles (not watch/read — auto-logged) */
   const CHIP_SLUGS = ['flashcards','practice','pastpapers','review','writing'];
@@ -912,21 +920,130 @@
 
   if (INIT_TOP) { INIT_TOP.split(',').forEach(function(t) { addTag(t); }); }
 
+  /* ── Tag suggestions, ranked by how often each tag has been used ──────── */
+  var tagSuggestWrap  = document.getElementById('ss-tag-suggest');
+  var tagSuggestPanel = document.getElementById('ss-tag-suggest-panel');
+  var tagActiveIdx    = -1;
+
+  function currentTagValues() {
+    return Array.from(tagWrap.querySelectorAll('.ss-tag')).map(function(t) {
+      return t.childNodes[0].textContent.trim().toLowerCase();
+    });
+  }
+  function currentTagMatches() {
+    var q = (tagInput.value || '').trim().toLowerCase();
+    var existing = currentTagValues();
+    return TAG_SUGGESTIONS.filter(function(t) {
+      var lower = t.toLowerCase();
+      return existing.indexOf(lower) === -1 && (!q || lower.indexOf(q) !== -1);
+    }).slice(0, 6);
+  }
+  function renderTagSuggestions() {
+    var matches = currentTagMatches();
+    if (!matches.length) { closeTagSuggest(); return; }
+    tagSuggestPanel.innerHTML = matches.map(function(t, i) {
+      return '<div class="ss-suggest__opt' + (i === tagActiveIdx ? ' active' : '') + '" data-idx="' + i + '" role="option">' + esc(t) + '</div>';
+    }).join('');
+    tagSuggestWrap.classList.add('is-open');
+  }
+  function closeTagSuggest() {
+    tagSuggestWrap.classList.remove('is-open');
+    tagActiveIdx = -1;
+  }
+
+  if (TAG_SUGGESTIONS.length) {
+    tagInput.addEventListener('focus', renderTagSuggestions);
+    tagInput.addEventListener('input', function() { tagActiveIdx = -1; renderTagSuggestions(); });
+    tagSuggestPanel.addEventListener('mousedown', function(e) {
+      var opt = e.target.closest('.ss-suggest__opt'); if (!opt) return;
+      e.preventDefault();
+      var matches = currentTagMatches();
+      var picked = matches[parseInt(opt.dataset.idx, 10)];
+      if (picked) { addTag(picked); tagInput.value = ''; renderTagSuggestions(); }
+      tagInput.focus();
+    });
+    document.addEventListener('click', function(e) {
+      if (!tagSuggestWrap.contains(e.target)) closeTagSuggest();
+    });
+  }
+
   tagInput.addEventListener('keydown', function(e) {
-    if (e.key === 'Enter') {
-      e.preventDefault(); addTag(tagInput.value); tagInput.value = '';
+    var matches = tagSuggestWrap.classList.contains('is-open') ? currentTagMatches() : [];
+    if (e.key === 'ArrowDown' && matches.length) {
+      e.preventDefault(); tagActiveIdx = Math.min(tagActiveIdx + 1, matches.length - 1); renderTagSuggestions();
+    } else if (e.key === 'ArrowUp' && matches.length) {
+      e.preventDefault(); tagActiveIdx = Math.max(tagActiveIdx - 1, 0); renderTagSuggestions();
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      var picked = tagActiveIdx >= 0 ? matches[tagActiveIdx] : tagInput.value;
+      addTag(picked); tagInput.value = '';
+      renderTagSuggestions();
     } else if (e.key === 'Backspace' && !tagInput.value) {
       var tags = tagWrap.querySelectorAll('.ss-tag');
-      if (tags.length) { tags[tags.length - 1].remove(); syncTopics(); }
+      if (tags.length) { tags[tags.length - 1].remove(); syncTopics(); renderTagSuggestions(); }
+    } else if (e.key === 'Escape') {
+      closeTagSuggest();
     }
   });
   tagWrap.addEventListener('click', function() { tagInput.focus(); });
 
   /* ═══════════════════════════════════════════════════════════════════════
-     TITLE — context-aware placeholder
+     TITLE — context-aware placeholder + suggestions from past session titles
   ═══════════════════════════════════════════════════════════════════════ */
   var titleInput = document.getElementById('id_title');
   var selResName = '';
+
+  var titleSuggestWrap  = document.getElementById('ss-title-suggest');
+  var titleSuggestPanel = document.getElementById('ss-title-suggest-panel');
+  var titleActiveIdx    = -1;
+
+  function currentTitleMatches() {
+    var q = (titleInput.value || '').trim().toLowerCase();
+    return TITLE_SUGGESTIONS.filter(function(t) {
+      return t.toLowerCase() !== q && (!q || t.toLowerCase().indexOf(q) !== -1);
+    }).slice(0, 6);
+  }
+  function renderTitleSuggestions() {
+    var matches = currentTitleMatches();
+    if (!matches.length) { closeTitleSuggest(); return; }
+    titleSuggestPanel.innerHTML = matches.map(function(t, i) {
+      return '<div class="ss-suggest__opt' + (i === titleActiveIdx ? ' active' : '') + '" data-idx="' + i + '" role="option">' + esc(t) + '</div>';
+    }).join('');
+    titleSuggestWrap.classList.add('is-open');
+  }
+  function closeTitleSuggest() {
+    titleSuggestWrap.classList.remove('is-open');
+    titleActiveIdx = -1;
+  }
+
+  if (TITLE_SUGGESTIONS.length) {
+    titleInput.addEventListener('focus', renderTitleSuggestions);
+    titleInput.addEventListener('input', function() { titleActiveIdx = -1; renderTitleSuggestions(); });
+    titleInput.addEventListener('keydown', function(e) {
+      var matches = titleSuggestWrap.classList.contains('is-open') ? currentTitleMatches() : [];
+      if (!matches.length) return;
+      if (e.key === 'ArrowDown') {
+        e.preventDefault(); titleActiveIdx = Math.min(titleActiveIdx + 1, matches.length - 1); renderTitleSuggestions();
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault(); titleActiveIdx = Math.max(titleActiveIdx - 1, 0); renderTitleSuggestions();
+      } else if (e.key === 'Enter' && titleActiveIdx >= 0) {
+        e.preventDefault(); titleInput.value = matches[titleActiveIdx]; closeTitleSuggest();
+      } else if (e.key === 'Escape') {
+        closeTitleSuggest();
+      }
+    });
+    titleSuggestPanel.addEventListener('mousedown', function(e) {
+      var opt = e.target.closest('.ss-suggest__opt'); if (!opt) return;
+      e.preventDefault();
+      var matches = currentTitleMatches();
+      var picked = matches[parseInt(opt.dataset.idx, 10)];
+      if (picked) { titleInput.value = picked; }
+      closeTitleSuggest();
+    });
+    document.addEventListener('click', function(e) {
+      if (!titleSuggestWrap.contains(e.target)) closeTitleSuggest();
+    });
+  }
 
   function refreshTitlePlaceholder() {
     if (titleInput) {

@@ -1,7 +1,8 @@
 import calendar as _calendar
 import datetime
+from collections import Counter, defaultdict
 
-from django.db.models import Count, F, QuerySet, Sum, Value
+from django.db.models import Count, F, Max, QuerySet, Sum, Value
 from django.db.models.functions import Greatest
 from django.utils import timezone
 
@@ -232,3 +233,46 @@ def get_study_log_context(resource: LearningResource) -> dict:
         "study_log_planned_count": len(planned),
         "study_log_overdue_count": overdue_count,
     }
+
+
+def get_title_suggestions(user, limit: int = 8) -> list[str]:
+    """Return the user's own past session titles, most-used first."""
+    rows = (
+        StudySession.objects.filter(user=user)
+        .exclude(title="")
+        .values("title")
+        .annotate(uses=Count("id"), last_used=Max("date"))
+        .order_by("-uses", "-last_used")[:limit]
+    )
+    return [row["title"] for row in rows]
+
+
+def get_tag_suggestions(user, limit: int = 12) -> list[str]:
+    """
+    Return the user's own most-used topic tags, most-used first.
+
+    ``topic`` stores multiple tags as a single comma-separated string, so
+    frequency can't be computed with a plain group-by — tags are split and
+    counted in Python instead. Tags are grouped case-insensitively but the
+    most common casing is kept for display.
+    """
+    topic_strings = (
+        StudySession.objects.filter(user=user)
+        .exclude(topic="")
+        .values_list("topic", flat=True)
+    )
+
+    counts: Counter[str] = Counter()
+    casing_counts: defaultdict[str, Counter[str]] = defaultdict(Counter)
+    for topic_string in topic_strings:
+        for tag in topic_string.split(","):
+            tag = tag.strip()
+            if not tag:
+                continue
+            key = tag.lower()
+            counts[key] += 1
+            casing_counts[key][tag] += 1
+
+    return [
+        casing_counts[key].most_common(1)[0][0] for key, _ in counts.most_common(limit)
+    ]
