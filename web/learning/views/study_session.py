@@ -15,7 +15,12 @@ from django.views.generic import CreateView, DeleteView, UpdateView
 from learning.forms import StudySessionForm
 from learning.mixins import UserPermissionMixin
 from learning.models import Activity, LearningResource, LearningUnit, StudySession
-from learning.services.sessions import get_day_sessions, get_month_calendar
+from learning.services.sessions import (
+    get_day_sessions,
+    get_month_calendar,
+    get_tag_suggestions,
+    get_title_suggestions,
+)
 
 
 def _parse_date(value: str | None) -> datetime.date | None:
@@ -152,6 +157,8 @@ class StudySessionCreateView(UserPermissionMixin, CreateView):
         ctx["today_iso"] = _user_today(self.request).isoformat()
         ctx["resource_prefill"] = self.request.GET.get("resource", "")
         ctx["date_prefill"] = self.request.GET.get("date", "")
+        ctx["title_suggestions_json"] = json.dumps(get_title_suggestions(user))
+        ctx["tag_suggestions_json"] = json.dumps(get_tag_suggestions(user))
         return ctx
 
     def form_valid(self, form):

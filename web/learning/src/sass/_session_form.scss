@@ -701,6 +701,46 @@ select.ss-control--select {
 }
 
 // ---------------------------------------------------------------------------
+// Suggestion dropdown (title / tag autocomplete, based on past sessions)
+// ---------------------------------------------------------------------------
+.ss-suggest {
+  position: relative;
+}
+
+.ss-suggest__panel {
+  display: none;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 7px);
+  z-index: 20;
+  background: var(--field);
+  border: 1.5px solid var(--line);
+  border-radius: 14px;
+  box-shadow: 0 24px 48px -20px rgba(13, 24, 18, 0.4);
+  padding: 6px;
+  max-height: 220px;
+  overflow-y: auto;
+
+  [data-theme="dark"] & { box-shadow: 0 24px 48px -20px rgba(0, 0, 0, 0.7); }
+
+  .ss-suggest.is-open & { display: block; }
+}
+
+.ss-suggest__opt {
+  padding: 10px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 0.92rem;
+  font-weight: 500;
+  color: var(--ink);
+  transition: background 0.14s;
+
+  &:hover,
+  &.active { background: color-mix(in srgb, var(--emerald) 11%, transparent); }
+}
+
+// ---------------------------------------------------------------------------
 // Tag input
 // ---------------------------------------------------------------------------
 .ss-taginput {
