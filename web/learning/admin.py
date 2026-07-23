@@ -3,7 +3,7 @@ from django.contrib import admin
 
 from learning.services.dashboard import get_dashboard_stats
 
-from .models import LearningResource, LearningUnit, ResourceType
+from .models import LearningResource, LearningUnit, ResourceType, StudySession
 
 
 class LearningUnitInline(SortableInlineAdminMixin, admin.TabularInline):
@@ -106,6 +106,42 @@ class LearningUnitAdmin(admin.ModelAdmin):
                     "notes",
                 )
             },
+        ),
+        (
+            "Timestamps",
+            {
+                "fields": ("created_at", "updated_at"),
+                "classes": ("collapse",),
+            },
+        ),
+    )
+
+
+@admin.register(StudySession)
+class StudySessionAdmin(admin.ModelAdmin):
+    list_display = (
+        "user",
+        "activity",
+        "display_label",
+        "date",
+        "status",
+        "duration_minutes",
+    )
+    list_filter = ("status", "activity", "date")
+    search_fields = ("title", "topic", "notes", "user__username")
+    readonly_fields = ("created_at", "updated_at")
+    ordering = ("-date", "-created_at")
+    date_hierarchy = "date"
+    autocomplete_fields = ("user", "resource", "unit")
+
+    fieldsets = (
+        (
+            None,
+            {"fields": ("user", "activity", "resource", "unit", "status")},
+        ),
+        (
+            "Details",
+            {"fields": ("date", "title", "topic", "duration_minutes", "notes")},
         ),
         (
             "Timestamps",
