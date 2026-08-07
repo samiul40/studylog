@@ -3,7 +3,8 @@
 
 <a class="bcard bcard--{{ resource.resource_type.slug }}"
    href="{{ resource.get_absolute_url }}"
-   aria-label="{{ resource.title }}">
+   aria-label="{{ resource.title }}"
+   data-type="{{ resource.resource_type.slug }}">
 
   {# ── Top row: type chip + status label ────────────────────────────────── #}
   <div class="bcard__top">

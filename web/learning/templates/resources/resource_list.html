@@ -78,9 +78,8 @@
     </a>
   </div>
 
-  {# ── Search / filter toolbar ───────────────────────────────────────────── #}
-  <form method="get" id="searchForm" class="rl-toolbar" role="search">
-    <input type="hidden" name="show" value="{% if show_completed %}completed{% else %}active{% endif %}">
+  {# ── Search / filter toolbar (client-side, live) ─────────────────────────── #}
+  <div class="rl-toolbar">
     <div class="rl-search">
       <svg class="rl-search__icon" viewBox="0 0 24 24" fill="none"
            stroke="currentColor" stroke-width="2"
@@ -88,22 +87,17 @@
         <circle cx="11" cy="11" r="7"></circle>
         <path d="M21 21l-4.3-4.3"></path>
       </svg>
-      <input type="text" name="search" id="searchInput"
+      <input type="text" id="searchInput"
              class="rl-search__input"
-             placeholder="Search resources…"
-             value="{{ search_query }}"
+             placeholder="Search resources or categories…"
              autocomplete="off">
     </div>
 
     <div class="rl-selectwrap">
-      <select name="type" id="typeFilter" class="rl-select"
-              aria-label="Filter by type">
+      <select id="typeFilter" class="rl-select" aria-label="Filter by type">
         <option value="">All types</option>
         {% for rt in resource_types %}
-        <option value="{{ rt.slug }}"
-                {% if selected_type == rt.slug %}selected{% endif %}>
-          {{ rt.name }}
-        </option>
+        <option value="{{ rt.slug }}">{{ rt.name }}</option>
         {% endfor %}
       </select>
       <svg class="rl-selectwrap__chevron" viewBox="0 0 24 24" fill="none"
@@ -112,85 +106,51 @@
         <path d="M6 9l6 6 6-6"></path>
       </svg>
     </div>
-  </form>
+  </div>
 
-  {# ── Card grid ─────────────────────────────────────────────────────────── #}
-  {% if resources %}
-  <div class="rl-grid" id="resourceGrid">
-    {% for resource in resources %}
-      {% include 'resources/partials/_resource_card.html' %}
+  {# ── Category sections ─────────────────────────────────────────────────── #}
+  {% if category_groups %}
+  <div class="rl-groupwrap" id="categoryGroups">
+    {% for group in category_groups %}
+    <section class="rl-group" data-category="{{ group.name|lower }}">
+      <button type="button" class="rl-group__head" aria-expanded="true">
+        <svg class="rl-group__chev" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M9 6l6 6-6 6"></path>
+        </svg>
+        <h2 class="rl-group__name">{{ group.name }}</h2>
+        <span class="rl-group__count">{{ group.count }}</span>
+      </button>
+      <div class="rl-grid rl-group__grid">
+        {% for resource in group.resources %}
+          {% include 'resources/partials/_resource_card.html' %}
+        {% endfor %}
+      </div>
+    </section>
     {% endfor %}
   </div>
 
-  {# ── Pagination ────────────────────────────────────────────────────────── #}
-  {% if is_paginated %}
-  <nav class="rl-pagination" aria-label="Resource pages">
-    {% if page_obj.has_previous %}
-    <a class="rl-page-btn"
-       href="?{% if base_query_string %}{{ base_query_string }}&{% endif %}page={{ page_obj.previous_page_number }}"
-       aria-label="Previous page">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
-           stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M15 18l-6-6 6-6"></path>
-      </svg>
-    </a>
-    {% else %}
-    <span class="rl-page-btn rl-page-btn--disabled" aria-disabled="true">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
-           stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M15 18l-6-6 6-6"></path>
-      </svg>
-    </span>
-    {% endif %}
-
-    <span class="rl-page-info">
-      Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
-    </span>
-
-    {% if page_obj.has_next %}
-    <a class="rl-page-btn"
-       href="?{% if base_query_string %}{{ base_query_string }}&{% endif %}page={{ page_obj.next_page_number }}"
-       aria-label="Next page">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
-           stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M9 18l6-6-6-6"></path>
-      </svg>
-    </a>
-    {% else %}
-    <span class="rl-page-btn rl-page-btn--disabled" aria-disabled="true">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
-           stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M9 18l6-6-6-6"></path>
-      </svg>
-    </span>
-    {% endif %}
-  </nav>
-  {% endif %}
+  <p class="rl-noresults" id="noResults" hidden>No resources match your search.</p>
 
   {% else %}
   {# ── Empty state ───────────────────────────────────────────────────────── #}
   <div class="rl-empty">
     <span class="rl-empty__icon">{% if show_completed %}🎓{% else %}📚{% endif %}</span>
     <p class="rl-empty__title">
-      {% if search_query or selected_type %}
-        No results found
-      {% elif show_completed %}
+      {% if show_completed %}
         No completed resources
       {% else %}
         No resources yet
       {% endif %}
     </p>
     <p class="rl-empty__text">
-      {% if search_query or selected_type %}
-        Try a different search term or filter.
-      {% elif show_completed %}
+      {% if show_completed %}
         Resources you finish will appear here.
       {% else %}
         Start tracking your learning by adding your first resource.
       {% endif %}
     </p>
-    {% if not search_query and not selected_type and not show_completed %}
-    {% if perms.learning.add_learningresource %}
+    {% if not show_completed and perms.learning.add_learningresource %}
     <a href="{% url 'learning:resource_create' %}" class="rl-btn rl-btn--primary">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
            stroke-linecap="round" aria-hidden="true">
@@ -198,7 +158,6 @@
       </svg>
       Add Your First Resource
     </a>
-    {% endif %}
     {% endif %}
   </div>
   {% endif %}
@@ -219,41 +178,48 @@
     });
   }, 60);
 
-  // ── Search — debounced 400 ms ──────────────────────────────────────────
+  // ── Category sections — click header to collapse/expand ────────────────
+  document.querySelectorAll('.rl-group__head').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var section = btn.closest('.rl-group');
+      var collapsed = section.classList.toggle('collapsed');
+      btn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+    });
+  });
+
+  // ── Live search + type filter — client-side, no debounce, no reload ────
   var searchInput = document.getElementById('searchInput');
-  var searchForm  = document.getElementById('searchForm');
-  var debounce;
+  var typeFilter  = document.getElementById('typeFilter');
+  var noResults   = document.getElementById('noResults');
+  var sections    = document.querySelectorAll('.rl-group');
 
-  if (searchInput) {
-    searchInput.addEventListener('input', function () {
-      clearTimeout(debounce);
-      debounce = setTimeout(function () {
-        if (searchInput.value.trim() === '') {
-          var url = new URL(window.location.href);
-          url.searchParams.delete('search');
-          url.searchParams.delete('page');
-          window.location.href = url.toString();
-        } else {
-          searchForm.submit();
-        }
-      }, 400);
+  function applyFilters() {
+    var query = searchInput ? searchInput.value.trim().toLowerCase() : '';
+    var type  = typeFilter ? typeFilter.value : '';
+    var anyVisible = false;
+
+    sections.forEach(function (section) {
+      var categoryMatches = !!query && section.dataset.category.includes(query);
+      var visibleCount = 0;
+
+      section.querySelectorAll('.bcard').forEach(function (card) {
+        var title = card.querySelector('.bcard__title').textContent.trim().toLowerCase();
+        var typeMatches = !type || card.dataset.type === type;
+        var searchMatches = !query || categoryMatches || title.includes(query);
+        var show = typeMatches && searchMatches;
+        card.style.display = show ? '' : 'none';
+        if (show) visibleCount++;
+      });
+
+      section.style.display = visibleCount ? '' : 'none';
+      if (visibleCount) anyVisible = true;
     });
 
-    // Restore focus and cursor position after a search-triggered page reload.
-    if (searchInput.value.trim() !== '') {
-      searchInput.focus();
-      var len = searchInput.value.length;
-      searchInput.setSelectionRange(len, len);
-    }
+    if (noResults) noResults.hidden = anyVisible;
   }
 
-  // ── Type filter — submit on change ────────────────────────────────────
-  var typeFilter = document.getElementById('typeFilter');
-  if (typeFilter) {
-    typeFilter.addEventListener('change', function () {
-      searchForm.submit();
-    });
-  }
+  if (searchInput) searchInput.addEventListener('input', applyFilters);
+  if (typeFilter) typeFilter.addEventListener('change', applyFilters);
 })();
 </script>
 {% endblock %}

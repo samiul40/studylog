@@ -5,7 +5,7 @@ from django.urls import reverse
 from django.utils import timezone
 from model_bakery import baker
 
-from learning.models import LearningResource, ResourceType
+from learning.models import Category, LearningResource, ResourceType
 
 pytestmark = pytest.mark.django_db
 
@@ -19,19 +19,6 @@ def test_resource_list_shows_user_resources(client_logged_in, user):
 
     assert response.status_code == 200
     assert resource in response.context["resources"]
-    assert len(response.context["resources"]) == 1
-
-
-def test_resource_list_filter_by_type(client_logged_in, user):
-    rt_book = ResourceType.objects.get(slug="book")
-    rt_other = ResourceType.objects.get(slug="other")
-    baker.make(LearningResource, user=user, resource_type=rt_book)
-    baker.make(LearningResource, user=user, resource_type=rt_other)
-
-    url = reverse("learning:resource_list") + "?type=book"
-    response = client_logged_in.get(url)
-
-    assert response.status_code == 200
     assert len(response.context["resources"]) == 1
 
 
@@ -433,3 +420,71 @@ def test_archived_resource_can_be_deleted(client_logged_in, user):
 
     assert response.status_code == 302
     assert not LearningResource.objects.filter(pk=resource.pk).exists()
+
+
+# ---------------------------------------------------------------------------
+# ResourceListView — category_groups context
+# ---------------------------------------------------------------------------
+
+
+def test_resource_list_groups_resources_by_category(client_logged_in, user):
+    science = Category.objects.get(slug="science")
+    tech = Category.objects.get(slug="technology")
+    baker.make(LearningResource, user=user, category=science)
+    baker.make(LearningResource, user=user, category=tech, _quantity=2)
+
+    response = client_logged_in.get(reverse("learning:resource_list"))
+
+    groups = {g["slug"]: g["count"] for g in response.context["category_groups"]}
+    assert groups == {"science": 1, "technology": 2}
+
+
+def test_resource_list_category_groups_follow_fixed_order(client_logged_in, user):
+    science = Category.objects.get(slug="science")
+    tech = Category.objects.get(slug="technology")
+    math = Category.objects.get(slug="mathematics")
+    # Create out of order to prove ordering isn't creation-order dependent.
+    baker.make(LearningResource, user=user, category=math)
+    baker.make(LearningResource, user=user, category=science)
+    baker.make(LearningResource, user=user, category=tech)
+
+    response = client_logged_in.get(reverse("learning:resource_list"))
+
+    slugs = [g["slug"] for g in response.context["category_groups"]]
+    assert slugs == ["science", "technology", "mathematics"]
+
+
+def test_resource_list_uncategorized_resource_falls_under_other(client_logged_in, user):
+    science = Category.objects.get(slug="science")
+    baker.make(LearningResource, user=user, category=science)
+    baker.make(LearningResource, user=user, category=None)
+
+    response = client_logged_in.get(reverse("learning:resource_list"))
+
+    groups = response.context["category_groups"]
+    assert groups[-1]["slug"] == "other"
+    assert groups[-1]["count"] == 1
+
+
+def test_resource_list_empty_categories_are_omitted(client_logged_in, user):
+    science = Category.objects.get(slug="science")
+    baker.make(LearningResource, user=user, category=science)
+
+    response = client_logged_in.get(reverse("learning:resource_list"))
+
+    slugs = [g["slug"] for g in response.context["category_groups"]]
+    assert slugs == ["science"]
+
+
+def test_resource_list_custom_category_appears_after_system_categories(
+    client_logged_in, user
+):
+    science = Category.objects.get(slug="science")
+    custom = baker.make(Category, name="Chemistry", is_system=False, user=user)
+    baker.make(LearningResource, user=user, category=science)
+    baker.make(LearningResource, user=user, category=custom)
+
+    response = client_logged_in.get(reverse("learning:resource_list"))
+
+    slugs = [g["slug"] for g in response.context["category_groups"]]
+    assert slugs == ["science", custom.slug]

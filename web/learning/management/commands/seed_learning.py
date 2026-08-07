@@ -4,7 +4,7 @@ from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 from faker import Faker
 
-from learning.models import LearningResource, LearningUnit, ResourceType
+from learning.models import Category, LearningResource, LearningUnit, ResourceType
 
 
 class Command(BaseCommand):
@@ -30,12 +30,16 @@ class Command(BaseCommand):
 
         self.stdout.write(self.style.SUCCESS("Creating learning resources..."))
 
+        # None included so some resources land in the "Other" bucket on the list page.
+        categories = list(Category.objects.for_user(user)) + [None]
+
         resources = []
         for _ in range(8):
             resource = LearningResource.objects.create(
                 user=user,
                 title=fake.sentence(nb_words=4),
                 resource_type=random.choice(resource_types),
+                category=random.choice(categories),
                 description=fake.text(max_nb_chars=120),
             )
             resources.append(resource)

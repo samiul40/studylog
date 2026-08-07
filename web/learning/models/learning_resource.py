@@ -2,6 +2,7 @@ from django.conf import settings
 from django.db import models
 from django.urls import reverse
 
+from .category import Category
 from .querysets import LearningResourceQuerySet
 from .resource_type import ResourceType
 
@@ -19,6 +20,17 @@ class LearningResource(models.Model):
         ResourceType,
         on_delete=models.PROTECT,
         related_name="resources",
+    )
+    category = models.ForeignKey(
+        Category,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="resources",
+        help_text=(
+            "Optional grouping category. Resources with no category are "
+            "shown under 'Other' on the resources list."
+        ),
     )
     description = models.TextField(blank=True)
     url = models.URLField(

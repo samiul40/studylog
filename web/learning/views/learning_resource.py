@@ -1,6 +1,5 @@
 import json
 import logging
-from urllib.parse import urlencode
 
 from django.contrib import messages
 from django.db.models import F, Q
@@ -19,6 +18,7 @@ from learning.forms import LearningResourceForm
 from learning.mixins import UserPermissionMixin
 from learning.models import LearningResource, LearningUnit, ResourceType
 from learning.services import get_resource_progress, get_study_log_context
+from learning.services.resource_grouping import group_resources_by_category
 
 logger = logging.getLogger(__name__)
 
@@ -41,53 +41,43 @@ class BaseUserResourceView(UserPermissionMixin):
 
 class ResourceListView(BaseUserResourceView, ListView):
     """
-    Display all learning resources belonging to the logged-in user.
+    Display all learning resources belonging to the logged-in user, grouped
+    by category. Search and type filtering happen client-side in-browser
+    against the full (unpaginated) set, so the queryset here only applies
+    the Active/Completed tab split.
     """
 
     permission_required = "learning.view_learningresource"
     template_name = "resources/resource_list.html"
     context_object_name = "resources"
-    paginate_by = 24
 
-    def get_queryset(self):
-        qs = (
+    def _base_queryset(self):
+        return (
             super()
             .get_queryset()
             .with_progress()
             .with_time_logged()
             .with_status_order()
-            .select_related("resource_type")
+            .select_related("resource_type", "category")
             .order_by(
                 "status_order",
                 F("last_unit_activity").desc(nulls_first=True),
             )
         )
 
-        search_query = self.request.GET.get("search", "").strip()
-        type_slug = self.request.GET.get("type", "").strip()
-
-        if search_query:
-            qs = qs.filter(title__icontains=search_query)
-
-        if type_slug:
-            qs = qs.filter(resource_type__slug=type_slug)
-
-        # Save before the show filter so get_context_data can compute tab counts.
-        self._qs_before_show_filter = qs
-
+    def get_queryset(self):
+        qs = self._base_queryset()
         show = self.request.GET.get("show", "active")
         if show == "completed":
             qs = qs.filter(percentage=100)
         else:
             qs = qs.filter(percentage__lt=100)
-
         return qs
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        show = self.request.GET.get("show", "active")
-        show_completed = show == "completed"
+        show_completed = self.request.GET.get("show", "active") == "completed"
 
         full_qs = self.object_list
         context["page_stats"] = {
@@ -95,26 +85,13 @@ class ResourceListView(BaseUserResourceView, ListView):
             "in_progress": full_qs.filter(percentage__gt=0, percentage__lt=100).count(),
         }
 
-        # Tab counts derived from the queryset before the show filter.
-        base_qs = self._qs_before_show_filter
+        base_qs = self._base_queryset()
         context["active_count"] = base_qs.filter(percentage__lt=100).count()
         context["completed_count"] = base_qs.filter(percentage=100).count()
 
-        # Tab URLs — preserve search + type params, swap show, drop page.
-        tab_params = {
-            k: v for k, v in self.request.GET.items() if k not in ("page", "show")
-        }
-        context["active_tab_url"] = "?" + urlencode({**tab_params, "show": "active"})
-        context["completed_tab_url"] = "?" + urlencode(
-            {**tab_params, "show": "completed"}
-        )
+        context["active_tab_url"] = "?show=active"
+        context["completed_tab_url"] = "?show=completed"
 
-        pag_params = self.request.GET.copy()
-        pag_params.pop("page", None)
-        context["base_query_string"] = pag_params.urlencode()
-
-        context["search_query"] = self.request.GET.get("search", "")
-        context["selected_type"] = self.request.GET.get("type", "")
         context["show_completed"] = show_completed
         context["archived_count"] = (
             LearningResource.objects.for_user(self.request.user).archived().count()
@@ -122,6 +99,7 @@ class ResourceListView(BaseUserResourceView, ListView):
         context["resource_types"] = ResourceType.objects.filter(
             Q(is_system=True) | Q(user=self.request.user)
         )
+        context["category_groups"] = group_resources_by_category(full_qs)
         return context
 
 
