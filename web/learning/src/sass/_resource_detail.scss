@@ -921,7 +921,7 @@
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--emerald) 12%, transparent);
 
   input {
-    width: 34px;
+    width: 26px;
     border: none;
     background: transparent;
     color: var(--ink);
@@ -944,6 +944,12 @@
 }
 
 .chips.show-custom .chip-input { display: inline-flex; }
+
+// Rejected edit (duration below time already watched)
+.chip-input--error {
+  border-color: var(--rose);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--rose) 12%, transparent);
+}
 
 // ---------------------------------------------------------------------------
 // Video watched section
@@ -1035,7 +1041,7 @@
   }
 
   input {
-    width: 40px;
+    width: 28px;
     border: none;
     background: transparent;
     color: var(--ink);
@@ -1073,6 +1079,13 @@
   font-style: italic;
 
   svg { width: 14px; height: 14px; flex-shrink: 0; }
+
+  // Rejected edit (e.g. duration set below time already watched) — nested
+  // under the Duration chips rather than a standalone panel section.
+  &--error {
+    color: var(--rose);
+    margin-top: 16px;
+  }
 }
 
 // Note preview callout (when note exists)
@@ -1261,6 +1274,46 @@
     .btn-close { opacity: 0.4; margin-top: 4px; &:hover { opacity: 0.8; } }
   }
 
+  // Icon + text titles (e.g. "+ Add learning unit") — the inline <svg> icons
+  // ship with no width/height, so without this they fall back to the
+  // browser's default replaced-element size (~300x150) and blow up the header.
+  .modal-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    svg {
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+      color: var(--emerald);
+    }
+
+    // Single-line heading, paired with the icon badge below
+    &--lg {
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      line-height: 1.25;
+      gap: 10px;
+    }
+
+    // Rounded-square badge behind the icon (opt-in via &__icon wrapper)
+    &__icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 30px;
+      height: 30px;
+      border-radius: 9px;
+      background: color-mix(in srgb, var(--emerald) 16%, transparent);
+      color: var(--emerald-deep);
+      flex-shrink: 0;
+
+      svg { width: 16px; height: 16px; color: var(--emerald-deep); }
+    }
+  }
+
   .sess-mhd {
     &__title {
       font-family: $font-display;
@@ -1357,7 +1410,8 @@
     }
   }
 
-  // Duration picker boxes (add-unit modal)
+  // Duration picker boxes (add-unit modal) — the pair spans the full field
+  // width, same as the title input above it, rather than sitting narrow.
   .modal-dur-row {
     display: flex;
     align-items: center;
@@ -1370,9 +1424,10 @@
     gap: 6px;
     background: var(--field);
     border: 1.5px solid var(--line);
-    border-radius: 12px;
-    padding: 8px 12px;
-    width: 90px;
+    border-radius: 9px;
+    padding: 10px 12px;
+    flex: 1 1 0;
+    min-width: 0;
     transition: border-color 0.15s;
 
     input {
@@ -1381,7 +1436,7 @@
       outline: none;
       background: transparent;
       font-family: $font-sans;
-      font-size: 0.9375rem;
+      font-size: 0.92rem;
       color: var(--ink);
       text-align: right;
       padding: 0;
@@ -1394,7 +1449,7 @@
 
     &__u {
       font-family: $font-mono;
-      font-size: 0.7rem;
+      font-size: 0.78rem;
       color: var(--ink-faint);
       flex-shrink: 0;
     }
@@ -1446,6 +1501,29 @@
     background: var(--field);
     border-color: var(--line);
     input { color: var(--ink); }
+  }
+}
+
+// Add-unit modal: compact sizing (ID-scoped so it doesn't affect the other
+// .modal--rd modals — delete/note/reschedule — which share these base classes).
+#addUnitModal {
+  .modal-header {
+    padding: 18px 20px;
+    gap: 10px;
+  }
+
+  .modal-body {
+    padding: 18px 20px;
+  }
+
+  .modal-footer {
+    padding: 14px 20px;
+  }
+
+  .modal-input {
+    padding: 10px 12px;
+    border-radius: 9px;
+    font-size: 0.92rem;
   }
 }
 

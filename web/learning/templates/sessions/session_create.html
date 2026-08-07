@@ -143,7 +143,6 @@
               <button type="button" class="ss-pill on" data-dur="30">30m</button>
               <button type="button" class="ss-pill" data-dur="45">45m</button>
               <button type="button" class="ss-pill" data-dur="60">60m</button>
-              <button type="button" class="ss-pill" data-dur="90">90m</button>
               <button type="button" class="ss-pill ss-pill--custom" data-dur="custom">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                      stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -152,9 +151,12 @@
                 Custom
               </button>
               <span class="ss-custom-min" id="ss-custom-min" aria-live="polite">
-                <input type="number" min="1" max="600" class="ss-control ss-custom-min__input"
-                       id="ss-custom-input" placeholder="90" aria-label="Custom duration in minutes">
-                <span class="ss-custom-min__unit">min</span>
+                <input type="number" min="0" max="99" class="ss-control ss-custom-min__input"
+                       id="ss-custom-hours" placeholder="0" aria-label="Custom duration hours">
+                <span class="ss-custom-min__unit">h</span>
+                <input type="number" min="0" max="59" class="ss-control ss-custom-min__input"
+                       id="ss-custom-mins" placeholder="0" aria-label="Custom duration minutes">
+                <span class="ss-custom-min__unit">m</span>
               </span>
             </div>
             <div class="ss-dur-readout" aria-live="polite">
@@ -740,10 +742,22 @@
   var durInput    = document.getElementById('id_duration_minutes');
   var durReadout  = document.getElementById('ss-dur-readout');
   var customWrap  = document.getElementById('ss-custom-min');
-  var customInput = document.getElementById('ss-custom-input');
-  var PRESETS     = [15, 30, 45, 60, 90];
+  var customHours = document.getElementById('ss-custom-hours');
+  var customMins  = document.getElementById('ss-custom-mins');
+  var PRESETS     = [15, 30, 45, 60];
 
   function setDurReadout(mins) { durReadout.textContent = mins ? fmt(mins) : '—'; }
+
+  function customTotal() {
+    var h = Math.max(0, parseInt(customHours.value, 10) || 0);
+    var m = Math.max(0, Math.min(59, parseInt(customMins.value, 10) || 0));
+    return h * 60 + m;
+  }
+
+  function setCustomFromMinutes(mins) {
+    customHours.value = Math.floor(mins / 60) || '';
+    customMins.value  = (mins % 60) || '';
+  }
 
   function selectDur(val) {
     $$('#ss-durgroup [data-dur]').forEach(function(p) { p.classList.remove('on'); });
@@ -751,7 +765,7 @@
     if (pill) pill.classList.add('on');
     if (val === 'custom') {
       customWrap.classList.add('show');
-      var cv = parseInt(customInput.value, 10) || 0;
+      var cv = customTotal();
       durInput.value = cv || '';
       setDurReadout(cv);
     } else {
@@ -765,17 +779,19 @@
   if (PRESETS.indexOf(INIT_DUR) !== -1) {
     selectDur(initDurStr);
   } else {
-    customInput.value = initDurStr;
+    setCustomFromMinutes(INIT_DUR);
     selectDur('custom');
   }
 
   $$('#ss-durgroup [data-dur]').forEach(function(pill) {
     pill.addEventListener('click', function() { selectDur(pill.dataset.dur); });
   });
-  customInput.addEventListener('input', function() {
-    var v = parseInt(customInput.value, 10) || 0;
-    durInput.value = v || '';
-    setDurReadout(v);
+  [customHours, customMins].forEach(function(el) {
+    el.addEventListener('input', function() {
+      var v = customTotal();
+      durInput.value = v || '';
+      setDurReadout(v);
+    });
   });
 
   /* ═══════════════════════════════════════════════════════════════════════
