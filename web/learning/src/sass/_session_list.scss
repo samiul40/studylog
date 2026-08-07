@@ -663,6 +663,31 @@
     }
   }
 
+  &__showmore {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    margin-top: 9px;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 12px;
+    background: transparent;
+    color: var(--ink-soft);
+    font-family: $font-sans;
+    font-size: 0.86rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.18s, color 0.18s;
+
+    &:hover {
+      color: var(--emerald-deep);
+      background: color-mix(in srgb, var(--emerald) 6%, transparent);
+
+      [data-theme="dark"] & { color: var(--emerald-bright); }
+    }
+  }
+
   &__empty {
     text-align: center;
     padding: 30px 10px;
