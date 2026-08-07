@@ -4,6 +4,7 @@ from django.utils import timezone
 from django.utils.text import slugify
 
 from .models.activity import Activity
+from .models.category import Category
 from .models.learning_resource import LearningResource
 from .models.learning_unit import LearningUnit
 from .models.resource_type import ResourceType
@@ -35,6 +36,24 @@ class LearningResourceForm(forms.ModelForm):
         label="Content kind",
         widget=forms.Select(attrs={"class": "form-select"}),
     )
+    category = forms.ModelChoiceField(
+        queryset=Category.objects.none(),
+        required=False,
+        widget=forms.Select(attrs={"class": "rf-control"}),
+        label="Category",
+        empty_label="No category",
+    )
+    new_category = forms.CharField(
+        required=False,
+        max_length=100,
+        label="Or add a new category",
+        widget=forms.TextInput(
+            attrs={
+                "class": "rf-control",
+                "placeholder": "e.g. Chemistry, Spanish, Music Theory",
+            }
+        ),
+    )
     unit_count = forms.IntegerField(
         required=False,
         min_value=1,
@@ -55,10 +74,11 @@ class LearningResourceForm(forms.ModelForm):
             self.fields["resource_type"].queryset = ResourceType.objects.filter(
                 Q(is_system=True) | Q(user=user)
             )
+            self.fields["category"].queryset = Category.objects.for_user(user)
 
     class Meta:
         model = LearningResource
-        fields = ["title", "resource_type", "description", "url"]
+        fields = ["title", "resource_type", "category", "description", "url"]
 
         widgets = {
             "title": forms.TextInput(
@@ -102,6 +122,16 @@ class LearningResourceForm(forms.ModelForm):
                 },
             )
             self.instance.resource_type = rt
+
+        new_category_name = self.cleaned_data.get("new_category", "").strip()
+        if new_category_name:
+            category, _ = Category.objects.get_or_create(
+                slug=slugify(new_category_name),
+                user=self.user,
+                defaults={"name": new_category_name},
+            )
+            self.instance.category = category
+
         return super().save(commit=commit)
 
 

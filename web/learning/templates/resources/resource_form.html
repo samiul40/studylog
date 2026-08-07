@@ -78,6 +78,12 @@
       <input type="hidden" name="new_content_kind" id="id_new_content_kind"
              value="{{ form.new_content_kind.value|default:'' }}">
 
+      {# Category hidden fields — the category combobox JS writes into these #}
+      <input type="hidden" name="category" id="id_category"
+             value="{% if form.category.value %}{{ form.category.value }}{% endif %}">
+      <input type="hidden" name="new_category" id="id_new_category"
+             value="{{ form.new_category.value|default:'' }}">
+
       <div class="rf-form-col">
 
       {# ── Section: Link ─────────────────────────────────────────────────── #}
@@ -162,6 +168,29 @@
           {% for err in form.non_field_errors %}{{ err }}{% endfor %}
         </div>
         {% endif %}
+      </div>
+
+      {# ── Category — smart combobox (mirrors resource type, no kind picker) ── #}
+      <div class="rf-field" id="rf-category-field">
+        <label class="rf-field__label">
+          Category <span class="rf-opt">Optional</span>
+        </label>
+
+        <div class="rf-combo" id="rf-category-combo">
+          <div class="rf-combo__control" id="rf-category-combo-control">
+            <input type="text" id="rf-category-combo-input"
+                   placeholder="Search categories, or type to create one…"
+                   autocomplete="off" spellcheck="false">
+            <span class="rf-combo__tag" id="rf-category-combo-tag" style="display:none;"></span>
+            <svg class="rf-combo__chev" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M6 9l6 6 6-6"></path>
+            </svg>
+          </div>
+          <div class="rf-combo__panel" id="rf-category-combo-panel"></div>
+        </div>
+
+        <div class="rf-field__hint">Pick an existing category or type a new name — we'll create it for you. Leave blank for none.</div>
       </div>
 
       {% if not form.instance.pk %}
@@ -479,6 +508,136 @@
       }
       selectCreateNew(existingNewName);
     }
+  })();
+
+  /* ── Category combobox ──────────────────────────────────────────────────── */
+  const RF_CATEGORIES = [
+    {% for c in form.category.field.queryset %}
+    { id: {{ c.pk }}, name: "{{ c.name|escapejs }}" },
+    {% endfor %}
+  ];
+
+  const hiddenCategoryId  = document.getElementById('id_category');
+  const hiddenNewCategory = document.getElementById('id_new_category');
+
+  const catCombo   = document.getElementById('rf-category-combo');
+  const catInput   = document.getElementById('rf-category-combo-input');
+  const catPanel   = document.getElementById('rf-category-combo-panel');
+  const catTag     = document.getElementById('rf-category-combo-tag');
+
+  let selectedCategory = null; // { id, name } | { isNew:true, name }
+
+  function renderCategoryPanel() {
+    const q  = catInput.value.trim();
+    const ql = q.toLowerCase();
+    const matches = RF_CATEGORIES.filter(c => c.name.toLowerCase().includes(ql));
+    const exact   = RF_CATEGORIES.some(c => c.name.toLowerCase() === ql);
+    let html = '';
+
+    if (matches.length) {
+      html += '<div class="rf-combo__group">Your categories</div>';
+      html += matches.map(c => {
+        const sel = selectedCategory && !selectedCategory.isNew && selectedCategory.id === c.id;
+        return `<div class="rf-combo__opt${sel ? ' selected' : ''}" data-id="${c.id}">
+          <span class="rf-combo__opt__t">${esc(c.name)}</span>
+          <svg class="rf-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 6L9 17l-5-5"></path>
+          </svg>
+        </div>`;
+      }).join('');
+    } else if (!q) {
+      html += '<div class="rf-combo__empty">Start typing to search or create a category.</div>';
+    } else {
+      html += '<div class="rf-combo__empty">No matches found.</div>';
+    }
+
+    if (q && !exact) {
+      html += `<div class="rf-combo__create" id="rf-category-combo-create">
+        <span class="rf-combo__create__ic">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round">
+            <path d="M12 5v14M5 12h14"></path>
+          </svg>
+        </span>
+        <span>Create <b>"${esc(q)}"</b></span>
+      </div>`;
+    }
+
+    catPanel.innerHTML = html;
+  }
+
+  function openCatCombo() {
+    catCombo.classList.add('is-open');
+    renderCategoryPanel();
+  }
+
+  function closeCatCombo() {
+    catCombo.classList.remove('is-open');
+  }
+
+  function selectExistingCategory(c) {
+    selectedCategory = { id: c.id, name: c.name };
+    catInput.value = c.name;
+    catTag.textContent = 'Selected';
+    catTag.style.display = '';
+    hiddenCategoryId.value  = c.id;
+    hiddenNewCategory.value = '';
+    closeCatCombo();
+  }
+
+  function selectCreateNewCategory(name) {
+    selectedCategory = { isNew: true, name };
+    catInput.value = name;
+    catTag.textContent = 'New';
+    catTag.style.display = '';
+    hiddenCategoryId.value  = '';
+    hiddenNewCategory.value = name;
+    closeCatCombo();
+  }
+
+  function clearCategory() {
+    selectedCategory = null;
+    catTag.style.display = 'none';
+    hiddenCategoryId.value  = '';
+    hiddenNewCategory.value = '';
+  }
+
+  document.getElementById('rf-category-combo-control').addEventListener('click', () => {
+    catInput.focus();
+    openCatCombo();
+  });
+
+  catInput.addEventListener('focus', openCatCombo);
+
+  catInput.addEventListener('input', () => {
+    clearCategory();
+    renderCategoryPanel();
+  });
+
+  catPanel.addEventListener('click', e => {
+    const opt    = e.target.closest('.rf-combo__opt');
+    const create = e.target.closest('.rf-combo__create');
+    if (opt) {
+      const c = RF_CATEGORIES.find(x => x.id === +opt.dataset.id);
+      if (c) selectExistingCategory(c);
+    } else if (create) {
+      const name = catInput.value.trim();
+      if (name) selectCreateNewCategory(name);
+    }
+  });
+
+  document.addEventListener('click', e => {
+    if (!catCombo.contains(e.target)) closeCatCombo();
+  });
+
+  (function initCategoryCombo() {
+    const existingId      = hiddenCategoryId.value;
+    const existingNewName = hiddenNewCategory.value;
+
+    if (existingId) {
+      const c = RF_CATEGORIES.find(x => x.id === +existingId);
+      if (c) { selectExistingCategory(c); return; }
+    }
+    if (existingNewName) selectCreateNewCategory(existingNewName);
   })();
 
   /* ── URL platform auto-detect + YouTube import (add form only) ───────────── */

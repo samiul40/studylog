@@ -3,7 +3,13 @@ from django.contrib import admin
 
 from learning.services.dashboard import get_dashboard_stats
 
-from .models import LearningResource, LearningUnit, ResourceType, StudySession
+from .models import (
+    Category,
+    LearningResource,
+    LearningUnit,
+    ResourceType,
+    StudySession,
+)
 
 
 class LearningUnitInline(SortableInlineAdminMixin, admin.TabularInline):
@@ -40,10 +46,31 @@ class ResourceTypeAdmin(admin.ModelAdmin):
         return self.readonly_fields
 
 
+@admin.register(Category)
+class CategoryAdmin(admin.ModelAdmin):
+    list_display = ("name", "slug", "is_system", "user")
+    list_filter = ("is_system",)
+    search_fields = ("name", "slug", "user__username")
+    readonly_fields = ("slug", "created_at")
+    autocomplete_fields = ("user",)
+
+    def get_readonly_fields(self, request, obj=None):
+        if obj and obj.is_system:
+            return ("name", "slug", "is_system", "user", "created_at")
+        return self.readonly_fields
+
+
 @admin.register(LearningResource)
 class LearningResourceAdmin(SortableAdminBase, admin.ModelAdmin):
-    list_display = ("title", "resource_type", "user", "progress", "created_at")
-    list_filter = ("resource_type", "created_at")
+    list_display = (
+        "title",
+        "resource_type",
+        "category",
+        "user",
+        "progress",
+        "created_at",
+    )
+    list_filter = ("resource_type", "category", "created_at")
     search_fields = ("title", "description", "user__username")
     readonly_fields = ("created_at", "updated_at")
     ordering = ("-created_at",)
@@ -55,7 +82,13 @@ class LearningResourceAdmin(SortableAdminBase, admin.ModelAdmin):
         (
             None,
             {
-                "fields": ("user", "title", "resource_type", "description"),
+                "fields": (
+                    "user",
+                    "title",
+                    "resource_type",
+                    "category",
+                    "description",
+                ),
             },
         ),
         (
