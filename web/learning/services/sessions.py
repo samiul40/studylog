@@ -163,7 +163,7 @@ def get_day_sessions(
     sessions = list(
         session_qs.filter(date=date)
         .select_related("resource", "activity")
-        .order_by("created_at")
+        .order_by("-created_at")
     )
 
     result = []

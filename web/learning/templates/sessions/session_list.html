@@ -247,6 +247,8 @@
   let dayData   = INIT_DAY;
   let selDate   = '{{ selected_date_iso }}';
   let filter    = '{{ activity_filter }}';
+  let dayExpanded = false;
+  const DAY_SHOW_LIMIT = 5;
 
   // ── Filter bar — single dropdown trigger ────────────────────────────────
   function renderFilter() {
@@ -299,6 +301,7 @@
     el.querySelectorAll('[data-f]').forEach(function(b) {
       b.addEventListener('click', function() {
         filter = b.dataset.f;
+        dayExpanded = false;
         renderFilter();
         fetchCal();
         fetchDay();
@@ -380,6 +383,7 @@
     grid.querySelectorAll('.cell:not(.empty)').forEach(cell => {
       const selectCell = () => {
         selDate = cell.dataset.date;
+        dayExpanded = false;
         renderCal();
         fetchDay();
       };
@@ -496,8 +500,26 @@
     if (dayData.day_sessions.length === 0) {
       body = emptyState();
     } else {
-      if (planned.length) body += `<div class="slist">${planned.map(planRow).join('')}</div>`;
-      if (done.length)    body += `<div class="slist">${done.map(doneRow).join('')}</div>`;
+      const totalCount = planned.length + done.length;
+      const truncated = !dayExpanded && totalCount > DAY_SHOW_LIMIT;
+
+      let plannedShown = planned;
+      let doneShown = done;
+      if (truncated) {
+        plannedShown = planned.slice(0, DAY_SHOW_LIMIT);
+        doneShown = done.slice(0, Math.max(0, DAY_SHOW_LIMIT - plannedShown.length));
+      }
+
+      if (plannedShown.length) body += `<div class="slist">${plannedShown.map(planRow).join('')}</div>`;
+      if (doneShown.length)    body += `<div class="slist">${doneShown.map(doneRow).join('')}</div>`;
+
+      if (truncated) {
+        const remaining = totalCount - plannedShown.length - doneShown.length;
+        body += `<button type="button" class="daypanel__showmore" id="js-daypanel-showmore">
+          Show ${remaining} more
+        </button>`;
+      }
+
       const canLog = past || selDate === TODAY_ISO;
       body += `<div class="daypanel__addrow">
         <a href="${URL_CREATE}?date=${encodeURIComponent(selDate)}" class="daypanel__addbtn">
@@ -531,6 +553,14 @@
         if (s) openSheet(s, true);
       });
     });
+    const showMoreBtn = document.getElementById('js-daypanel-showmore');
+    if (showMoreBtn) {
+      showMoreBtn.addEventListener('click', () => {
+        dayExpanded = true;
+        renderDay();
+      });
+    }
+
     el.querySelectorAll('.srow--edit').forEach(row => {
       const open = () => {
         const s = dayData.day_sessions.find(x => x.id === Number(row.dataset.id));
@@ -579,6 +609,7 @@
     const [y, m] = TODAY_ISO.split('-').map(Number);
     viewYear = y; viewMonth = m;
     selDate = TODAY_ISO;
+    dayExpanded = false;
     fetchCal();
     fetchDay();
   }
