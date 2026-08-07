@@ -4,15 +4,17 @@
       <form method="post" action="{% url 'learning:unit_create' resource.pk %}">
         {% csrf_token %}
         <div class="modal-header">
-          <h5 class="modal-title">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 5v14M5 12h14"></path>
-            </svg>
+          <h5 class="modal-title modal-title--lg">
+            <span class="modal-title__icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 5v14M5 12h14"></path>
+              </svg>
+            </span>
             Add learning unit
           </h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
-        <div class="modal-body" style="display:flex;flex-direction:column;gap:18px">
+        <div class="modal-body" style="display:flex;flex-direction:column;gap:16px">
           <div>
             <div class="modal-field-label">Title</div>
             <input type="text" name="title" class="modal-input" required autofocus
@@ -20,10 +22,7 @@
           </div>
           {% if resource.resource_type.content_kind != "reading" %}
           <div>
-            <div class="modal-field-label">
-              Duration
-              <span class="modal-field-hint">optional — you can set it inline later</span>
-            </div>
+            <div class="modal-field-label">Duration</div>
             <div class="modal-dur-row duration-picker">
               <div class="modal-dur-box">
                 <input type="number" class="dp-hours" min="0" placeholder="0" aria-label="Hours">
@@ -35,6 +34,7 @@
               </div>
               <input type="hidden" name="duration_minutes">
             </div>
+            <p class="modal-field-hint">Optional — you can set it inline later.</p>
           </div>
           {% endif %}
         </div>

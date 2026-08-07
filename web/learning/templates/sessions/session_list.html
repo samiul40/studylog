@@ -166,7 +166,7 @@
   // Only show chip-selectable activities in the filter bar (exclude auto-logged watch/read)
   const FILTER_ACTS = ACTIVITIES.filter(a => ['flashcards','practice','pastpapers','review','writing'].indexOf(a.slug) !== -1 || !a.is_system);
   const ACT_MAP = Object.fromEntries(ACTIVITIES.map(a => [a.slug, a]));
-  const DURATIONS = [15, 30, 45, 60, 90];
+  const DURATIONS = [15, 30, 45, 60];
 
   // ── SVG icon library ─────────────────────────────────────────────────────
   const IC = {
@@ -695,12 +695,21 @@
     ).join('')
     + `<button type="button" class="sl-pill sl-pill--custom" data-dur="custom">${IC.custom}Custom</button>`
     + `<span class="sl-custom-min" id="js-sheet-custom">
-         <input type="number" min="1" max="600" class="sl-control" id="js-sheet-custom-input" placeholder="90">
-         <span class="sl-custom-min__unit">min</span>
+         <input type="number" min="0" max="99" class="sl-control" id="js-sheet-custom-hours" placeholder="0">
+         <span class="sl-custom-min__unit">h</span>
+         <input type="number" min="0" max="59" class="sl-control" id="js-sheet-custom-mins" placeholder="0">
+         <span class="sl-custom-min__unit">m</span>
        </span>`;
 
     const customWrap  = document.getElementById('js-sheet-custom');
-    const customInput = document.getElementById('js-sheet-custom-input');
+    const customHours = document.getElementById('js-sheet-custom-hours');
+    const customMins  = document.getElementById('js-sheet-custom-mins');
+
+    function customTotal() {
+      const h = Math.max(0, parseInt(customHours.value, 10) || 0);
+      const m = Math.max(0, Math.min(59, parseInt(customMins.value, 10) || 0));
+      return h * 60 + m;
+    }
 
     durRow.querySelectorAll('[data-dur]').forEach(pill => {
       pill.addEventListener('click', () => {
@@ -708,8 +717,8 @@
         pill.classList.add('on');
         if (pill.dataset.dur === 'custom') {
           customWrap.classList.add('show');
-          customInput.focus();
-          sheetDraft.duration_minutes = Number(customInput.value) || 0;
+          customHours.focus();
+          sheetDraft.duration_minutes = customTotal();
         } else {
           customWrap.classList.remove('show');
           sheetDraft.duration_minutes = Number(pill.dataset.dur);
@@ -717,8 +726,10 @@
       });
     });
 
-    customInput.addEventListener('input', () => {
-      sheetDraft.duration_minutes = Number(customInput.value) || 0;
+    [customHours, customMins].forEach(el => {
+      el.addEventListener('input', () => {
+        sheetDraft.duration_minutes = customTotal();
+      });
     });
 
     // Tag chip input
@@ -806,7 +817,8 @@
     // Duration pills
     const durPills    = document.querySelectorAll('#js-sheet-durrow [data-dur]');
     const customWrap  = document.getElementById('js-sheet-custom');
-    const customInput = document.getElementById('js-sheet-custom-input');
+    const customHours = document.getElementById('js-sheet-custom-hours');
+    const customMins  = document.getElementById('js-sheet-custom-mins');
     let matched = false;
     durPills.forEach(p => {
       const on = p.dataset.dur === String(session.duration_minutes);
@@ -819,7 +831,8 @@
       const customPill = document.querySelector('#js-sheet-durrow [data-dur="custom"]');
       if (customPill) customPill.classList.add('on');
       customWrap.classList.add('show');
-      customInput.value = session.duration_minutes;
+      customHours.value = Math.floor(session.duration_minutes / 60) || '';
+      customMins.value  = (session.duration_minutes % 60) || '';
     }
 
     // Topic tags

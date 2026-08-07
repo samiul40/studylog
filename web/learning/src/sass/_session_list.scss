@@ -1236,9 +1236,13 @@
   &.show { display: inline-flex; }
 
   input {
-    width: 88px;
+    width: 60px;
     text-align: center;
-    padding: 9px 10px;
+    padding: 9px 8px;
+    -moz-appearance: textfield;
+
+    &::-webkit-outer-spin-button,
+    &::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
   }
 
   &__unit {
