@@ -28,6 +28,8 @@ cd web && python manage.py runserver
 cd web && pytest
 ```
 
+`pytest.ini` sets `addopts = -n 4`, so this is already parallel across 4 xdist workers. Pass `-n 0` to force a serial run — required for `--pdb`, and for reading `print()` output.
+
 **Run a single test file:**
 ```bash
 cd web && pytest learning/tests/test_learning_resource_views.py
@@ -117,6 +119,8 @@ Copy `web/.env.example` to `web/.env` and fill in Postgres credentials. Tests us
 **Test fixtures:**
 
 `web/conftest.py` provides `user` (superuser) and `client_logged_in` fixtures via `model_bakery`. Use `baker.make(...)` for test object creation.
+
+It also has an autouse `fast_password_hashing` fixture that swaps `PASSWORD_HASHERS` to MD5 for the test run — PBKDF2 costs ~0.6s per test and nearly every test builds a user. Keep that override in `conftest.py`; putting it in `settings.py` would hash real users' passwords with MD5.
 
 Tests are function-based with `pytestmark = pytest.mark.django_db` at module level. Migrations **do** run for the test database, so data migrations are exercised. Because the `user` fixture is a superuser it bypasses permission checks — cover real-user access separately by adding the `"Learning User"` group to a plain `baker.make("auth.User", is_superuser=False)`.
 
