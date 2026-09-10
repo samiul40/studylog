@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block title %}Suggest a feature — StudyLog{% endblock %}
+
+{% block content %}
+{# Placeholder markup — replaced by the real design in the frontend phase. #}
+{% if request.GET.submitted %}
+  <h1>Thanks — got it!</h1>
+  <p>We read every suggestion — thanks for helping shape StudyLog.</p>
+  <a href="{% url 'learning:dashboard' %}">Back to dashboard</a>
+{% else %}
+  <h1>Suggest a feature</h1>
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Send idea</button>
+  </form>
+{% endif %}
+{% endblock %}
