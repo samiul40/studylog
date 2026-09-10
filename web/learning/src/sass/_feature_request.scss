@@ -1,0 +1,350 @@
+@use '../../../studyflow/src/sass/abstracts/variables' as *;
+
+// =============================================================================
+// _feature_request.scss — Suggest a Feature form (fr- namespace)
+// Design tokens come from :root (set in _variables.scss + _resource_form.scss).
+// =============================================================================
+
+// ---------------------------------------------------------------------------
+// Page wrapper
+// ---------------------------------------------------------------------------
+.fr-bg {
+  background: var(--paper);
+  color: var(--ink);
+  transition: background 0.4s var(--ease), color 0.4s var(--ease);
+}
+
+.fr-page {
+  width: 100%;
+  max-width: 750px;
+  margin: 0 auto;
+  padding: clamp(12px, 2vw, 20px) clamp(16px, 4vw, 24px) 40px;
+}
+
+// ---------------------------------------------------------------------------
+// Breadcrumb
+// ---------------------------------------------------------------------------
+.fr-crumbs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px;
+  font-family: $font-mono;
+  font-size: 0.72rem;
+  letter-spacing: 0.02em;
+  color: var(--ink-faint);
+  margin-bottom: 22px;
+
+  a {
+    color: var(--ink-soft);
+    text-decoration: none;
+    transition: color 0.2s;
+
+    &:hover { color: var(--emerald-deep); }
+    [data-theme="dark"] &:hover { color: var(--emerald-bright); }
+  }
+
+  &__sep { opacity: 0.5; }
+  &__cur { color: var(--ink); font-weight: 600; }
+}
+
+// ---------------------------------------------------------------------------
+// Form card
+// ---------------------------------------------------------------------------
+.fr-card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-card);
+  padding: clamp(22px, 4vw, 30px);
+}
+
+.fr-card__head {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding-bottom: 20px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid var(--line);
+}
+
+.fr-card__icon {
+  width: 50px;
+  height: 50px;
+  flex: 0 0 auto;
+  border-radius: 15px;
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--emerald) 16%, transparent);
+  color: var(--emerald-deep);
+
+  svg { width: 23px; height: 23px; }
+
+  [data-theme="dark"] & { color: var(--emerald-bright); }
+}
+
+.fr-card__title {
+  font-family: $font-display;
+  font-size: 1.45rem;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.05;
+  color: var(--ink);
+  margin: 0 0 2px;
+}
+
+.fr-card__sub {
+  color: var(--ink-soft);
+  font-size: 0.92rem;
+  margin: 0;
+}
+
+.fr-card__actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+}
+
+// ---------------------------------------------------------------------------
+// Error banner
+// ---------------------------------------------------------------------------
+.fr-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  background: color-mix(in srgb, var(--rose) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--rose) 40%, transparent);
+  color: color-mix(in srgb, var(--rose) 92%, var(--ink));
+  border-radius: 13px;
+  padding: 13px 15px;
+  margin-bottom: 24px;
+  font-size: 0.92rem;
+  font-weight: 500;
+
+  svg {
+    width: 18px;
+    height: 18px;
+    flex: 0 0 auto;
+    margin-top: 1px;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Form sections
+// ---------------------------------------------------------------------------
+.fr-fsection {
+  margin-bottom: 24px;
+
+  & + & {
+    padding-top: 22px;
+    border-top: 1px solid var(--line-soft);
+  }
+}
+
+.fr-fsection__head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.fr-fsection__kicker {
+  font-family: $font-mono;
+  font-size: 0.64rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--emerald-deep);
+
+  [data-theme="dark"] & { color: var(--emerald-bright); }
+}
+
+// ---------------------------------------------------------------------------
+// Fields
+// ---------------------------------------------------------------------------
+.fr-field {
+  margin-bottom: 0;
+
+  & + & { margin-top: 20px; }
+}
+
+.fr-field__label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 0.92rem;
+  color: var(--ink);
+  margin-bottom: 9px;
+}
+
+.fr-opt {
+  font-family: $font-mono;
+  font-size: 0.62rem;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  padding: 2px 7px;
+  border: 1px solid var(--line);
+  border-radius: 100px;
+}
+
+.fr-field__err {
+  display: none;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--rose);
+  margin-top: 8px;
+
+  svg { width: 13px; height: 13px; flex: 0 0 auto; }
+}
+
+.fr-field--invalid {
+  .fr-control {
+    border-color: var(--rose);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--rose) 14%, transparent);
+  }
+
+  .fr-field__err { display: flex; }
+}
+
+// ---------------------------------------------------------------------------
+// Text control
+// ---------------------------------------------------------------------------
+.fr-control {
+  width: 100%;
+  background: var(--field);
+  border: 1.5px solid var(--line);
+  border-radius: 13px;
+  padding: 13px 15px;
+  font-family: $font-sans;
+  font-size: 1rem;
+  color: var(--ink);
+  transition: border-color 0.2s, box-shadow 0.2s;
+
+  &::placeholder { color: var(--rf-placeholder); }
+
+  &:focus {
+    outline: none;
+    border-color: var(--emerald);
+    box-shadow: var(--focus);
+  }
+
+  &:hover:not(:focus) {
+    border-color: color-mix(in srgb, var(--ink) 22%, transparent);
+  }
+}
+
+textarea.fr-control {
+  resize: vertical;
+  min-height: 84px;
+  line-height: 1.5;
+}
+
+// ---------------------------------------------------------------------------
+// Buttons
+// ---------------------------------------------------------------------------
+.fr-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  font-family: $font-sans;
+  font-weight: 600;
+  font-size: 0.96rem;
+  padding: 13px 24px;
+  border-radius: 100px;
+  border: 1.5px solid transparent;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.22s var(--ease);
+  white-space: nowrap;
+  line-height: 1;
+
+  svg { width: 17px; height: 17px; }
+
+  &--primary {
+    background: var(--emerald);
+    color: #042b1d;
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.25) inset,
+                0 8px 22px -10px rgba(16, 185, 129, 0.7);
+
+    &:hover {
+      background: var(--emerald-bright);
+      color: #042b1d;
+      transform: translateY(-2px);
+      box-shadow: 0 1px 0 rgba(255, 255, 255, 0.25) inset,
+                  0 14px 28px -10px rgba(16, 185, 129, 0.8);
+    }
+  }
+
+  &--ghost {
+    background: transparent;
+    color: var(--ink-soft);
+    border-color: var(--line);
+
+    &:hover {
+      color: var(--ink);
+      border-color: color-mix(in srgb, var(--ink) 30%, transparent);
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Success state — replaces the form after a successful submission
+// ---------------------------------------------------------------------------
+.fr-success {
+  text-align: center;
+  padding: 36px 20px 10px;
+}
+
+.fr-success__ic {
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--emerald) 16%, transparent);
+  color: var(--emerald-deep);
+  margin: 0 auto 18px;
+
+  svg { width: 28px; height: 28px; }
+
+  [data-theme="dark"] & { color: var(--emerald-bright); }
+}
+
+.fr-success__title {
+  font-family: $font-display;
+  font-size: 1.4rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  margin: 0 0 8px;
+}
+
+.fr-success__sub {
+  color: var(--ink-soft);
+  font-size: 0.95rem;
+  max-width: 380px;
+  margin: 0 auto;
+}
+
+.fr-success__actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 24px;
+}
+
+// ---------------------------------------------------------------------------
+// Reduced motion
+// ---------------------------------------------------------------------------
+@media (prefers-reduced-motion: reduce) {
+  .fr-bg  { transition: none; }
+  .fr-btn { transition: none; }
+}
