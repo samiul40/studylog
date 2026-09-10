@@ -1,4 +1,5 @@
 from .dashboard import dashboard_view
+from .feature_request import FeatureRequestView
 from .learning_resource import (
     ResourceArchiveListView,
     ResourceArchiveView,
@@ -31,6 +32,7 @@ from .study_session import (
 from .youtube import YouTubePreviewView
 
 __all__ = [
+    "FeatureRequestView",
     "ResourceArchiveListView",
     "ResourceArchiveView",
     "ResourceCreateView",

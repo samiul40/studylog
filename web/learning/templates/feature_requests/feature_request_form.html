@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}Suggest a feature — StudyLog{% endblock %}
+
+{% block main_class %}fr-bg{% endblock %}
+
+{# Suppress the breadcrumb and alert zones — handled inside the card #}
+{% block breadcrumbs %}{% endblock %}
+{% block alerts %}{% endblock %}
+
+{% block content %}
+<div class="fr-page">
+
+  {# ── Breadcrumb ─────────────────────────────────────────────────────────── #}
+  <nav class="fr-crumbs" aria-label="breadcrumb">
+    <a href="{% url 'learning:dashboard' %}">Dashboard</a>
+    <span class="fr-crumbs__sep">/</span>
+    <span class="fr-crumbs__cur">Suggest a feature</span>
+  </nav>
+
+  {# ── Form card ──────────────────────────────────────────────────────────── #}
+  <div class="fr-card">
+
+    {# Card header #}
+    <div class="fr-card__head">
+      <div class="fr-card__icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M9 18h6"></path>
+          <path d="M10 22h4"></path>
+          <path d="M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.2 1 2.3h6c0-1.1.4-1.8 1-2.3A7 7 0 0 0 12 2z"></path>
+        </svg>
+      </div>
+      <div>
+        <h1 class="fr-card__title">Suggest a feature</h1>
+        <p class="fr-card__sub">
+          StudyLog is built to help you study smarter — tell us what would make it more useful.
+        </p>
+      </div>
+    </div>
+
+    {% if submitted %}
+    {# ── Success state ────────────────────────────────────────────────────── #}
+    <div class="fr-success">
+      <div class="fr-success__ic">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M20 6L9 17l-5-5"></path>
+        </svg>
+      </div>
+      <h2 class="fr-success__title">Thanks — got it!</h2>
+      <p class="fr-success__sub">We read every suggestion — thanks for helping shape StudyLog.</p>
+      <div class="fr-success__actions">
+        <a class="fr-btn fr-btn--ghost" href="{% url 'learning:dashboard' %}">Back to dashboard</a>
+      </div>
+    </div>
+
+    {% else %}
+    {# Error banner — shown when Django form validation fails #}
+    {% if form.errors %}
+    <div class="fr-banner" role="alert">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"></circle><path d="M12 8v5M12 16h.01"></path>
+      </svg>
+      <span>Please fix the errors highlighted below.</span>
+    </div>
+    {% endif %}
+
+    <form method="post">
+      {% csrf_token %}
+
+      {# ── Section: The idea ─────────────────────────────────────────────── #}
+      <div class="fr-fsection">
+        <div class="fr-fsection__head">
+          <span class="fr-fsection__kicker">The idea</span>
+        </div>
+
+        {# ── 1. Idea ─────────────────────────────────────────────────────── #}
+        <div class="fr-field {% if form.idea.errors %}fr-field--invalid{% endif %}">
+          <label class="fr-field__label" for="id_idea">What would you like to see?</label>
+          <textarea class="fr-control" id="id_idea" name="idea" required
+                    minlength="5" maxlength="2000"
+                    placeholder="e.g. a reminder if I haven't logged a session in a few days">{{ form.idea.value|default:'' }}</textarea>
+          <div class="fr-field__err">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round">
+              <circle cx="12" cy="12" r="10"></circle><path d="M12 8v5M12 16h.01"></path>
+            </svg>
+            {% for err in form.idea.errors %}{{ err }}{% empty %}This field is required.{% endfor %}
+          </div>
+        </div>
+
+        {# ── 2. Why ──────────────────────────────────────────────────────── #}
+        <div class="fr-field {% if form.why.errors %}fr-field--invalid{% endif %}">
+          <label class="fr-field__label" for="id_why">
+            Why would this help your studying? <span class="fr-opt">Optional</span>
+          </label>
+          <textarea class="fr-control" id="id_why" name="why" maxlength="2000"
+                    placeholder="What problem would this solve for you?">{{ form.why.value|default:'' }}</textarea>
+          <div class="fr-field__err">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round">
+              <circle cx="12" cy="12" r="10"></circle><path d="M12 8v5M12 16h.01"></path>
+            </svg>
+            {% for err in form.why.errors %}{{ err }}{% endfor %}
+          </div>
+        </div>
+      </div>
+
+      <div class="fr-card__actions">
+        <button type="submit" class="fr-btn fr-btn--primary">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M22 2L11 13"></path>
+            <path d="M22 2l-7 20-4-9-9-4 20-7z"></path>
+          </svg>
+          Send idea
+        </button>
+      </div>
+    </form>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}

@@ -5,6 +5,7 @@ from django.utils.text import slugify
 
 from .models.activity import Activity
 from .models.category import Category
+from .models.feature_request import FeatureRequest
 from .models.learning_resource import LearningResource
 from .models.learning_unit import LearningUnit
 from .models.resource_type import ResourceType
@@ -270,3 +271,34 @@ class LearningUnitForm(forms.ModelForm):
                 attrs={"class": "form-control", "placeholder": "e.g. 10"}
             ),
         }
+
+
+class FeatureRequestForm(forms.ModelForm):
+    idea = forms.CharField(
+        min_length=5,
+        max_length=2000,
+        label="What would you like to see?",
+        widget=forms.Textarea(
+            attrs={
+                "class": "fr-control",
+                "placeholder": (
+                    "e.g. a reminder if I haven't logged a session in a few days"
+                ),
+            }
+        ),
+    )
+    why = forms.CharField(
+        required=False,
+        max_length=2000,
+        label="Why would this help your studying?",
+        widget=forms.Textarea(
+            attrs={
+                "class": "fr-control",
+                "placeholder": "What problem would this solve for you?",
+            }
+        ),
+    )
+
+    class Meta:
+        model = FeatureRequest
+        fields = ["idea", "why"]

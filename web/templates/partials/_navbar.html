@@ -71,6 +71,13 @@
               Settings
             </a>
           </li>
+          <li>
+            <a class="appbar-dropdown__item {% if view == 'feature_request' %}appbar-dropdown__item--on{% endif %}"
+               href="{% url 'feature_request' %}">
+              <i class="fas fa-lightbulb" aria-hidden="true"></i>
+              Suggest a feature
+            </a>
+          </li>
           <li class="appbar-dropdown__settings-item"><hr class="appbar-dropdown__divider"></li>
           <li>
             <form method="post" action="{% url 'account_logout' %}">

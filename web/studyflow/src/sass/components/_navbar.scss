@@ -250,6 +250,18 @@ body:has(.appbar) > main {
     i { color: var(--ink); }
   }
 
+  &--on {
+    color: var(--emerald-deep);
+    background: color-mix(in srgb, var(--emerald) 12%, transparent);
+    i { color: var(--emerald-deep); }
+
+    &:hover {
+      color: var(--emerald-deep);
+      background: color-mix(in srgb, var(--emerald) 18%, transparent);
+      i { color: var(--emerald-deep); }
+    }
+  }
+
   &--danger {
     color: var(--rose, #e5484d);
     i { color: var(--rose, #e5484d); }
@@ -276,6 +288,11 @@ body:has(.appbar) > main {
 
   .appbar-dropdown__item { color: var(--ink-soft); }
   .appbar-dropdown__item:hover { color: var(--ink); }
+  .appbar-dropdown__item--on,
+  .appbar-dropdown__item--on:hover {
+    color: var(--emerald-bright);
+    i { color: var(--emerald-bright); }
+  }
 }
 
 // ---------------------------------------------------------------------------
