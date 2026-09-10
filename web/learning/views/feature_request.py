@@ -24,6 +24,11 @@ class FeatureRequestView(UserPermissionMixin, CreateView):
     form_class = FeatureRequestForm
     template_name = "feature_requests/feature_request_form.html"
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["submitted"] = "submitted" in self.request.GET
+        return context
+
     def post(self, request, *args, **kwargs):
         if getattr(request, "limited", False):
             messages.error(
