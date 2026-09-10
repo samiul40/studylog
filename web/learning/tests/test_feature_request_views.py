@@ -153,3 +153,62 @@ def test_rate_limited_post_is_not_saved(client_logged_in):
     assert response.status_code == 302
     assert response.url == URL
     assert not FeatureRequest.objects.exists()
+
+
+def test_submission_emails_the_owner(
+    client_logged_in, user, settings, mailoutbox, django_capture_on_commit_callbacks
+):
+    settings.FEATURE_REQUEST_NOTIFY_EMAIL = "owner@example.com"
+
+    with django_capture_on_commit_callbacks(execute=True):
+        client_logged_in.post(URL, {"idea": "Add a streak counter"})
+
+    assert len(mailoutbox) == 1
+
+    email = mailoutbox[0]
+    assert email.to == ["owner@example.com"]
+    assert user.username in email.subject
+    assert "Add a streak counter" in email.body
+
+    request = FeatureRequest.objects.get(user=user)
+    assert str(request.pk) in email.body
+
+
+def test_no_email_when_notify_address_is_unset(
+    client_logged_in, settings, mailoutbox, django_capture_on_commit_callbacks
+):
+    settings.FEATURE_REQUEST_NOTIFY_EMAIL = ""
+
+    with django_capture_on_commit_callbacks(execute=True):
+        client_logged_in.post(URL, {"idea": "Add a streak counter"})
+
+    assert mailoutbox == []
+
+
+def test_no_email_when_the_form_is_invalid(
+    client_logged_in, settings, mailoutbox, django_capture_on_commit_callbacks
+):
+    settings.FEATURE_REQUEST_NOTIFY_EMAIL = "owner@example.com"
+
+    with django_capture_on_commit_callbacks(execute=True):
+        client_logged_in.post(URL, {"idea": "no"})
+
+    assert mailoutbox == []
+    assert not FeatureRequest.objects.exists()
+
+
+def test_submission_survives_a_mail_failure(
+    client_logged_in, user, settings, django_capture_on_commit_callbacks
+):
+    settings.FEATURE_REQUEST_NOTIFY_EMAIL = "owner@example.com"
+
+    with patch(
+        "learning.services.notifications.send_mail",
+        side_effect=Exception("Resend is down"),
+    ):
+        with django_capture_on_commit_callbacks(execute=True):
+            response = client_logged_in.post(URL, {"idea": "Add a streak counter"})
+
+    assert response.status_code == 302
+    assert response.url == f"{URL}?submitted=1"
+    assert FeatureRequest.objects.filter(user=user).exists()

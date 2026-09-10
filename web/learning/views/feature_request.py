@@ -1,4 +1,5 @@
 from django.contrib import messages
+from django.db import transaction
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.utils.decorators import method_decorator
@@ -8,6 +9,7 @@ from django_ratelimit.decorators import ratelimit
 from learning.forms import FeatureRequestForm
 from learning.mixins import UserPermissionMixin
 from learning.models import FeatureRequest
+from learning.services.notifications import send_feature_request_notification
 
 
 @method_decorator(
@@ -41,8 +43,20 @@ class FeatureRequestView(UserPermissionMixin, CreateView):
     def form_valid(self, form):
         form.instance.user = self.request.user
         response = super().form_valid(form)
+        self.notify_owner()
         messages.success(self.request, "Thanks for the suggestion!")
         return response
+
+    def notify_owner(self):
+        admin_url = self.request.build_absolute_uri(
+            reverse(
+                "admin:learning_featurerequest_change",
+                args=[self.object.pk],
+            )
+        )
+        transaction.on_commit(
+            lambda: send_feature_request_notification(self.object, admin_url)
+        )
 
     def get_success_url(self):
         return f"{reverse('feature_request')}?submitted=1"
