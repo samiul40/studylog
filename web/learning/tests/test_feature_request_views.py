@@ -26,6 +26,19 @@ def test_get_renders_form(client_logged_in):
 
     assert response.status_code == 200
     assert "form" in response.context
+    assert response.context["submitted"] is False
+    assert "Thanks — got it!" not in response.content.decode()
+
+
+def test_get_with_submitted_flag_renders_success_state(client_logged_in):
+    response = client_logged_in.get(URL, {"submitted": "1"})
+
+    content = response.content.decode()
+
+    assert response.status_code == 200
+    assert response.context["submitted"] is True
+    assert "Thanks — got it!" in content
+    assert 'name="idea"' not in content
 
 
 def test_create_feature_request(client_logged_in, user):
