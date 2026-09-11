@@ -5,6 +5,11 @@ from . import views
 
 urlpatterns = [
     path("settings/", views.Settings.as_view(), name="settings"),
+    path(
+        "accept-terms/",
+        views.AcceptTermsView.as_view(),
+        name="accept_terms",
+    ),
     path("set-timezone/", views.set_timezone, name="set_timezone"),
     path(
         "cancel-social-signup/",

@@ -157,9 +157,14 @@ class TermsAcceptanceMixin(forms.Form):
 
     def record_acceptance(self, user):
         now = timezone.now()
-        profile = user.profile
-        profile.age_confirmed = True
-        profile.age_confirmed_at = now
+        profile, _ = UserProfile.objects.get_or_create(user=user)
+
+        # Don't overwrite an existing age confirmation — that timestamp should
+        # stay at the moment they first confirmed, not the latest re-consent.
+        if not profile.age_confirmed:
+            profile.age_confirmed = True
+            profile.age_confirmed_at = now
+
         profile.terms_accepted = True
         profile.terms_accepted_at = now
         profile.terms_version = settings.TERMS_VERSION
@@ -167,6 +172,18 @@ class TermsAcceptanceMixin(forms.Form):
         profile.privacy_accepted_at = now
         profile.privacy_version = settings.PRIVACY_VERSION
         profile.save()
+
+
+class AcceptTermsForm(TermsAcceptanceMixin, forms.Form):
+    """
+    Re-consent for an existing account. The age tick is dropped when the user
+    has already confirmed it, so a version-only bump doesn't ask again.
+    """
+
+    def __init__(self, *args, age_already_confirmed=False, **kwargs):
+        super().__init__(*args, **kwargs)
+        if age_already_confirmed:
+            del self.fields["age_confirmed"]
 
 
 class StudyLogSignupForm(TermsAcceptanceMixin, SignupForm):

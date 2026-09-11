@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block title %}Sign out · StudyLog{% endblock %}
+
+{% block extra_head %}
+<meta name="color-scheme" content="light dark">
+<script nonce="{{ request.csp_nonce }}">document.documentElement.removeAttribute('data-theme');</script>
+{% endblock %}
+{% block navbar %}{% endblock %}
+{% block footer %}{% endblock %}
+{% block mobile_nav %}{% endblock %}
+{% block main_class %}{% endblock %}
+{% block alerts %}{% endblock %}
+
+{% block content %}
+<div class="auth-layout">
+
+  {% include "partials/_auth_brand.html" with hide_widget=True eyebrow="See you soon" headline="Signing out." sub="Your study data stays exactly where you left it." %}
+
+  <div class="auth-main">
+    <div class="auth-card">
+      <div class="auth-card__head">
+        <h1 class="auth-card__title">Sign out</h1>
+        <p class="auth-card__sub">Are you sure you want to sign out?</p>
+      </div>
+
+      <form method="post" action="{% url 'account_logout' %}">
+        {% csrf_token %}
+        {% if redirect_field_value %}
+        <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}">
+        {% endif %}
+        <button type="submit" class="auth-btn auth-btn--primary">Sign out</button>
+      </form>
+
+      <p class="auth-foot-link">
+        Changed your mind? <a href="{% url 'learning:dashboard' %}">Back to StudyLog</a>
+      </p>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
