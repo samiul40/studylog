@@ -16,14 +16,61 @@
   margin: 0 auto;
   padding: 0 clamp(20px, 4vw, 48px);
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  gap: 16px;
+  justify-content: space-between;
+  gap: 20px 32px;
+  flex-wrap: wrap;
   font-family: $font-mono;
   font-size: 0.68rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--ink-faint, rgba(13,24,18,0.38));
+}
+
+.app-footer__id {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.app-footer__tag::before {
+  content: "·";
+  margin-right: 8px;
+  opacity: 0.55;
+}
+
+.app-footer__links {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  flex-wrap: wrap;
+
+  a {
+    color: var(--ink-faint);
+    text-decoration: none;
+
+    &:hover { color: var(--ink); }
+  }
+
+  // Nested under .app-footer__links so it outweighs the `a` rule above,
+  // which would otherwise grey out the CTA.
+  .app-footer__cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--emerald-deep);
+    font-weight: 600;
+
+    &:hover {
+      color: var(--emerald-deep);
+      text-decoration: underline;
+    }
+
+    svg { width: 13px; height: 13px; }
+
+    [data-theme="dark"] & { color: var(--emerald-bright); }
+  }
 }
 
 @media (max-width: 720px) {
