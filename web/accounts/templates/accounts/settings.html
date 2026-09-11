@@ -141,8 +141,6 @@
               {% include "partials/_form_field.html" with field=profile_form.last_name %}
             </div>
 
-            {% include "partials/_form_field.html" with field=profile_form.email %}
-
             <div class="pactions">
               <span class="pactions__hint">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -152,6 +150,44 @@
                 Changes save to your profile
               </span>
               <button type="submit" class="s-btn s-btn--primary">Save changes</button>
+            </div>
+          </form>
+
+        </div>
+
+        <div class="scard spcard">
+          <div class="phead">
+            <h3>Email address</h3>
+            <p>Used to sign in and to reset your password. A new address only takes effect once you confirm it.</p>
+          </div>
+
+          <p class="semail-current">
+            <strong>{{ request.user.email|default:"No email set" }}</strong>
+            {% if request.user.email %}<span class="semail-badge">Current</span>{% endif %}
+          </p>
+
+          {% if pending_email %}
+          <p class="semail-pending">
+            Waiting for confirmation: <strong>{{ pending_email.email }}</strong>.
+            Check that inbox for the link.
+          </p>
+          {% endif %}
+
+          <form method="post" novalidate>
+            {% csrf_token %}
+            <input type="hidden" name="form_type" value="email">
+
+            {% include "partials/_form_field.html" with field=email_form.email %}
+
+            <div class="pactions">
+              <span class="pactions__hint">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M4 4h16v16H4z"></path><path d="M4 7l8 6 8-6"></path>
+                </svg>
+                We'll email a confirmation link
+              </span>
+              <button type="submit" class="s-btn s-btn--primary">Change email</button>
             </div>
           </form>
 

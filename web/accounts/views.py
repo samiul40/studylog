@@ -2,6 +2,7 @@ import json
 import zoneinfo
 from datetime import timedelta
 
+from allauth.account.models import EmailAddress
 from django.contrib import messages
 from django.contrib.auth import get_user_model, login, update_session_auth_hash
 from django.contrib.auth import logout as auth_logout
@@ -17,6 +18,7 @@ from django.views.decorators.http import require_POST
 
 from .forms import (
     AcceptTermsForm,
+    ChangeEmailForm,
     ChangePasswordForm,
     ProfileUpdateForm,
     TimezoneForm,
@@ -33,6 +35,14 @@ class Settings(LoginRequiredMixin, View):
         profile, _ = UserProfile.objects.get_or_create(user=user)
         return profile
 
+    def _pending_email(self, user):
+        """An address the user has asked for but not yet confirmed."""
+        return (
+            EmailAddress.objects.filter(user=user, verified=False)
+            .exclude(email__iexact=user.email or "")
+            .first()
+        )
+
     def get(self, request):
         profile = self._get_profile(request.user)
         return render(
@@ -40,8 +50,10 @@ class Settings(LoginRequiredMixin, View):
             "accounts/settings.html",
             {
                 "profile_form": ProfileUpdateForm(instance=request.user),
+                "email_form": ChangeEmailForm(user=request.user),
                 "timezone_form": TimezoneForm(instance=profile),
                 "password_form": ChangePasswordForm(request.user),
+                "pending_email": self._pending_email(request.user),
             },
         )
 
@@ -49,27 +61,40 @@ class Settings(LoginRequiredMixin, View):
         profile = self._get_profile(request.user)
         form_type = request.POST.get("form_type")
 
+        profile_form = ProfileUpdateForm(instance=request.user)
+        email_form = ChangeEmailForm(user=request.user)
+        timezone_form = TimezoneForm(instance=profile)
+        password_form = ChangePasswordForm(request.user)
+
         if form_type == "profile":
             profile_form = ProfileUpdateForm(request.POST, instance=request.user)
-            timezone_form = TimezoneForm(instance=profile)
-            password_form = ChangePasswordForm(request.user)
             if profile_form.is_valid():
                 profile_form.save()
                 messages.success(request, "Profile updated successfully.")
                 return redirect("settings")
 
+        elif form_type == "email":
+            email_form = ChangeEmailForm(data=request.POST, user=request.user)
+            if email_form.is_valid():
+                # Stores the address as unverified and emails a confirmation.
+                # User.email is untouched until allauth promotes it on confirm.
+                email_form.save(request)
+                messages.success(
+                    request,
+                    "Check your inbox — we've sent a link to confirm your new "
+                    "email address. Your current address stays active until "
+                    "you confirm.",
+                )
+                return redirect("settings")
+
         elif form_type == "timezone":
-            profile_form = ProfileUpdateForm(instance=request.user)
             timezone_form = TimezoneForm(request.POST, instance=profile)
-            password_form = ChangePasswordForm(request.user)
             if timezone_form.is_valid():
                 timezone_form.save()
                 messages.success(request, "Timezone updated successfully.")
                 return redirect("settings")
 
         elif form_type == "password":
-            profile_form = ProfileUpdateForm(instance=request.user)
-            timezone_form = TimezoneForm(instance=profile)
             password_form = ChangePasswordForm(request.user, request.POST)
             if password_form.is_valid():
                 password_form.save()
@@ -85,8 +110,10 @@ class Settings(LoginRequiredMixin, View):
             "accounts/settings.html",
             {
                 "profile_form": profile_form,
+                "email_form": email_form,
                 "timezone_form": timezone_form,
                 "password_form": password_form,
+                "pending_email": self._pending_email(request.user),
             },
         )
 
