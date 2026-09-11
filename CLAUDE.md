@@ -112,6 +112,14 @@ Design tokens are CSS custom properties (`--ink`, `--paper`, `--card`, `--field`
 
 Tint colours with `color-mix(in srgb, var(--emerald) 16%, transparent)` rather than SCSS `rgba()`/`darken()`.
 
+**Legal pages:**
+
+`/terms` and `/privacy` are served from `pages/templates/pages/` by `TemplateView` routes in `pages/urls.py`, styled by `components/_legal.scss` (the only prose styling in the codebase). Signed-out visitors get no appbar or footer, so both templates carry their own "Back to home" link.
+
+Acceptance is recorded per user on `UserProfile` — `terms_accepted` / `_at` / `_version`, the same trio for privacy, plus `age_confirmed` / `_at` — stamped at signup from `settings.TERMS_VERSION` and `settings.PRIVACY_VERSION`.
+
+**If you change the wording of either document, bump the matching version constant in `settings.py`.** The stored version is the only thing distinguishing a user who accepted the current text from one who accepted an older one; leaving it unchanged silently makes every historical acceptance look current, and quietly breaks any future "please re-accept the updated terms" flow. Keep the "Last Updated" date in the template in step with the bump.
+
 **Environment:**
 
 Copy `web/.env.example` to `web/.env` and fill in Postgres credentials. Tests use SQLite in-memory when `CI=true` is set; locally they require a running Postgres instance.
