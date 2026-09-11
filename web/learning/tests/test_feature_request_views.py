@@ -3,7 +3,6 @@ from unittest.mock import patch
 import pytest
 from conftest import record_consent
 from django.contrib.auth.models import Group
-from django.core.cache import cache
 from django.urls import reverse
 from model_bakery import baker
 
@@ -12,14 +11,6 @@ from learning.models import FeatureRequest
 pytestmark = pytest.mark.django_db
 
 URL = reverse("feature_request")
-
-
-@pytest.fixture(autouse=True)
-def reset_rate_limit():
-    """Rate-limit counters live in the process-wide cache and user PKs are
-    reused after each rollback, so without this one test's POSTs eat into the
-    next test's allowance."""
-    cache.clear()
 
 
 def test_get_renders_form(client_logged_in):

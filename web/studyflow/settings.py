@@ -68,6 +68,9 @@ LOGIN_REDIRECT_URL = "learning:dashboard"
 ACCOUNT_LOGOUT_REDIRECT_URL = "account_login"
 ACCOUNT_SIGNUP_REDIRECT_URL = "learning:dashboard"
 ACCOUNT_SESSION_REMEMBER = True
+# One address per account: confirming a new one replaces the old, rather than
+# accumulating addresses.
+ACCOUNT_CHANGE_EMAIL = True
 
 ACCOUNT_FORMS = {"signup": "accounts.forms.StudyLogSignupForm"}
 SOCIALACCOUNT_FORMS = {"signup": "accounts.forms.StudyLogSocialSignupForm"}

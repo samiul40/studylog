@@ -1,6 +1,6 @@
 import re
 
-from allauth.account.forms import SignupForm
+from allauth.account.forms import AddEmailForm, SignupForm
 from allauth.account.utils import filter_users_by_username, user_email, user_field
 from allauth.socialaccount.forms import SignupForm as SocialSignupForm
 from allauth.utils import generate_unique_username
@@ -94,26 +94,45 @@ _TIMEZONE_CHOICES = [
 
 
 class ProfileUpdateForm(forms.ModelForm):
+    """Name only.
+
+    Email deliberately lives in ChangeEmailForm: writing User.email here would
+    bypass allauth, which reads its own EmailAddress table for sign-in and
+    password reset. The two would silently disagree.
+    """
+
     class Meta:
         model = User
-        fields = ["first_name", "last_name", "email"]
+        fields = ["first_name", "last_name"]
         widgets = {
             "first_name": forms.TextInput(attrs=_FC),
             "last_name": forms.TextInput(attrs=_FC),
-            "email": forms.EmailInput(attrs=_FC),
         }
         labels = {
             "first_name": "First Name",
             "last_name": "Last Name",
-            "email": "Email Address",
         }
 
+
+class ChangeEmailForm(AddEmailForm):
+    """Start an email change.
+
+    Subclasses allauth's AddEmailForm to inherit its validation (normalising,
+    rejecting addresses already on this or another account, honouring
+    ACCOUNT_PREVENT_ENUMERATION). The new address is only stored as pending —
+    allauth promotes it and updates User.email once the user confirms it.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["email"].widget.attrs.update(_FC)
+        self.fields["email"].label = "Email Address"
+
     def clean_email(self):
-        email = self.cleaned_data["email"]
-        qs = User.objects.filter(email=email).exclude(pk=self.instance.pk)
-        if qs.exists():
-            raise forms.ValidationError("This email is already in use.")
-        return email
+        email = self.cleaned_data["email"].lower()
+        if email == (self.user.email or "").lower():
+            raise forms.ValidationError("That is already your email address.")
+        return super().clean_email()
 
 
 class TimezoneForm(forms.ModelForm):

@@ -1,6 +1,16 @@
 import pytest
 from django.conf import settings as django_settings
+from django.core.cache import cache
 from model_bakery import baker
+
+
+@pytest.fixture(autouse=True)
+def clear_cache():
+    """Rate limiters (django_ratelimit, and allauth's verification-email
+    limiter) count in the process-wide cache, which outlives the per-test
+    database rollback. Without this one test silently eats another's
+    allowance and the second sends no mail."""
+    cache.clear()
 
 
 @pytest.fixture(autouse=True)
