@@ -2,7 +2,8 @@
 {% comment %}
 Shared dark panel for the auth pages. Callers may override the copy via
 "with", pass steps=True to swap the proof card for the step rail, and
-hide_back=True to drop the "Back to home" link.
+hide_back=True to drop the "Back to home" link, and hide_widget=True to
+show neither the proof card nor the step rail.
 {% endcomment %}
 <aside class="auth-brand">
   <div class="auth-brand__grid"></div>
@@ -37,7 +38,7 @@ hide_back=True to drop the "Back to home" link.
         <div class="auth-step auth-step--now"><span class="auth-step__n">2</span>Agree to the terms</div>
         <div class="auth-step"><span class="auth-step__n">3</span>Add your first resource</div>
       </div>
-    {% else %}
+    {% elif not hide_widget %}
       <div class="auth-proof">
         <div class="auth-proof__ring" style="--val:68;"><span>68%</span></div>
         <div class="auth-proof__body">

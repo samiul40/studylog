@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if is_update %}Updated terms{% else %}Before you continue{% endif %} · StudyLog{% endblock %}
+
+{% block extra_head %}
+<meta name="color-scheme" content="light dark">
+<script nonce="{{ request.csp_nonce }}">document.documentElement.removeAttribute('data-theme');</script>
+{% endblock %}
+{% block navbar %}{% endblock %}
+{% block footer %}{% endblock %}
+{% block mobile_nav %}{% endblock %}
+{% block main_class %}{% endblock %}
+{% block alerts %}{% endblock %}
+
+{% block content %}
+<div class="auth-layout">
+
+  {% if is_update %}
+    {% include "partials/_auth_brand.html" with hide_back=True hide_widget=True eyebrow="Updated terms" headline="We've updated our terms." sub="Nothing about your account has changed. Have a read, tick the box, and you'll be straight back to where you were." %}
+  {% else %}
+    {% include "partials/_auth_brand.html" with hide_back=True hide_widget=True eyebrow="One step left" headline="A quick bit of housekeeping." sub="We've published our Terms and Privacy Policy. Confirm them once and you won't be asked again." %}
+  {% endif %}
+
+  <div class="auth-main">
+    <div class="auth-card">
+      <div class="auth-card__head">
+        <h1 class="auth-card__title">
+          {% if is_update %}Our terms have changed{% else %}Before you continue{% endif %}
+        </h1>
+        <p class="auth-card__sub">
+          {% if is_update %}
+            Please review and accept the updated documents to carry on using StudyLog.
+          {% else %}
+            Please confirm the following to carry on using StudyLog.
+          {% endif %}
+        </p>
+      </div>
+
+      {% if form.non_field_errors %}
+      <div class="auth-alert" role="alert">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 8v4M12 16h.01"></path></svg>
+        <span>{% for error in form.non_field_errors %}{{ error }}{% endfor %}</span>
+      </div>
+      {% endif %}
+
+      <form method="post" action="{% url 'accept_terms' %}">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ next }}">
+
+        <div class="auth-checks">
+          {% if form.age_confirmed %}
+          <label class="auth-check{% if form.age_confirmed.errors %} is-invalid{% endif %}">
+            <input type="checkbox" name="age_confirmed" id="id_age_confirmed"
+                   {% if form.age_confirmed.value %}checked{% endif %}>
+            <span class="auth-check__box">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 13l4 4L19 7"></path></svg>
+            </span>
+            <span class="auth-check__text">I confirm that I am at least 13 years old.</span>
+          </label>
+          {% endif %}
+
+          <label class="auth-check{% if form.accept_terms.errors %} is-invalid{% endif %}">
+            <input type="checkbox" name="accept_terms" id="id_accept_terms"
+                   {% if form.accept_terms.value %}checked{% endif %}>
+            <span class="auth-check__box">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 13l4 4L19 7"></path></svg>
+            </span>
+            <span class="auth-check__text">
+              I have read and agree to the
+              <a href="{% url 'terms' %}" target="_blank" rel="noopener">Terms &amp; Conditions</a>
+              and
+              <a href="{% url 'privacy' %}" target="_blank" rel="noopener">Privacy Policy</a>.
+            </span>
+          </label>
+        </div>
+
+        {% for error in form.age_confirmed.errors %}
+          <div class="invalid-feedback d-block">{{ error }}</div>
+        {% endfor %}
+        {% for error in form.accept_terms.errors %}
+          <div class="invalid-feedback d-block">{{ error }}</div>
+        {% endfor %}
+
+        <button type="submit" class="auth-btn auth-btn--primary" style="margin-top:6px;">Agree and continue</button>
+      </form>
+
+      {# Escape hatch: nobody should be trapped on this page. #}
+      <form method="post" action="{% url 'account_logout' %}" class="auth-foot-link">
+        {% csrf_token %}
+        Not right now?
+        <button type="submit" class="auth-linkbtn">Sign out</button>
+      </form>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

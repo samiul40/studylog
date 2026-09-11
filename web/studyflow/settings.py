@@ -152,6 +152,9 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "allauth.account.middleware.AccountMiddleware",
+    # After AccountMiddleware so allauth's own flows (email verification,
+    # social signup) resolve before the consent gate applies.
+    "accounts.middleware.TermsAcceptanceMiddleware",
 ]
 
 # Only enable debug toolbar locally

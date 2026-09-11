@@ -1,6 +1,7 @@
 from unittest.mock import patch
 
 import pytest
+from conftest import record_consent
 from django.contrib.auth.models import Group
 from django.core.cache import cache
 from django.urls import reverse
@@ -126,7 +127,7 @@ def test_unauthenticated_get_redirects_to_login(client):
 def test_learning_user_group_can_submit(client):
     """The group permissions migration covers FeatureRequest, so an ordinary
     signed-up user can reach the page without being redirected to index."""
-    user = baker.make("auth.User", is_superuser=False, is_staff=False)
+    user = record_consent(baker.make("auth.User", is_superuser=False, is_staff=False))
     user.groups.add(Group.objects.get(name="Learning User"))
     client.force_login(user)
 
@@ -137,7 +138,7 @@ def test_learning_user_group_can_submit(client):
 
 
 def test_user_without_permission_redirects_to_index(client):
-    user = baker.make("auth.User", is_superuser=False, is_staff=False)
+    user = record_consent(baker.make("auth.User", is_superuser=False, is_staff=False))
     client.force_login(user)
 
     response = client.get(URL)

@@ -9,11 +9,18 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
+from django.urls import reverse
 from django.utils import timezone as dj_timezone
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.views import View
 from django.views.decorators.http import require_POST
 
-from .forms import ChangePasswordForm, ProfileUpdateForm, TimezoneForm
+from .forms import (
+    AcceptTermsForm,
+    ChangePasswordForm,
+    ProfileUpdateForm,
+    TimezoneForm,
+)
 from .models import UserProfile
 
 User = get_user_model()
@@ -190,3 +197,57 @@ def cancel_social_signup(request):
     """
     request.session.pop("socialaccount_sociallogin", None)
     return redirect("account_login")
+
+
+class AcceptTermsView(LoginRequiredMixin, View):
+    """
+    Re-consent gate. TermsAcceptanceMiddleware sends users here when the terms
+    they accepted no longer match the published version.
+    """
+
+    template = "account/accept_terms.html"
+
+    def get_profile(self):
+        profile, _ = UserProfile.objects.get_or_create(user=self.request.user)
+        return profile
+
+    def get_redirect_target(self):
+        target = self.request.GET.get("next") or self.request.POST.get("next", "")
+        if target and url_has_allowed_host_and_scheme(
+            target, allowed_hosts={self.request.get_host()}
+        ):
+            return target
+        return reverse("learning:dashboard")
+
+    def get(self, request):
+        profile = self.get_profile()
+        return render(
+            request,
+            self.template,
+            {
+                "form": AcceptTermsForm(age_already_confirmed=profile.age_confirmed),
+                "next": self.get_redirect_target(),
+                "is_update": bool(profile.terms_version),
+            },
+        )
+
+    def post(self, request):
+        profile = self.get_profile()
+        form = AcceptTermsForm(
+            request.POST, age_already_confirmed=profile.age_confirmed
+        )
+
+        if not form.is_valid():
+            return render(
+                request,
+                self.template,
+                {
+                    "form": form,
+                    "next": self.get_redirect_target(),
+                    "is_update": bool(profile.terms_version),
+                },
+            )
+
+        form.record_acceptance(request.user)
+        messages.success(request, "Thanks — you're all set.")
+        return redirect(self.get_redirect_target())

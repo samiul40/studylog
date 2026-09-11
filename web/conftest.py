@@ -1,4 +1,5 @@
 import pytest
+from django.conf import settings as django_settings
 from model_bakery import baker
 
 
@@ -13,6 +14,22 @@ def fast_password_hashing(settings):
     settings.PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
 
 
+def record_consent(user):
+    """Mark a user as having accepted the current policies.
+
+    TermsAcceptanceMiddleware redirects anyone whose recorded version doesn't
+    match, so without this every authenticated test bounces to the consent
+    page. Tests covering the gate itself deliberately skip this."""
+    profile = user.profile
+    profile.age_confirmed = True
+    profile.terms_accepted = True
+    profile.terms_version = django_settings.TERMS_VERSION
+    profile.privacy_accepted = True
+    profile.privacy_version = django_settings.PRIVACY_VERSION
+    profile.save()
+    return user
+
+
 @pytest.fixture
 def user(db):
     user = baker.make(
@@ -20,7 +37,7 @@ def user(db):
     )
     user.set_password("12345")
     user.save()
-    return user
+    return record_consent(user)
 
 
 @pytest.fixture

@@ -759,6 +759,23 @@
   }
 
   // min-height stops the layout jumping as the message appears and clears.
+  // A submit button that reads as a link — logout must be a POST, but it
+  // shouldn't look like a second call to action.
+  .auth-linkbtn {
+    font-family: inherit;
+    font-size: inherit;
+    font-weight: 600;
+    color: var(--emerald-deep);
+    background: none;
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+
+    @media (hover: hover) {
+      &:hover { text-decoration: underline; }
+    }
+  }
+
   .auth-btn__hint {
     text-align: center;
     font-size: 0.76rem;
