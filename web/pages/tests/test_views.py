@@ -27,10 +27,20 @@ def test_legal_pages_render_for_anonymous(client, name):
     assert response.status_code == 200
 
 
-def test_privacy_is_not_indexed_while_it_is_a_placeholder(client):
+@pytest.mark.parametrize("name", ["terms", "privacy"])
+def test_legal_pages_are_indexable(client, name):
+    response = client.get(reverse(name))
+
+    assert 'content="noindex"' not in response.content.decode()
+
+
+def test_privacy_serves_the_real_document(client):
     response = client.get(reverse("privacy"))
 
-    assert 'content="noindex"' in response.content.decode()
+    content = response.content.decode()
+
+    assert "Last Updated" in content
+    assert "Your Rights" in content
 
 
 def test_terms_serves_the_real_document(client):
