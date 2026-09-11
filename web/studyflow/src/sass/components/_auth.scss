@@ -870,6 +870,12 @@ body:has(.auth-layout) > main {
       border-color: rgba(243, 241, 232, 0.28);
     }
 
+    // --ink is a dark *surface* colour on data-theme-less pages (it paints the
+    // brand panel), so anything using it as text must switch to --bone here.
+    .auth-check__text { color: var(--bone); }
+
+    .auth-ident__mail { color: var(--bone); }
+
     .auth-card__title { color: var(--bone); }
 
     .auth-field .auth-input {
