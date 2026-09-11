@@ -1,6 +1,7 @@
 from datetime import timedelta
 
 import pytest
+from django.conf import settings
 from django.urls import reverse
 from django.utils import timezone
 from model_bakery import baker
@@ -19,12 +20,12 @@ def make_user(username, terms_version):
 
 
 def test_changelist_shows_the_terms_column(client_logged_in):
-    make_user("current_user", "1.0")
+    make_user("current_user", settings.TERMS_VERSION)
 
     content = client_logged_in.get(CHANGELIST).content.decode()
 
     assert "Terms" in content
-    assert "✓ 1.0" in content
+    assert f"✓ {settings.TERMS_VERSION}" in content
 
 
 def test_an_outdated_version_is_called_out(client_logged_in):
@@ -54,7 +55,7 @@ def test_a_user_who_never_accepted_is_called_out(client_logged_in):
 def test_the_terms_filter_narrows_the_list(
     client_logged_in, status, expected, unexpected
 ):
-    make_user("current_user", "1.0")
+    make_user("current_user", settings.TERMS_VERSION)
     make_user("old_user", "0.9")
     make_user("never_user", "")
 

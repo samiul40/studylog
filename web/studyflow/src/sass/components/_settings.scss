@@ -772,7 +772,19 @@ $s-ease:           cubic-bezier(0.22, 1, 0.36, 1);
   // Full-width confirm input and button in danger zone
   .danger-confirm-input { max-width: 100%; }
 
-  .s-btn--danger { width: 100%; justify-content: center; }
+  // Low-emphasis actions that sit beside a primary one (re-send, cancel).
+.s-btn--ghost {
+  background: transparent;
+  color: var(--ink-soft);
+  border-color: var(--line);
+
+  &:hover:not(:disabled) {
+    color: var(--ink);
+    border-color: color-mix(in srgb, var(--ink) 30%, transparent);
+  }
+}
+
+.s-btn--danger { width: 100%; justify-content: center; }
 }
 
 @media (max-width: 520px) {
@@ -892,4 +904,61 @@ $s-ease:           cubic-bezier(0.22, 1, 0.36, 1);
 [data-theme="dark"] .s-btn--danger {
   color: #fff;
   &:hover:not(:disabled) { color: #fff; }
+}
+
+.semail-pending__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+// ── Connected accounts ───────────────────────────────────────────────────────
+.sconn-list {
+  list-style: none;
+  margin: 0 0 18px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sconn__pick {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 14px;
+  border: 1.5px solid var(--line);
+  border-radius: 12px;
+  cursor: pointer;
+
+  &:hover { border-color: color-mix(in srgb, var(--ink) 24%, transparent); }
+
+  input { flex: 0 0 auto; accent-color: var(--emerald); }
+}
+
+.sconn__body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.sconn__provider {
+  font-weight: 600;
+  font-size: 0.92rem;
+  color: var(--ink);
+}
+
+.sconn__detail {
+  font-size: 0.82rem;
+  color: var(--ink-soft);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sconn-back {
+  margin-top: 18px;
+  font-size: 0.88rem;
 }

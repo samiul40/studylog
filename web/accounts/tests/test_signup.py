@@ -1,5 +1,6 @@
 import pytest
 from allauth.socialaccount.models import SocialApp
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.sites.models import Site
 from django.urls import reverse
@@ -44,11 +45,11 @@ def test_signup_records_acceptance_on_the_profile(client):
 
     assert profile.terms_accepted is True
     assert profile.terms_accepted_at is not None
-    assert profile.terms_version == "1.0"
+    assert profile.terms_version == settings.TERMS_VERSION
 
     assert profile.privacy_accepted is True
     assert profile.privacy_accepted_at is not None
-    assert profile.privacy_version == "1.0"
+    assert profile.privacy_version == settings.PRIVACY_VERSION
 
     assert profile.age_confirmed is True
     assert profile.age_confirmed_at is not None
