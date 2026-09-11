@@ -18,9 +18,7 @@ def send_feature_request_notification(feature_request, admin_url):
         return
 
     context = {"feature_request": feature_request, "admin_url": admin_url}
-    subject = render_to_string(
-        "email/feature_request_subject.txt", context
-    ).strip()
+    subject = render_to_string("email/feature_request_subject.txt", context).strip()
     body = render_to_string("email/feature_request_body.txt", context)
 
     try:
