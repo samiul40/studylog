@@ -60,6 +60,22 @@ cd web && npm run watch:css
 cd web && npm run build:css
 ```
 
+**Scheduled maintenance commands:**
+
+Both are idempotent and safe to re-run. Neither is installed anywhere — add
+them to the server's crontab if you want them automated:
+
+```cron
+0 3 * * * docker exec studylog_web python manage.py purge_unverified_accounts --delete
+0 4 * * * docker exec studylog_web python manage.py purge_deleted_accounts
+```
+
+`purge_unverified_accounts` is **dry-run by default** and needs `--delete` to
+remove anything — it selects accounts by inactivity rather than an explicit
+request, so a bare run must never destroy data. `purge_deleted_accounts` is the
+reverse (deletes by default, `--dry-run` to preview) because it only ever acts
+on accounts whose owner asked to be deleted.
+
 **Database migrations:**
 ```bash
 cd web && python manage.py makemigrations
