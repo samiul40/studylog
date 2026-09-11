@@ -155,3 +155,23 @@ def test_a_user_with_no_profile_does_not_error(client):
 
     assert response.status_code == 302
     assert response.url.startswith(ACCEPT_URL)
+
+
+def test_first_time_copy_is_shown_when_nothing_was_ever_accepted(client, unconsented):
+    content = client.get(ACCEPT_URL).content.decode()
+
+    assert "Before you continue" in content
+    assert "A quick bit of housekeeping." in content
+    assert "Our terms have changed" not in content
+
+
+def test_update_copy_is_shown_when_the_version_changes(client, user, settings):
+    """A returning user needs different wording from a first-time acceptance."""
+    client.force_login(user)
+    settings.TERMS_VERSION = "2.0"
+
+    content = client.get(ACCEPT_URL).content.decode()
+
+    assert "Our terms have changed" in content
+    assert "We've updated our terms." in content
+    assert "A quick bit of housekeeping." not in content
