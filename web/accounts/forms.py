@@ -1,8 +1,12 @@
+from allauth.account.forms import SignupForm
+from allauth.socialaccount.forms import SignupForm as SocialSignupForm
 from django import forms
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import (
     PasswordChangeForm as DjangoPasswordChangeForm,
 )
+from django.utils import timezone
 
 from .models import UserProfile
 
@@ -125,3 +129,51 @@ class ChangePasswordForm(DjangoPasswordChangeForm):
         super().__init__(*args, **kwargs)
         for field in self.fields.values():
             field.widget.attrs.update(_FC)
+
+
+class TermsAcceptanceMixin(forms.Form):
+    """
+    Shared by the email and Google signup forms so the two paths can't drift.
+    """
+
+    age_confirmed = forms.BooleanField(
+        required=True,
+        label="I confirm that I am at least 13 years old.",
+        error_messages={
+            "required": "Please confirm that you are at least 13 years old."
+        },
+    )
+    accept_terms = forms.BooleanField(
+        required=True,
+        label="I have read and agree to the Terms & Conditions and Privacy Policy.",
+        error_messages={
+            "required": "Please accept the Terms & Conditions and Privacy Policy."
+        },
+    )
+
+    def record_acceptance(self, user):
+        now = timezone.now()
+        profile = user.profile
+        profile.age_confirmed = True
+        profile.age_confirmed_at = now
+        profile.terms_accepted = True
+        profile.terms_accepted_at = now
+        profile.terms_version = settings.TERMS_VERSION
+        profile.privacy_accepted = True
+        profile.privacy_accepted_at = now
+        profile.privacy_version = settings.PRIVACY_VERSION
+        profile.save()
+
+
+class StudyLogSignupForm(TermsAcceptanceMixin, SignupForm):
+    def save(self, request):
+        user = super().save(request)
+        self.record_acceptance(user)
+        return user
+
+
+class StudyLogSocialSignupForm(TermsAcceptanceMixin, SocialSignupForm):
+    def save(self, request):
+        user = super().save(request)
+        self.record_acceptance(user)
+        return user

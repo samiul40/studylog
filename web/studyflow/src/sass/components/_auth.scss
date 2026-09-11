@@ -440,6 +440,39 @@
     }
   }
 
+  .auth-check {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 12px;
+    font-size: 0.84rem;
+    line-height: 1.45;
+    color: var(--ink-soft);
+
+    input[type="checkbox"] {
+      flex: 0 0 auto;
+      width: 17px;
+      height: 17px;
+      // Nudge down so the box aligns with the first line of the label.
+      margin-top: 1px;
+      accent-color: var(--emerald);
+      cursor: pointer;
+    }
+
+    label { cursor: pointer; }
+
+    a {
+      color: var(--ink);
+      font-weight: 600;
+      text-decoration: underline;
+    }
+
+    &.is-invalid input[type="checkbox"] {
+      outline: 2px solid var(--rose);
+      outline-offset: 2px;
+    }
+  }
+
   .auth-legal {
     text-align: center;
     margin-top: 22px;

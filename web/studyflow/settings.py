@@ -69,6 +69,8 @@ ACCOUNT_LOGOUT_REDIRECT_URL = "account_login"
 ACCOUNT_SIGNUP_REDIRECT_URL = "learning:dashboard"
 ACCOUNT_SESSION_REMEMBER = True
 
+ACCOUNT_FORMS = {"signup": "accounts.forms.StudyLogSignupForm"}
+
 # Bump when the published documents change materially, so past acceptances
 # can be told apart from acceptances of the current text.
 TERMS_VERSION = "1.0"
