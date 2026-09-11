@@ -2,6 +2,9 @@ import json
 import zoneinfo
 from datetime import timedelta
 
+from allauth.account.internal.flows.email_verification import (
+    send_verification_email_to_address,
+)
 from allauth.account.models import EmailAddress
 from django.contrib import messages
 from django.contrib.auth import get_user_model, login, update_session_auth_hash
@@ -86,6 +89,34 @@ class Settings(LoginRequiredMixin, View):
                     "you confirm.",
                 )
                 return redirect("settings")
+
+        elif form_type == "email_resend":
+            pending = self._pending_email(request.user)
+            if pending:
+                # allauth's own helper, so the resend is rate limited the same
+                # way its email page is. Internal API, pinned allauth version.
+                # It returns False when throttled — don't claim we sent one.
+                if send_verification_email_to_address(request, pending):
+                    messages.success(
+                        request, f"We've sent another link to {pending.email}."
+                    )
+                else:
+                    messages.warning(
+                        request,
+                        "We sent a link moments ago — check your inbox, or try "
+                        "again shortly.",
+                    )
+            return redirect("settings")
+
+        elif form_type == "email_cancel":
+            pending = self._pending_email(request.user)
+            if pending:
+                # Safe to drop outright: it is neither verified nor primary, so
+                # removing it just abandons the pending change.
+                address = pending.email
+                pending.delete()
+                messages.success(request, f"Cancelled the change to {address}.")
+            return redirect("settings")
 
         elif form_type == "timezone":
             timezone_form = TimezoneForm(request.POST, instance=profile)

@@ -164,10 +164,24 @@
           </p>
 
           {% if pending_email %}
-          <p class="semail-pending">
-            Waiting for confirmation: <strong>{{ pending_email.email }}</strong>.
-            Check that inbox for the link.
-          </p>
+          <div class="semail-pending">
+            <p>
+              Waiting for confirmation: <strong>{{ pending_email.email }}</strong>.
+              Check that inbox for the link.
+            </p>
+            <div class="semail-pending__actions">
+              <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="form_type" value="email_resend">
+                <button type="submit" class="s-btn s-btn--ghost">Re-send link</button>
+              </form>
+              <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="form_type" value="email_cancel">
+                <button type="submit" class="s-btn s-btn--ghost">Cancel change</button>
+              </form>
+            </div>
+          </div>
           {% endif %}
 
           <form method="post" novalidate>

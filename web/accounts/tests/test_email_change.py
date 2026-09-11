@@ -3,6 +3,7 @@ from io import StringIO
 import pytest
 from allauth.account.models import EmailAddress, EmailConfirmationHMAC
 from django.contrib.auth import get_user_model
+from django.core.cache import cache
 from django.core.management import call_command
 from django.urls import reverse
 from model_bakery import baker
@@ -161,3 +162,66 @@ def test_the_audit_command_is_quiet_when_everything_matches(account):
     call_command("audit_email_sync", stdout=out)
 
     assert "in sync" in out.getvalue()
+
+
+def test_the_allauth_email_page_redirects_to_settings(client_logged_in):
+    """Settings does the same job in the app's own design, so there is one
+    place to manage email rather than two that can drift."""
+    response = client_logged_in.get("/accounts/email/")
+
+    assert response.status_code == 302
+    assert response.url == SETTINGS_URL
+
+
+def test_resending_sends_another_link(client_logged_in, account, mailoutbox):
+    change_email(client_logged_in, "new@example.com")
+    mailoutbox.clear()
+    # allauth throttles verification emails; clear the counter so this tests
+    # the resend itself rather than the rate limiter.
+    cache.clear()
+
+    client_logged_in.post(SETTINGS_URL, {"form_type": "email_resend"})
+
+    assert len(mailoutbox) == 1
+    assert mailoutbox[0].to == ["new@example.com"]
+
+
+def test_a_throttled_resend_does_not_claim_it_sent_one(
+    client_logged_in, account, mailoutbox
+):
+    """allauth rate limits verification emails. Saying "we've sent another
+    link" when it sent nothing would have people waiting on a mail that is
+    never coming."""
+    change_email(client_logged_in, "new@example.com")
+    mailoutbox.clear()
+
+    response = client_logged_in.post(
+        SETTINGS_URL, {"form_type": "email_resend"}, follow=True
+    )
+
+    assert mailoutbox == []
+    content = response.content.decode()
+    assert "sent another link" not in content
+    assert "try again shortly" in content
+
+
+def test_cancelling_drops_the_pending_address(client_logged_in, account):
+    change_email(client_logged_in, "new@example.com")
+
+    client_logged_in.post(SETTINGS_URL, {"form_type": "email_cancel"})
+
+    assert not EmailAddress.objects.filter(email="new@example.com").exists()
+
+    account.refresh_from_db()
+    assert account.email == "old@example.com"
+    assert EmailAddress.objects.get(user=account).email == "old@example.com"
+
+
+def test_cancelling_never_removes_the_live_address(client_logged_in, account):
+    """With nothing pending the action must be a harmless no-op, not a way to
+    delete the address you sign in with."""
+    client_logged_in.post(SETTINGS_URL, {"form_type": "email_cancel"})
+
+    assert EmailAddress.objects.filter(
+        user=account, email="old@example.com", verified=True
+    ).exists()
