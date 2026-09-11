@@ -1,7 +1,22 @@
 {% load static %}
 <footer class="app-footer">
   <div class="app-footer__inner">
-    <span>© 2026 StudyLog</span>
-    <span>Made for people who start a lot of courses</span>
+    <div class="app-footer__id">
+      <span>© 2026 StudyLog</span>
+      <span class="app-footer__tag">Made for people who start a lot of courses</span>
+    </div>
+    <nav class="app-footer__links" aria-label="Footer">
+      <a class="app-footer__cta" href="{% url 'feature_request' %}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M9 18h6"></path>
+          <path d="M10 22h4"></path>
+          <path d="M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.2 1 2.3h6c0-1.1.4-1.8 1-2.3A7 7 0 0 0 12 2z"></path>
+        </svg>
+        Suggest a feature
+      </a>
+      <a href="{% url 'privacy' %}">Privacy</a>
+      <a href="{% url 'terms' %}">Terms</a>
+    </nav>
   </div>
 </footer>

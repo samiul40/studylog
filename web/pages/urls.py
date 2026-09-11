@@ -10,6 +10,16 @@ sitemaps = {"static": StaticViewSitemap}
 urlpatterns = [
     path("", views.index, name="index"),
     path(
+        "privacy/",
+        TemplateView.as_view(template_name="pages/privacy.html"),
+        name="privacy",
+    ),
+    path(
+        "terms/",
+        TemplateView.as_view(template_name="pages/terms.html"),
+        name="terms",
+    ),
+    path(
         "robots.txt",
         TemplateView.as_view(template_name="robots.txt", content_type="text/plain"),
         name="robots_txt",
