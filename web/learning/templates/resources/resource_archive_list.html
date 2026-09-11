@@ -7,13 +7,11 @@
 {% block main_class %}rlist-bg{% endblock %}
 
 {# Suppress the base.html alerts block — flash messages are included inside .rl-wrap #}
-{% block alerts %}{% endblock %}
 
 {% block content %}
 <div class="rl-wrap">
 
   {# ── Flash messages ──────────────────────────────────────────────────────── #}
-  {% include 'partials/_alerts.html' %}
 
   {# ── Breadcrumbs ─────────────────────────────────────────────────────────── #}
   <nav class="rl-crumbs" aria-label="Breadcrumb">
