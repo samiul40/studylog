@@ -293,6 +293,9 @@ ANYMAIL = {
     "RESEND_API_KEY": os.environ.get("RESEND_API_KEY", ""),
 }
 
+# Where new feature suggestions are emailed. Unset disables the notification.
+FEATURE_REQUEST_NOTIFY_EMAIL = os.environ.get("FEATURE_REQUEST_NOTIFY_EMAIL", "")
+
 YOUTUBE_API_KEY = os.environ.get("YOUTUBE_API_KEY", "")
 
 

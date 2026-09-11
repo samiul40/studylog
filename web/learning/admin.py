@@ -1,10 +1,12 @@
 from adminsortable2.admin import SortableAdminBase, SortableInlineAdminMixin
 from django.contrib import admin
+from django.utils.text import Truncator
 
 from learning.services.dashboard import get_dashboard_stats
 
 from .models import (
     Category,
+    FeatureRequest,
     LearningResource,
     LearningUnit,
     ResourceType,
@@ -184,6 +186,42 @@ class StudySessionAdmin(admin.ModelAdmin):
             },
         ),
     )
+
+
+@admin.register(FeatureRequest)
+class FeatureRequestAdmin(admin.ModelAdmin):
+    list_display = ("idea_preview", "user", "status", "created_at")
+    list_editable = ("status",)
+    list_filter = ("status", "created_at")
+    search_fields = ("idea", "why", "user__username", "user__email")
+    readonly_fields = ("user", "idea", "why", "created_at", "updated_at")
+    ordering = ("-created_at",)
+    date_hierarchy = "created_at"
+
+    fieldsets = (
+        (
+            None,
+            {"fields": ("user", "status")},
+        ),
+        (
+            "Suggestion",
+            {"fields": ("idea", "why")},
+        ),
+        (
+            "Timestamps",
+            {
+                "fields": ("created_at", "updated_at"),
+                "classes": ("collapse",),
+            },
+        ),
+    )
+
+    @admin.display(description="Idea", ordering="idea")
+    def idea_preview(self, obj):
+        return Truncator(obj.idea).chars(80)
+
+    def has_add_permission(self, request):
+        return False
 
 
 original_index = admin.site.index

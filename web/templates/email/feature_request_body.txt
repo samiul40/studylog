@@ -1,0 +1,10 @@
+{{ feature_request.user.username|default:"A deleted user" }} suggested a new feature.
+
+WHAT THEY'D LIKE TO SEE
+{{ feature_request.idea }}
+{% if feature_request.why %}
+WHY IT WOULD HELP
+{{ feature_request.why }}
+{% endif %}
+Review it here:
+{{ admin_url }}
