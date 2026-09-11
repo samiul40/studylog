@@ -4,7 +4,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.sites.models import Site
 from django.urls import reverse
 
-from accounts.forms import StudyLogSignupForm
+from accounts.forms import StudyLogSignupForm, StudyLogSocialSignupForm
 
 pytestmark = pytest.mark.django_db
 
@@ -100,3 +100,24 @@ def test_signup_page_renders_both_checkboxes(client):
 
     assert 'name="age_confirmed"' in content
     assert 'name="accept_terms"' in content
+
+
+def test_google_signup_form_requires_the_same_checkboxes():
+    # Instantiating it needs a sociallogin, so inspect the declared fields.
+    fields = StudyLogSocialSignupForm.base_fields
+
+    assert fields["age_confirmed"].required is True
+    assert fields["accept_terms"].required is True
+
+
+def test_google_signup_does_not_bypass_the_form(settings):
+    """Auto-signup would create the account without ever showing the form, so
+    a Google user would never accept the terms."""
+    assert settings.SOCIALACCOUNT_AUTO_SIGNUP is False
+
+
+def test_google_signup_form_is_wired_up(settings):
+    assert (
+        settings.SOCIALACCOUNT_FORMS["signup"]
+        == "accounts.forms.StudyLogSocialSignupForm"
+    )

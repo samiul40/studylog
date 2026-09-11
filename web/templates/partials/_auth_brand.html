@@ -1,0 +1,37 @@
+{% load static %}
+<aside class="auth-brand">
+  <div class="auth-brand__grid"></div>
+  <div class="auth-brand__glow"></div>
+
+  <div class="auth-brand__head">
+    <a href="{% url 'index' %}" class="auth-logo">
+      <img src="{% static 'img/studylog-lockup-dark.webp' %}" alt="StudyLog" height="30">
+    </a>
+    <a href="{% url 'index' %}" class="auth-back">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"></path></svg>
+      Back to home
+    </a>
+  </div>
+
+  <div class="auth-brand__mid">
+    <span class="auth-brand__eyebrow">
+      <span class="blip"></span>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:0.68rem;letter-spacing:0.06em;text-transform:uppercase;">Free forever</span>
+    </span>
+    <h1>Start finishing what you start.</h1>
+    <p class="auth-brand__sub">Set up your first resource in under two minutes. No card needed.</p>
+
+    <div class="auth-proof">
+      <div class="auth-proof__ring" style="--val:68;"><span>68%</span></div>
+      <div class="auth-proof__body">
+        <div class="auth-proof__name">The Complete React Developer Course</div>
+        <div class="auth-proof__meta"><span>17 / 25 units</span>·<span class="accent">+6 this week</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="auth-brand__foot">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+    Encrypted &amp; secure · Free forever
+  </div>
+</aside>
