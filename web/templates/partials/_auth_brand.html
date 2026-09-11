@@ -1,0 +1,55 @@
+{% load static %}
+{% comment %}
+Shared dark panel for the auth pages. Callers may override the copy via
+"with", pass steps=True to swap the proof card for the step rail, and
+hide_back=True to drop the "Back to home" link.
+{% endcomment %}
+<aside class="auth-brand">
+  <div class="auth-brand__grid"></div>
+  <div class="auth-brand__glow"></div>
+
+  <div class="auth-brand__head">
+    <a href="{% url 'index' %}" class="auth-logo">
+      <img src="{% static 'img/studylog-lockup-dark.webp' %}" alt="StudyLog" height="30">
+    </a>
+    {% if not hide_back %}
+    <a href="{% url 'index' %}" class="auth-back">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"></path></svg>
+      Back to home
+    </a>
+    {% endif %}
+  </div>
+
+  <div class="auth-brand__mid">
+    <span class="auth-brand__eyebrow">
+      <span class="blip"></span>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:0.68rem;letter-spacing:0.06em;text-transform:uppercase;">{{ eyebrow|default:"Free forever" }}</span>
+    </span>
+    <h1>{{ headline|default:"Start finishing what you start." }}</h1>
+    <p class="auth-brand__sub">{{ sub|default:"Set up your first resource in under two minutes. No card needed." }}</p>
+
+    {% if steps %}
+      <div class="auth-steps">
+        <div class="auth-step auth-step--done">
+          <span class="auth-step__n"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 13l4 4L19 7"></path></svg></span>
+          Signed in with Google
+        </div>
+        <div class="auth-step auth-step--now"><span class="auth-step__n">2</span>Agree to the terms</div>
+        <div class="auth-step"><span class="auth-step__n">3</span>Add your first resource</div>
+      </div>
+    {% else %}
+      <div class="auth-proof">
+        <div class="auth-proof__ring" style="--val:68;"><span>68%</span></div>
+        <div class="auth-proof__body">
+          <div class="auth-proof__name">The Complete React Developer Course</div>
+          <div class="auth-proof__meta"><span>17 / 25 units</span>·<span class="accent">+6 this week</span></div>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+
+  <div class="auth-brand__foot">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+    Encrypted &amp; secure · Free forever
+  </div>
+</aside>

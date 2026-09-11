@@ -7,6 +7,11 @@ urlpatterns = [
     path("settings/", views.Settings.as_view(), name="settings"),
     path("set-timezone/", views.set_timezone, name="set_timezone"),
     path(
+        "cancel-social-signup/",
+        views.cancel_social_signup,
+        name="cancel_social_signup",
+    ),
+    path(
         "delete-account/",
         views.DeleteAccountView.as_view(),
         name="delete_account",

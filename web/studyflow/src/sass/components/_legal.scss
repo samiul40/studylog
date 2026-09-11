@@ -1,0 +1,114 @@
+// =============================================================================
+// _legal.scss — Long-form legal documents (terms, privacy)
+// =============================================================================
+@use '../abstracts/variables' as *;
+
+.legal-doc {
+  // ~70 characters at this size — a comfortable reading measure for prose.
+  max-width: 44rem;
+  margin: 0 auto;
+  padding: clamp(28px, 5vw, 56px) 0 64px;
+  color: var(--ink-soft);
+  font-size: 1rem;
+  line-height: 1.7;
+
+  h1 {
+    font-family: $font-display;
+    font-size: clamp(1.75rem, 4vw, 2.25rem);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+    color: var(--ink);
+    margin: 0;
+  }
+
+  h2 {
+    font-family: $font-display;
+    font-size: 1.2rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    margin: 40px 0 12px;
+  }
+
+  h3 {
+    font-family: $font-sans;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--ink);
+    margin: 22px 0 8px;
+  }
+
+  p {
+    margin: 0 0 14px;
+  }
+
+  ul {
+    margin: 0 0 14px;
+    padding-left: 22px;
+  }
+
+  li {
+    margin-bottom: 6px;
+
+    &::marker { color: var(--emerald-deep); }
+  }
+
+  a {
+    color: var(--emerald-deep);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+
+    &:hover { color: var(--emerald-bright); }
+  }
+}
+
+[data-theme="dark"] .legal-doc li::marker,
+[data-theme="dark"] .legal-doc a { color: var(--emerald-bright); }
+
+// Signed-out visitors get no appbar or footer, so the document would otherwise
+// be a dead end with no way back into the site.
+.legal-doc__back {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 24px;
+  font-family: $font-mono;
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  text-decoration: none;
+
+  svg { width: 14px; height: 14px; }
+
+  &:hover {
+    color: var(--emerald-deep);
+    text-decoration: none;
+  }
+}
+
+[data-theme="dark"] .legal-doc__back:hover { color: var(--emerald-bright); }
+
+.legal-doc__head {
+  padding-bottom: 20px;
+  margin-bottom: 28px;
+  border-bottom: 1px solid var(--line);
+}
+
+.legal-doc__updated {
+  font-family: $font-mono;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin: 10px 0 0;
+}
+
+.legal-doc__closing {
+  margin-top: 36px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+  font-weight: 600;
+  color: var(--ink);
+}

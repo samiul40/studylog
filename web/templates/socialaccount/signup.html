@@ -1,39 +1,186 @@
 {% extends 'base.html' %}
 
+{% block title %}Finish setting up · StudyLog{% endblock %}
+
+{% block extra_head %}
+<meta name="color-scheme" content="light dark">
+<script nonce="{{ request.csp_nonce }}">document.documentElement.removeAttribute('data-theme');</script>
+{% endblock %}
+{% block navbar %}{% endblock %}
+{% block footer %}{% endblock %}
+{% block mobile_nav %}{% endblock %}
+{% block main_class %}{% endblock %}
+{% block alerts %}{% endblock %}
+
 {% block content %}
-<section class="login-section">
-  <div class="login-card">
+<div class="auth-layout">
 
-    <div class="login-header">
-      <div class="login-brand">StudyLog<span>.</span></div>
-      <p class="login-subtitle">Complete sign in with Google</p>
-    </div>
+  {% include "partials/_auth_brand.html" with steps=True hide_back=True eyebrow="One step left" headline="You're one tick away." sub="Google confirmed who you are, so there's nothing to fill in. Just agree to the terms and you're set." %}
 
-    <p class="text-muted small mb-4">
-      You are signing in using your Google account
-      <strong>{{ sociallogin.account.extra_data.email }}</strong>.
-      Click continue to finish.
-    </p>
-
-    <form method="POST" action="{% url 'socialaccount_signup' %}">
-      {% csrf_token %}
-      {% for field in form.visible_fields %}
-      <div class="mb-3">
-        <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
-        {{ field }}
-        {% if field.errors %}
-        <div class="text-danger small mt-1">{{ field.errors }}</div>
-        {% endif %}
+  <div class="auth-main">
+    <div class="auth-card">
+      <div class="auth-card__head">
+        <h1 class="auth-card__title">Almost there</h1>
+        <p class="auth-card__sub">Pick a username if you'd like, then agree to the terms.</p>
       </div>
-      {% endfor %}
-      {% for field in form.hidden_fields %}{{ field }}{% endfor %}
-      <button type="submit" class="btn btn-primary w-100">Continue</button>
-    </form>
 
-    <div class="login-footer-link-center">
-      <a href="{% url 'account_login' %}">Back to sign in</a>
+      {% if form.non_field_errors %}
+      <div class="auth-alert" role="alert">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 8v4M12 16h.01"></path></svg>
+        <span>{% for error in form.non_field_errors %}{{ error }}{% endfor %}</span>
+      </div>
+      {% endif %}
+
+      {# ── Google identity, read-only ───────────────────────────────────────── #}
+      <div class="auth-ident">
+        <div class="auth-ident__av">{{ account.extra_data.email|first|upper }}</div>
+        <div class="auth-ident__body">
+          <div class="auth-ident__label">
+            <svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 12.955 4 4 12.955 4 24s8.955 20 20 20 20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"></path><path fill="#FF3D00" d="M6.306 14.691l6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 16.318 4 9.656 8.337 6.306 14.691z"></path><path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238C29.211 35.091 26.715 36 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z"></path><path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303c-.792 2.237-2.231 4.166-4.087 5.571l6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917z"></path></svg>
+            Signing up as
+          </div>
+          <div class="auth-ident__mail">{{ account.extra_data.email }}</div>
+        </div>
+        <form method="post" action="{% url 'cancel_social_signup' %}">
+          {% csrf_token %}
+          <button type="submit" class="auth-ident__swap">Change</button>
+        </form>
+      </div>
+
+      <form method="POST" action="{% url 'socialaccount_signup' %}" id="finishForm">
+        {% csrf_token %}
+
+        {# Email is already confirmed by Google and shown in the chip above. #}
+        <input type="hidden" name="email" value="{{ form.email.value|default:'' }}">
+
+        <div class="auth-field">
+          <label class="auth-field__label" for="id_username">
+            Username <span class="auth-label-opt">(optional)</span>
+          </label>
+          <div class="auth-input-group{% if form.username.errors %} is-bad{% endif %}" id="uWrap">
+            <span class="auth-input-group__at">@</span>
+            <input id="id_username" name="username" type="text"
+                   value="{{ form.username.value|default:'' }}"
+                   data-suggested="{{ form.suggested_username }}"
+                   autocomplete="username" spellcheck="false">
+            <span class="auth-input-group__state">
+              <svg class="ico-ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"></path></svg>
+              <svg class="ico-bad" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v4M12 16h.01"></path></svg>
+            </span>
+          </div>
+          <p class="auth-hint{% if form.username.errors %} is-bad{% endif %}" id="uHint">
+            {% if form.username.errors %}{{ form.username.errors.0 }}{% else %}You can change this now or later in Settings.{% endif %}
+          </p>
+        </div>
+
+        <div class="auth-checks">
+          <label class="auth-check{% if form.age_confirmed.errors %} is-invalid{% endif %}">
+            <input type="checkbox" name="age_confirmed" id="id_age_confirmed"
+                   {% if form.age_confirmed.value %}checked{% endif %}>
+            <span class="auth-check__box">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 13l4 4L19 7"></path></svg>
+            </span>
+            <span class="auth-check__text">I confirm that I am at least 13 years old.</span>
+          </label>
+
+          <label class="auth-check{% if form.accept_terms.errors %} is-invalid{% endif %}">
+            <input type="checkbox" name="accept_terms" id="id_accept_terms"
+                   {% if form.accept_terms.value %}checked{% endif %}>
+            <span class="auth-check__box">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 13l4 4L19 7"></path></svg>
+            </span>
+            <span class="auth-check__text">
+              I have read and agree to the
+              <a href="{% url 'terms' %}" target="_blank" rel="noopener">Terms &amp; Conditions</a>
+              and
+              <a href="{% url 'privacy' %}" target="_blank" rel="noopener">Privacy Policy</a>.
+            </span>
+          </label>
+        </div>
+
+        <button type="submit" class="auth-btn auth-btn--primary" id="submitBtn">Create account</button>
+        <p class="auth-btn__hint" id="btnHint"></p>
+      </form>
+
+      <p class="auth-foot-link">Changed your mind? <a href="{% url 'account_login' %}">Back to sign in</a></p>
     </div>
-
   </div>
-</section>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script nonce="{{ request.csp_nonce }}">
+(function () {
+  var input = document.getElementById('id_username');
+  var wrap = document.getElementById('uWrap');
+  var hint = document.getElementById('uHint');
+  var age = document.getElementById('id_age_confirmed');
+  var terms = document.getElementById('id_accept_terms');
+  var btn = document.getElementById('submitBtn');
+  var btnHint = document.getElementById('btnHint');
+  if (!input || !btn) return;
+
+  var suggested = input.dataset.suggested || '';
+  var FORMAT = /^[A-Za-z0-9_]{3,20}$/;
+  var DEFAULT_HINT = 'You can change this now or later in Settings.';
+
+  // Format only — availability is checked server side on submit, so we never
+  // claim a name is free when we haven't asked.
+  function checkUsername() {
+    var value = input.value.trim();
+    wrap.classList.remove('is-ok', 'is-bad');
+    hint.classList.remove('is-bad');
+
+    if (!value) {
+      hint.textContent = 'Leave blank and we’ll use @' + suggested + ' for you.';
+      return true;
+    }
+    if (value === suggested) {
+      hint.textContent = DEFAULT_HINT;
+      return true;
+    }
+    if (!FORMAT.test(value)) {
+      wrap.classList.add('is-bad');
+      hint.classList.add('is-bad');
+      hint.textContent = 'Use 3–20 letters, numbers or underscores.';
+      return false;
+    }
+    wrap.classList.add('is-ok');
+    hint.textContent = '@' + value + ' looks good.';
+    return true;
+  }
+
+  function sync() {
+    var usernameOk = checkUsername();
+    var a = age.checked;
+    var t = terms.checked;
+    btn.disabled = !(usernameOk && a && t);
+
+    if (!usernameOk) {
+      btnHint.textContent = '';
+    } else if (!a && !t) {
+      btnHint.textContent = 'Tick both boxes to continue.';
+    } else if (!t) {
+      btnHint.textContent = 'Please agree to the Terms & Privacy Policy.';
+    } else if (!a) {
+      btnHint.textContent = 'Please confirm your age.';
+    } else {
+      btnHint.textContent = '';
+    }
+  }
+
+  input.addEventListener('input', sync);
+  age.addEventListener('change', sync);
+  terms.addEventListener('change', sync);
+
+  document.getElementById('finishForm').addEventListener('submit', function () {
+    btn.textContent = 'Creating your account…';
+    btn.disabled = true;
+    btnHint.textContent = '';
+  });
+
+  sync();
+})();
+</script>
 {% endblock %}

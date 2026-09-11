@@ -1,23 +1,270 @@
 {% extends 'base.html' %}
 
-{% block title %}Terms of Service — StudyLog{% endblock %}
-{% block meta_description %}StudyLog's terms of service.{% endblock %}
-
-{% block extra_head %}
-<meta name="robots" content="noindex">
-{% endblock %}
+{% block title %}Terms and Conditions — StudyLog{% endblock %}
+{% block meta_description %}The terms and conditions governing your use of StudyLog.{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center py-4">
-  <div class="col-lg-7">
-    <h1>Terms of Service</h1>
-    <p>
-      We're still finalising this page. StudyLog's full terms of service will be
-      published here before long.
-    </p>
-    <p>
-      <a href="{% url 'index' %}">Back to StudyLog</a>
-    </p>
-  </div>
+<div class="legal-doc">
+  {% if not user.is_authenticated %}
+  <a href="{% url 'index' %}" class="legal-doc__back">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+         stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M19 12H5M11 18l-6-6 6-6"></path>
+    </svg>
+    Back to home
+  </a>
+  {% endif %}
+
+  <header class="legal-doc__head">
+    <h1>Terms and Conditions</h1>
+    <p class="legal-doc__updated">Last Updated: 11 September 2026</p>
+  </header>
+
+  <p>
+    Welcome to StudyLog ("StudyLog", "we", "our", or "us"). These Terms and
+    Conditions govern your access to and use of the StudyLog website and
+    services available through StudyLog.
+  </p>
+  <p>
+    By accessing or using StudyLog, you agree to be bound by these Terms and
+    Conditions. If you do not agree with these Terms, you must not use the
+    service.
+  </p>
+
+  <h2>1. About StudyLog</h2>
+  <p>
+    StudyLog is an online platform designed to help users organise, track, and
+    manage their learning activities, educational resources, study goals, and
+    progress.
+  </p>
+
+  <h2>2. Eligibility</h2>
+  <p>
+    You must be at least 13 years old to use StudyLog. If you are under 18, you
+    should ensure you have permission from a parent or guardian where required
+    by applicable law. By using StudyLog, you confirm that you meet these
+    eligibility requirements.
+  </p>
+  <p>By using StudyLog, you confirm that:</p>
+  <ul>
+    <li>You have the legal capacity to agree to these Terms.</li>
+    <li>The information you provide is accurate and up to date.</li>
+    <li>You will comply with all applicable laws and regulations.</li>
+  </ul>
+
+  <h2>3. User Accounts</h2>
+  <p>
+    You may be required to create an account to access certain features of
+    StudyLog.
+  </p>
+  <p>You are responsible for:</p>
+  <ul>
+    <li>Maintaining the confidentiality of your account credentials.</li>
+    <li>All activity that occurs under your account.</li>
+    <li>Ensuring your account information remains accurate.</li>
+  </ul>
+  <p>
+    You must notify us immediately if you believe your account has been accessed
+    without authorisation.
+  </p>
+  <p>
+    We reserve the right to suspend or terminate accounts that violate these
+    Terms.
+  </p>
+
+  <h2>4. Acceptable Use</h2>
+  <p>You agree not to:</p>
+  <ul>
+    <li>Use StudyLog for any unlawful purpose.</li>
+    <li>Attempt to gain unauthorised access to systems, servers, databases, or accounts.</li>
+    <li>Upload, distribute, or transmit viruses, malware, or other harmful code.</li>
+    <li>Interfere with the operation or security of the service.</li>
+    <li>Use automated tools to scrape, harvest, or collect data from the platform without permission.</li>
+    <li>Impersonate another person or entity.</li>
+    <li>Use the service in a manner that could damage, disable, or impair StudyLog.</li>
+  </ul>
+
+  <h2>5. User Content</h2>
+  <p>
+    You retain ownership of any content you create or upload to StudyLog,
+    including but not limited to:
+  </p>
+  <ul>
+    <li>Study notes</li>
+    <li>Learning resources</li>
+    <li>Progress records</li>
+    <li>Goals</li>
+    <li>Personal learning data</li>
+  </ul>
+  <p>
+    By submitting content to StudyLog, you grant us a non-exclusive, worldwide,
+    royalty-free licence to store, process, display, and use that content solely
+    for the purpose of operating, maintaining, and improving the service.
+  </p>
+  <p>
+    You are solely responsible for the content you submit and must ensure that
+    you have the necessary rights to use and share such content.
+  </p>
+
+  <h2>6. Intellectual Property</h2>
+  <p>
+    All intellectual property rights relating to StudyLog, including its
+    software, design, branding, logos, text, graphics, and functionality, are
+    owned by or licensed to StudyLog.
+  </p>
+  <p>You may not:</p>
+  <ul>
+    <li>Copy</li>
+    <li>Modify</li>
+    <li>Reproduce</li>
+    <li>Distribute</li>
+    <li>Reverse engineer</li>
+    <li>Commercially exploit</li>
+  </ul>
+  <p>any part of the service without prior written permission.</p>
+
+  <h2>7. Availability of Service</h2>
+  <p>
+    We aim to keep StudyLog available and functioning reliably; however, we do
+    not guarantee uninterrupted access.
+  </p>
+  <p>We may:</p>
+  <ul>
+    <li>Modify features</li>
+    <li>Add or remove functionality</li>
+    <li>Perform maintenance</li>
+    <li>Temporarily suspend access</li>
+    <li>Discontinue parts of the service</li>
+  </ul>
+  <p>at any time and without prior notice.</p>
+
+  <h2>8. Future Paid Services</h2>
+  <p>StudyLog is currently provided free of charge.</p>
+  <p>
+    We reserve the right to introduce paid features, premium plans,
+    subscriptions, or other charges in the future.
+  </p>
+  <p>If paid services are introduced:</p>
+  <ul>
+    <li>Users will be notified in advance.</li>
+    <li>Pricing information will be clearly displayed before payment is required.</li>
+    <li>Users will have the opportunity to review and accept any applicable pricing before subscribing.</li>
+    <li>Certain features may remain available free of charge at our discretion.</li>
+  </ul>
+  <p>
+    Nothing in these Terms obliges users to purchase any future paid service.
+  </p>
+
+  <h2>9. Beta Service Notice</h2>
+  <p>StudyLog is an evolving platform.</p>
+  <p>
+    As we continue to develop and improve the service, features may be added,
+    changed, restricted, or removed.
+  </p>
+  <p>
+    The service may occasionally contain bugs, errors, interruptions, or
+    incomplete functionality.
+  </p>
+  <p>
+    By using StudyLog, you acknowledge that the platform is under ongoing
+    development.
+  </p>
+
+  <h2>10. Disclaimer</h2>
+  <p>StudyLog is provided on an "as is" and "as available" basis.</p>
+  <p>
+    To the fullest extent permitted by law, we make no guarantees or warranties
+    regarding:
+  </p>
+  <ul>
+    <li>The accuracy of information entered by users.</li>
+    <li>The availability, reliability, or performance of the service.</li>
+    <li>The suitability of the service for any particular purpose.</li>
+    <li>Educational outcomes, learning progress, or academic success resulting from use of the platform.</li>
+  </ul>
+  <p>
+    StudyLog is intended as an organisational and productivity tool only.
+  </p>
+
+  <h2>11. Limitation of Liability</h2>
+  <p>
+    To the fullest extent permitted by law, StudyLog and its owners shall not be
+    liable for:
+  </p>
+  <ul>
+    <li>Loss of data</li>
+    <li>Loss of profits</li>
+    <li>Loss of business opportunities</li>
+    <li>Loss of goodwill</li>
+    <li>Indirect, incidental, special, or consequential damages</li>
+  </ul>
+  <p>arising from or related to your use of the service.</p>
+  <p>
+    Nothing in these Terms excludes liability that cannot be excluded under
+    applicable law.
+  </p>
+
+  <h2>12. Account Suspension and Termination</h2>
+  <p>You may stop using StudyLog at any time.</p>
+  <p>We may suspend or terminate your account if:</p>
+  <ul>
+    <li>You breach these Terms.</li>
+    <li>You engage in unlawful activity.</li>
+    <li>Your use of the service presents a security risk.</li>
+    <li>We reasonably believe your actions may harm StudyLog, its users, or third parties.</li>
+  </ul>
+  <p>Upon termination, your right to use the service will cease immediately.</p>
+
+  <h2>13. Privacy</h2>
+  <p>
+    Your use of StudyLog is also subject to our
+    <a href="{% url 'privacy' %}">Privacy Policy</a>.
+  </p>
+  <p>
+    The Privacy Policy explains how we collect, use, store, and protect your
+    personal information.
+  </p>
+  <p>
+    By using StudyLog, you acknowledge that your information may be processed in
+    accordance with our Privacy Policy.
+  </p>
+
+  <h2>14. Changes to These Terms</h2>
+  <p>We may update these Terms and Conditions from time to time.</p>
+  <p>
+    When changes are made, we will update the "Last Updated" date at the top of
+    this page.
+  </p>
+  <p>
+    Significant changes may be communicated through the website or by email
+    where appropriate.
+  </p>
+  <p>
+    Your continued use of StudyLog after any changes take effect constitutes
+    acceptance of the revised Terms.
+  </p>
+
+  <h2>15. Governing Law</h2>
+  <p>
+    These Terms and Conditions shall be governed by and construed in accordance
+    with the laws of England and Wales.
+  </p>
+  <p>
+    Any disputes arising out of or relating to these Terms or the use of
+    StudyLog shall be subject to the exclusive jurisdiction of the courts of
+    England and Wales.
+  </p>
+
+  <h2>16. Contact</h2>
+  <p>
+    If you have any questions about these Terms and Conditions, please contact
+    us at:
+  </p>
+  <p>Email: <a href="mailto:studyloguk@gmail.com">studyloguk@gmail.com</a></p>
+
+  <p class="legal-doc__closing">
+    By using StudyLog, you acknowledge that you have read, understood, and agree
+    to these Terms and Conditions.
+  </p>
 </div>
 {% endblock %}

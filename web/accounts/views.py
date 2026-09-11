@@ -178,3 +178,15 @@ def set_timezone(request):
         return JsonResponse({"ok": True})
     except Exception:
         return JsonResponse({"ok": False}, status=400)
+
+
+@require_POST
+def cancel_social_signup(request):
+    """
+    Abandon a half-finished Google sign-up.
+
+    Without this the pending identity stays in the session and is resurrected
+    the next time the user visits the social signup page.
+    """
+    request.session.pop("socialaccount_sociallogin", None)
+    return redirect("account_login")

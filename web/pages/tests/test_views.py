@@ -27,11 +27,55 @@ def test_legal_pages_render_for_anonymous(client, name):
     assert response.status_code == 200
 
 
-@pytest.mark.parametrize("name", ["privacy", "terms"])
-def test_legal_pages_are_not_indexed_while_they_are_placeholders(client, name):
+@pytest.mark.parametrize("name", ["terms", "privacy"])
+def test_legal_pages_are_indexable(client, name):
     response = client.get(reverse(name))
 
-    assert 'content="noindex"' in response.content.decode()
+    assert 'content="noindex"' not in response.content.decode()
+
+
+def test_privacy_serves_the_real_document(client):
+    response = client.get(reverse("privacy"))
+
+    content = response.content.decode()
+
+    assert "Last Updated" in content
+    assert "Your Rights" in content
+
+
+def test_terms_serves_the_real_document(client):
+    response = client.get(reverse("terms"))
+
+    content = response.content.decode()
+
+    assert "Last Updated" in content
+    assert "Governing Law" in content
+    assert "studyloguk@gmail.com" in content
+    assert 'content="noindex"' not in content
+
+
+@pytest.mark.parametrize("name", ["privacy", "terms"])
+def test_legal_pages_give_signed_out_visitors_a_way_back(client, name):
+    """Signed out there is no appbar or footer, so the page needs its own link."""
+    response = client.get(reverse(name))
+
+    assert "Back to home" in response.content.decode()
+
+
+@pytest.mark.parametrize("name", ["privacy", "terms"])
+def test_legal_pages_omit_the_back_link_when_signed_in(client_logged_in, name):
+    response = client_logged_in.get(reverse(name))
+
+    assert "Back to home" not in response.content.decode()
+
+
+def test_landing_page_links_to_the_legal_pages(client):
+    response = client.get(INDEX_URL)
+
+    content = response.content.decode()
+
+    assert reverse("terms") in content
+    assert reverse("privacy") in content
 
 
 def test_footer_links_to_the_feature_request_page(client_logged_in):
