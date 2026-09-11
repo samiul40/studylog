@@ -7,15 +7,13 @@
 {# Swap Bootstrap container for our own background + centring #}
 {% block main_class %}rlist-bg{% endblock %}
 
-{# Suppress default breadcrumb and alert blocks — handled inside .rl-wrap #}
+{# Suppress the default breadcrumb — handled inside .rl-wrap #}
 {% block breadcrumbs %}{% endblock %}
-{% block alerts %}{% endblock %}
 
 {% block content %}
 <div class="rl-wrap">
 
   {# ── Flash messages ────────────────────────────────────────────────────── #}
-  {% include 'partials/_alerts.html' %}
 
   {# ── Breadcrumbs ───────────────────────────────────────────────────────── #}
   <nav class="rl-crumbs" aria-label="Breadcrumb">

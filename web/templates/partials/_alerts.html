@@ -1,27 +1,44 @@
 {% if messages %}
-{% for message in messages %}
-<div
-  class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show text-center"
-  role="alert">
-  <strong>
-    {% if message.level == 40 %}
-    Error:
-    {% else %}
-    {{ message.tags|title }}:
-    {% endif %}
-  </strong>
-  {{ message }}
-  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+<div class="toasts" role="status" aria-live="polite" data-toasts>
+  {% for message in messages %}
+  <div class="toast-msg toast-msg--{% if message.tags == 'error' %}danger{% elif message.tags %}{{ message.tags }}{% else %}info{% endif %}">
+    <span class="toast-msg__icon" aria-hidden="true">
+      {% if message.level == 40 %}
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 8v5M12 16h.01"></path></svg>
+      {% elif message.level == 30 %}
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"></path><path d="M12 9v4M12 17h.01"></path></svg>
+      {% else %}
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg>
+      {% endif %}
+    </span>
+    <span class="toast-msg__text">{{ message }}</span>
+    <button type="button" class="toast-msg__close" aria-label="Dismiss" data-toast-close>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"></path></svg>
+    </button>
+  </div>
+  {% endfor %}
 </div>
-{% endfor %}
-{% endif %}
 
 <script nonce="{{ request.csp_nonce }}">
-  setTimeout(function () {
-    const alerts = document.querySelectorAll('.alert');
-    alerts.forEach(alert => {
-      const bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
-      bsAlert.close();
+(function () {
+  var container = document.querySelector('[data-toasts]');
+  if (!container) return;
+
+  function dismiss(toast) {
+    toast.classList.add('is-leaving');
+    // Remove after the transition so it doesn't keep occupying the stack.
+    setTimeout(function () { toast.remove(); }, 220);
+  }
+
+  container.querySelectorAll('.toast-msg').forEach(function (toast) {
+    toast.querySelector('[data-toast-close]').addEventListener('click', function () {
+      dismiss(toast);
     });
-  }, 3000);
+    // Errors stay until dismissed — they usually need acting on.
+    if (!toast.classList.contains('toast-msg--danger')) {
+      setTimeout(function () { dismiss(toast); }, 4000);
+    }
+  });
+})();
 </script>
+{% endif %}

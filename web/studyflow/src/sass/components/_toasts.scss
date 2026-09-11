@@ -1,0 +1,119 @@
+// =============================================================================
+// _toasts.scss — Global flash messages
+// Fixed to the viewport so page layout never affects them; previously these
+// rendered inline in <main>, which is why most pages suppressed them.
+// =============================================================================
+@use '../abstracts/variables' as *;
+
+.toasts {
+  position: fixed;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  // Above the appbar (100) and its dropdown (200).
+  z-index: 1080;
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 10px;
+  width: calc(100% - 32px);
+  max-width: 460px;
+  pointer-events: none;
+}
+
+.toast-msg {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  padding: 13px 14px;
+  border-radius: 13px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  box-shadow: 0 18px 40px -20px rgba(13, 24, 18, 0.45);
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: var(--ink);
+  pointer-events: auto;
+  animation: toast-in 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+
+  &.is-leaving {
+    opacity: 0;
+    transform: translateY(6px);
+    transition: opacity 0.2s, transform 0.2s;
+  }
+
+  &__icon {
+    flex: 0 0 auto;
+    width: 20px;
+    height: 20px;
+    display: grid;
+    place-items: center;
+
+    svg { width: 17px; height: 17px; }
+  }
+
+  &__text { flex: 1; min-width: 0; }
+
+  &__close {
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--ink-faint);
+    cursor: pointer;
+
+    svg { width: 13px; height: 13px; }
+
+    @media (hover: hover) {
+      &:hover { color: var(--ink); }
+    }
+  }
+
+  &--success &__icon { color: var(--emerald-deep); }
+  &--info &__icon { color: var(--emerald-deep); }
+  &--warning &__icon { color: var(--amber); }
+
+  &--danger {
+    border-color: color-mix(in srgb, var(--rose) 40%, transparent);
+
+    .toast-msg__icon { color: var(--rose); }
+  }
+}
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+
+// The mobile bottom nav is fixed and 72px tall below 991px — clear it, plus
+// any iOS home-indicator inset.
+@media (max-width: 991px) {
+  .toasts {
+    bottom: calc(72px + env(safe-area-inset-bottom, 0px) + 12px);
+  }
+}
+
+[data-theme="dark"] .toast-msg,
+:root:not([data-theme]) .toast-msg {
+  box-shadow: 0 18px 40px -20px rgba(0, 0, 0, 0.7);
+}
+
+// The auth and legal pages strip data-theme and follow the OS, where --ink is
+// a dark surface colour rather than text.
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) .toast-msg {
+    color: var(--bone);
+  }
+
+  :root:not([data-theme]) .toast-msg--success .toast-msg__icon,
+  :root:not([data-theme]) .toast-msg--info .toast-msg__icon {
+    color: var(--emerald-bright);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toast-msg { animation: none; }
+}

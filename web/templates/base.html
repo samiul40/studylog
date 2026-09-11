@@ -72,6 +72,9 @@
 </head>
 
 <body class="d-flex flex-column min-vh-100{% if user.is_authenticated %} is-authed{% endif %}">
+  {# Outside <main> so no page layout can hide or displace it. #}
+  {% include 'partials/_alerts.html' %}
+
   <!-- Navbar -->
   {% block navbar %}
   {% if user.is_authenticated %}
@@ -85,12 +88,6 @@
     {% endblock %}
 
     <!-- Alerts -->
-    {% block alerts %}
-    <div class="my-4">
-      {% include 'partials/_alerts.html' %}
-    </div>
-    {% endblock %}
-
     {% block content %}{% endblock %}
   </main>
 

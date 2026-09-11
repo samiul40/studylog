@@ -4,13 +4,10 @@
 
 {% block main_class %}settings-main{% endblock %}
 
-{# Suppress base.html's default alerts wrapper — we render alerts inside .settings-wrap #}
-{% block alerts %}{% endblock %}
 
 {% block content %}
 <div class="settings-wrap">
 
-  {% include 'partials/_alerts.html' %}
 
   <nav class="settings-crumbs" aria-label="Breadcrumb">
     <a href="{% url 'learning:dashboard' %}">Home</a>
