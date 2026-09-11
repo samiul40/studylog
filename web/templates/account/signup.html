@@ -90,25 +90,34 @@
           {% endfor %}
         </div>
 
-        <div class="auth-check{% if form.age_confirmed.errors %} is-invalid{% endif %}">
-          <input type="checkbox" name="age_confirmed" id="id_age_confirmed"
-                 {% if form.age_confirmed.value %}checked{% endif %} required>
-          <label for="id_age_confirmed">I confirm that I am at least 13 years old.</label>
+        <div class="auth-checks">
+          <label class="auth-check{% if form.age_confirmed.errors %} is-invalid{% endif %}">
+            <input type="checkbox" name="age_confirmed" id="id_age_confirmed"
+                   {% if form.age_confirmed.value %}checked{% endif %}>
+            <span class="auth-check__box">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 13l4 4L19 7"></path></svg>
+            </span>
+            <span class="auth-check__text">I confirm that I am at least 13 years old.</span>
+          </label>
+
+          <label class="auth-check{% if form.accept_terms.errors %} is-invalid{% endif %}">
+            <input type="checkbox" name="accept_terms" id="id_accept_terms"
+                   {% if form.accept_terms.value %}checked{% endif %}>
+            <span class="auth-check__box">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 13l4 4L19 7"></path></svg>
+            </span>
+            <span class="auth-check__text">
+              I have read and agree to the
+              <a href="{% url 'terms' %}" target="_blank" rel="noopener">Terms &amp; Conditions</a>
+              and
+              <a href="{% url 'privacy' %}" target="_blank" rel="noopener">Privacy Policy</a>.
+            </span>
+          </label>
         </div>
+
         {% for error in form.age_confirmed.errors %}
           <div class="invalid-feedback d-block">{{ error }}</div>
         {% endfor %}
-
-        <div class="auth-check{% if form.accept_terms.errors %} is-invalid{% endif %}">
-          <input type="checkbox" name="accept_terms" id="id_accept_terms"
-                 {% if form.accept_terms.value %}checked{% endif %} required>
-          <label for="id_accept_terms">
-            I have read and agree to the
-            <a href="{% url 'terms' %}" target="_blank" rel="noopener">Terms &amp; Conditions</a>
-            and
-            <a href="{% url 'privacy' %}" target="_blank" rel="noopener">Privacy Policy</a>.
-          </label>
-        </div>
         {% for error in form.accept_terms.errors %}
           <div class="invalid-feedback d-block">{{ error }}</div>
         {% endfor %}
