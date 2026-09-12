@@ -141,6 +141,21 @@ Permissions reach real users through the **"Learning User" group**, which `accou
 
 `get_dashboard_stats()` (defined in `learning/services/dashboard/_orchestrator.py`, exported from the `dashboard` package) is the single source of truth for both the user dashboard (`/learning/dashboard/`) and the staff admin dashboard. It accepts optional `user` and `resource_type` filters; passing `user=None` returns site-wide data (used by the admin view).
 
+**Admin (django-unfold):**
+
+The admin is themed by `django-unfold`, which replaces `admin.site` wholesale — hence `unfold` and its `contrib` apps sit **before** `django.contrib.admin` in `INSTALLED_APPS`. Subclass `unfold.admin.ModelAdmin` / `TabularInline` / `StackedInline`, never the `django.contrib.admin` originals, or the page renders unstyled inside the theme. Third-party admins (axes, allauth, sites, auth `Group`) are re-registered at the bottom of `accounts/admin.py` against subclasses of *their own* admin class plus `unfold.admin.ModelAdmin`, so they inherit the package's `list_display` rather than a copy that drifts on upgrade.
+
+Two things fail silently and each has a guard test that will tell you which:
+
+- **Registering a model isn't enough to make it reachable.** The sidebar is hand-written in `UNFOLD["SIDEBAR"]` in `settings.py`; a model missing from it is only reachable by typing its URL. `studyflow/tests/test_admin_navigation.py` audits the nav against `admin.site._registry` and names anything absent, duplicated, or pointing at nothing.
+- **Dropdown filters need `list_filter_submit = True` on the ModelAdmin.** Unfold only wraps the filter panel in a `<form>` when that is on. Django's own filters are lists of links and work either way, but anything from `unfold.contrib.filters.admin` (or a `DropdownFilter` subclass) is a form input — without the flag it renders, opens, and does nothing when you pick a value. `studyflow/tests/test_admin_filters.py` catches it.
+
+Drag-sortable inlines use Unfold's own support — set `ordering_field` on the inline. This is *not* django-admin-sortable2 (which the project no longer depends on); don't reintroduce `SortableAdminBase`/`SortableInlineAdminMixin`.
+
+The admin index is fed by `UNFOLD["DASHBOARD_CALLBACK"]` → `learning.admin.dashboard_callback`. Use that hook rather than replacing `admin.site.index`.
+
+**Changelists must stay query-flat.** Use `annotate` / `select_related` instead of per-row work, and beware the fan-out: aggregating over **two** multi-valued relations in one query multiplies the rows, so any `Sum` comes back inflated (`Count(distinct=True)` and `Max` survive it, `Sum` does not). Push one side into a `Subquery` — `accounts/admin.py` and `LearningResourceAdmin.get_queryset` both do, and both have tests that fail on the naive version. Note `LearningResourceQuerySet.with_progress()` already aggregates over `units`, so anything joining sessions alongside it corrupts both.
+
 **CSS:**
 
 SCSS source lives in `web/studyflow/src/sass/` (shared: tokens, base, components) and `web/learning/src/sass/` (per-page partials). `main.scss` is the single entry point and `@use`s every partial. Compiled output goes to `web/studyflow/static/css/main.css`, which is **gitignored** — commit the SCSS source only, never the build artefact.
@@ -188,5 +203,7 @@ The `FeatureRequest` feature (model → form → view → page) is the most rece
 **6. Page** — each full-page form gets its **own SCSS partial with its own class prefix** (`rf-` resource form, `ss-` session form, `fr-` feature request); there are no shared generic `.card`/`.btn`/`.control` classes, so don't reach for them. Add the partial to `main.scss`'s `// Apps` group. The template extends `base.html` and overrides `{% block main_class %}` (to replace Bootstrap's container with the page's own `*-bg`) plus empty `{% block breadcrumbs %}` / `{% block alerts %}` when the card handles its own. Write field markup by hand with `name="..."` and `value="{{ form.x.value|default:'' }}"` rather than `{{ form.x }}`, and render errors as an always-present `*-field__err` div revealed by a `*-field--invalid` modifier on the wrapper. Mirror validation in HTML attributes for instant feedback, but the server stays authoritative. Page column is 750px (`max-width` on `*-page`), padding via `clamp()`.
 
 **7. Tests** — `learning/tests/test_<feature>_model.py` and `test_<feature>_views.py`. Cover the happy path (object created and owned by the right user), each rejected input, unauthenticated access, and real-user permission via the group.
+
+**8. Admin (only if the model needs one)** — register it against `unfold.admin.ModelAdmin` and add a matching entry to `UNFOLD["SIDEBAR"]` in `settings.py`, or the model is unreachable from the nav. See *Admin (django-unfold)* for that and the rest of the conventions.
 
 Verify with: `pytest`, `ruff check web/`, `npm run build:css`, then the page in a browser in both light and dark themes.

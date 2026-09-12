@@ -1,121 +1,69 @@
-{% extends "admin/base_site.html" %}
+{% extends "admin/base.html" %}
+
+{% load i18n unfold %}
+
+{% block title %}{{ title }} | {{ site_title|default:_('Django site admin') }}{% endblock %}
+
+{% block branding %}
+    {% include "unfold/helpers/site_branding.html" %}
+{% endblock %}
 
 {% block content %}
-
-<h1>StudyLog Admin Dashboard</h1>
-
-<div style="display:flex; gap:20px; margin-bottom:40px;">
-
-  <div style="padding:20px; background:#f3f3f3; border-radius:6px;">
-    <h2>{{ total_resources }}</h2>
-    <p>Total Resources</p>
-  </div>
-
-  <div style="padding:20px; background:#f3f3f3; border-radius:6px;">
-    <h2>{{ total_units }}</h2>
-    <p>Total Units</p>
-  </div>
-
-  <div style="padding:20px; background:#f3f3f3; border-radius:6px;">
-    <h2>{{ completed_units }}</h2>
-    <p>Completed Units</p>
-  </div>
-
-  <div style="padding:20px; background:#f3f3f3; border-radius:6px;">
-    <h2>{{ completion_rate }}%</h2>
-    <p>Completion Rate</p>
-  </div>
-
-</div>
-
-<h2>Course Progress</h2>
-
-<table style="width:600px; margin-top:10px;">
-  <thead>
-    <tr>
-      <th style="text-align:left;">Resource</th>
-      <th>Progress</th>
-    </tr>
-  </thead>
-
-  <tbody>
-    {% for resource in resource_progress %}
-    <tr>
-      <td>{{ resource.title }}</td>
-      <td>
-        <div style="background:#eee; width:200px; height:10px; border-radius:5px;">
-          <div style="
-                background:#4CAF50;
-                width:{{ resource.percent }}%;
-                height:10px;
-                border-radius:5px;
-            "></div>
-        </div>
-        {{ resource.percent }}%
-      </td>
-    </tr>
+  <div class="grid grid-cols-2 gap-4 mb-8 lg:grid-cols-4">
+    {% for stat in stat_cards %}
+      {% component "unfold/components/card.html" %}
+        <p class="text-[11px] uppercase text-font-subtle-light dark:text-font-subtle-dark">
+          {{ stat.label }}
+        </p>
+        <p class="font-semibold mt-1 text-3xl text-font-important-light dark:text-font-important-dark">
+          {{ stat.value }}
+        </p>
+      {% endcomponent %}
     {% endfor %}
-  </tbody>
-</table>
+  </div>
 
-<h2 style="margin-bottom:0;">Usage</h2>
+  <div class="mb-8">
+    <div class="flex gap-4 items-center mb-4">
+      <h2 class="font-semibold text-font-important-light dark:text-font-important-dark">
+        {% translate "Usage" %}
+      </h2>
 
-<p style="width:600px; margin:6px 0 10px;">
-  {% if usage_period == "week" %}
-  <strong>Weekly</strong> ·
-  <a href="?period=month">Monthly</a>
-  {% else %}
-  <a href="?period=week">Weekly</a> ·
-  <strong>Monthly</strong>
-  {% endif %}
-</p>
+      <div class="border border-base-200 flex overflow-hidden rounded-default text-sm dark:border-base-700">
+        {% for value, label in periods %}
+          <a href="?period={{ value }}"
+             class="px-3 py-1 {% if usage_period == value %}bg-primary-600 font-medium text-white{% else %}text-font-default-light hover:text-primary-600 dark:text-font-default-dark dark:hover:text-primary-500{% endif %}">
+            {{ label }}
+          </a>
+        {% endfor %}
+      </div>
+    </div>
 
-<table style="width:600px;">
-  <thead>
-    <tr>
-      <th style="text-align:left;">{% if usage_period == "week" %}Week{% else %}Month{% endif %}</th>
-      <th>Resources</th>
-      <th>Sessions</th>
-      <th>Time</th>
-      <th>Active users</th>
-      <th>Accounts</th>
-    </tr>
-  </thead>
+    {% if usage_table.rows %}
+      {% component "unfold/components/table.html" with table=usage_table striped=1 %}{% endcomponent %}
 
-  <tbody>
-    {% for row in usage_rows %}
-    <tr>
-      <td>{{ row.label }}</td>
-      <td style="text-align:center;">{{ row.resources }}</td>
-      <td style="text-align:center;">{{ row.sessions }}</td>
-      <td style="text-align:center;">{{ row.minutes_display }}</td>
-      <td style="text-align:center;">
-        {{ row.active_users }}
-        {% if row.total_accounts %}
-        <span style="color:#666;">
-          ({% widthratio row.active_users row.total_accounts 100 %}%)
-        </span>
-        {% endif %}
-      </td>
-      <td style="text-align:center;">{{ row.total_accounts }}</td>
-    </tr>
-    {% empty %}
-    <tr>
-      <td colspan="6">
-        Nothing recorded yet — run <code>manage.py rollup_usage_stats</code>.
-      </td>
-    </tr>
-    {% endfor %}
-  </tbody>
-</table>
+      <p class="max-w-2xl mt-2 text-xs text-font-subtle-light dark:text-font-subtle-dark">
+        {% blocktranslate with days=usage_window %}
+          Totals are kept per day and survive account deletion. Active users
+          counts distinct people who studied in the {{ days }} days ending on
+          the busiest day of the period, shown as a share of all accounts
+          existing then.
+        {% endblocktranslate %}
+      </p>
+    {% else %}
+      {% component "unfold/components/card.html" %}
+        <p class="text-font-subtle-light dark:text-font-subtle-dark">
+          {% translate "Nothing recorded yet — run" %}
+          <code class="bg-primary-50 px-2 py-1 rounded-default dark:bg-base-800">manage.py rollup_usage_stats</code>
+        </p>
+      {% endcomponent %}
+    {% endif %}
+  </div>
 
-<p style="width:600px; color:#666; font-size:12px;">
-  Totals are kept per day and survive account deletion. Active users counts
-  distinct people who studied in the
-  {% if usage_period == "week" %}7{% else %}28{% endif %} days ending on the
-  busiest day of the period, shown as a share of all accounts existing then.
-</p>
+  <div class="flex flex-col lg:flex-row lg:gap-8">
+    <div class="grow">
+      {% include "unfold/helpers/app_list_default.html" %}
+    </div>
 
-{{ block.super }}
-
+    {% include "unfold/helpers/history.html" %}
+  </div>
 {% endblock %}

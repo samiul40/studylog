@@ -1,0 +1,49 @@
+{% comment %}
+Unfold's fieldset, plus a "full-width" escape hatch.
+
+A fieldset marked with the "full-width" class renders its fields' contents
+straight into the fieldset, skipping the label column that every normal form
+row carries. Read-only blocks that draw their own layout — the user page's
+activity summary — need the whole width, and inside a standard row they sit
+in the value column with an empty label gutter beside them.
+
+Everything else falls through to Unfold's markup unchanged, so this stays in
+step with the theme.
+{% endcomment %}
+{% load unfold %}
+
+<fieldset class="module relative {% if fieldset.classes %} {{ fieldset.classes }}{% endif %}" {% if stacked != 1 %}x-show="activeTab == 'general'"{% endif %}>
+    {% if fieldset.is_collapsible %}<details><summary>{% endif %}
+
+    {% if fieldset.name and "tab" not in fieldset.classes %}
+        {% if stacked == 1 %}
+            <h2 class="border-b border-base-200 border-t border-dashed font-semibold text-font-important-light px-3 py-4.5 dark:text-font-important-dark dark:border-base-800 {% if fieldset.is_collapsible %}cursor-pointer{% endif %}">
+                {{ fieldset.name }}
+            </h2>
+        {% else %}
+            {% include "unfold/helpers/inline_heading.html" with title=fieldset.name clickable=fieldset.is_collapsible %}
+        {% endif %}
+    {% endif %}
+
+    {% if fieldset.is_collapsible %}</summary>{% endif %}
+
+    {% if fieldset.description %}
+        <div class="leading-relaxed mb-4 max-w-4xl text-sm">
+            {{ fieldset.description|safe }}
+        </div>
+    {% endif %}
+
+    {% if "full-width" in fieldset.classes %}
+        {% for line in fieldset %}
+            {% for field in line %}{{ field.contents }}{% endfor %}
+        {% endfor %}
+    {% else %}
+        <div class="{% fieldset_rows_classes %}">
+            {% for line in fieldset %}
+                {% include "unfold/helpers/fieldset_row.html" %}
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    {% if fieldset.name and fieldset.is_collapsible %}</details>{% endif %}
+</fieldset>

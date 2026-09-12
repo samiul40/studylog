@@ -182,6 +182,20 @@ class UsageRow(TypedDict):
     resources: int
 
 
+class UserActivity(TypedDict):
+    """One user's session record, for the admin user detail page."""
+
+    sessions_total: int
+    sessions_28d: int
+    minutes_total: int
+    minutes_28d: int
+    average_minutes: int  # mean length of a logged session
+    current_streak: int  # consecutive days ending today or yesterday
+    best_streak: int  # longest such run ever
+    last_session: object  # the StudySession itself, or None
+    window_days: int  # length of the "recent" window, for the labels
+
+
 class DashboardStats(TypedDict):
     # --- legacy keys (used by admin dashboard) ---
     total_resources: int

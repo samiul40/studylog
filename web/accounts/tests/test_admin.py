@@ -25,7 +25,7 @@ def test_changelist_shows_the_terms_column(client_logged_in):
     content = client_logged_in.get(CHANGELIST).content.decode()
 
     assert "Terms" in content
-    assert f"✓ {settings.TERMS_VERSION}" in content
+    assert settings.TERMS_VERSION in content
 
 
 def test_an_outdated_version_is_called_out(client_logged_in):
@@ -41,7 +41,7 @@ def test_a_user_who_never_accepted_is_called_out(client_logged_in):
 
     content = client_logged_in.get(CHANGELIST).content.decode()
 
-    assert "— Never" in content
+    assert "Never" in content
 
 
 @pytest.mark.parametrize(
@@ -82,9 +82,10 @@ def test_consent_fields_are_read_only_on_the_user_page(client_logged_in, user):
 
     content = client_logged_in.get(url).content.decode()
 
-    assert 'name="profile-0-terms_version"' not in content
-    assert 'name="profile-0-terms_accepted"' not in content
-    assert 'name="profile-0-timezone"' in content
+    assert 'name="terms_version"' not in content
+    assert 'name="terms_accepted"' not in content
+    # The profile's one editable field now sits on the user form itself.
+    assert 'name="timezone"' in content
 
 
 def test_users_are_listed_newest_first(client_logged_in):

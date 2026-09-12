@@ -1,0 +1,46 @@
+{% load i18n %}
+
+<div class="border border-base-200 flex gap-4 items-center mb-3 p-4 rounded-default dark:border-base-800">
+  <span class="bg-primary-600 flex font-semibold h-10 items-center justify-center rounded-full shrink-0 text-white w-10">
+    {{ identity.initial }}
+  </span>
+
+  <div class="min-w-0">
+    <div class="flex gap-2 items-center">
+      <span class="font-semibold text-font-important-light dark:text-font-important-dark">
+        {{ identity.name }}
+      </span>
+      {% include "unfold/helpers/label.html" with type=engagement.colour text=engagement.text size="md" %}
+    </div>
+    <div class="text-xs text-font-subtle-light truncate dark:text-font-subtle-dark">
+      {{ identity.email|default:"no email" }} · {{ identity.timezone }} ·
+      {% blocktranslate with joined=identity.joined %}joined {{ joined }}{% endblocktranslate %}
+    </div>
+  </div>
+
+  <div class="flex flex-wrap gap-4 justify-end ml-auto text-sm">
+    {% for link in links %}
+    <a href="{{ link.url }}" class="font-medium text-primary-600 dark:text-primary-500">
+      {{ link.label }} →
+    </a>
+    {% endfor %}
+  </div>
+</div>
+
+<div class="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5">
+  {% for card in cards %}
+  <div class="border border-base-200 flex flex-col h-full p-4 rounded-default dark:border-base-800">
+    <p class="text-[11px] uppercase text-font-subtle-light dark:text-font-subtle-dark">
+      {{ card.label }}
+    </p>
+    <p class="font-semibold mt-1 text-2xl text-font-important-light truncate dark:text-font-important-dark"
+       {% if card.title %}title="{{ card.title }}"{% endif %}>
+      {{ card.value }}
+    </p>
+    <p class="mt-1 text-xs text-font-subtle-light truncate dark:text-font-subtle-dark"
+       {% if card.title %}title="{{ card.title }}"{% endif %}>
+      {{ card.detail }}
+    </p>
+  </div>
+  {% endfor %}
+</div>

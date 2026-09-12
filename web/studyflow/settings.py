@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 
+from django.urls import reverse_lazy
 from dotenv import load_dotenv
 
 from studyflow.logging import get_logging_config
@@ -27,6 +28,11 @@ ADMIN_URL = os.environ.get("ADMIN_URL", "admin/")
 # Application definition
 
 INSTALLED_APPS = [
+    # unfold themes the admin by replacing admin.site, so it has to be loaded
+    # before django.contrib.admin runs autodiscover.
+    "unfold",
+    "unfold.contrib.filters",
+    "unfold.contrib.forms",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -38,7 +44,6 @@ INSTALLED_APPS = [
     # External Packages
     "anymail",
     "axes",
-    "adminsortable2",
     "allauth",
     "allauth.account",
     "allauth.socialaccount",
@@ -107,6 +112,173 @@ AXES_IPWARE_META_PRECEDENCE_ORDER = [
     "HTTP_X_FORWARDED_FOR",
     "REMOTE_ADDR",
 ]
+
+# django-unfold: admin theme
+#
+# The primary ramp is Tailwind's emerald, whose 500 is #10b981 — the same
+# --emerald the product uses — so the admin reads as the same application.
+
+UNFOLD = {
+    "SITE_TITLE": "StudyLog administration",
+    "SITE_HEADER": "StudyLog administration",
+    "SHOW_HISTORY": True,
+    "SHOW_VIEW_ON_SITE": True,
+    "DASHBOARD_CALLBACK": "learning.admin.dashboard_callback",
+    "COLORS": {
+        "primary": {
+            "50": "#ecfdf5",
+            "100": "#d1fae5",
+            "200": "#a7f3d0",
+            "300": "#6ee7b7",
+            "400": "#34d399",
+            "500": "#10b981",
+            "600": "#059669",
+            "700": "#047857",
+            "800": "#065f46",
+            "900": "#064e3b",
+            "950": "#022c22",
+        },
+    },
+    "SIDEBAR": {
+        "show_search": True,
+        "navigation": [
+            {
+                "title": "Overview",
+                "items": [
+                    {
+                        "title": "Dashboard",
+                        "icon": "dashboard",
+                        "link": reverse_lazy("admin:index"),
+                    },
+                ],
+            },
+            {
+                "title": "Learning",
+                "items": [
+                    {
+                        "title": "Study sessions",
+                        "icon": "timer",
+                        "link": reverse_lazy("admin:learning_studysession_changelist"),
+                    },
+                    {
+                        "title": "Learning resources",
+                        "icon": "library_books",
+                        "link": reverse_lazy(
+                            "admin:learning_learningresource_changelist"
+                        ),
+                    },
+                    {
+                        "title": "Learning units",
+                        "icon": "format_list_numbered",
+                        "link": reverse_lazy("admin:learning_learningunit_changelist"),
+                    },
+                    {
+                        "title": "Feature requests",
+                        "icon": "lightbulb",
+                        "link": reverse_lazy(
+                            "admin:learning_featurerequest_changelist"
+                        ),
+                        "badge": "learning.admin.unreviewed_feature_requests",
+                    },
+                ],
+            },
+            {
+                "title": "People",
+                "items": [
+                    {
+                        "title": "Users",
+                        "icon": "person",
+                        "link": reverse_lazy("admin:auth_user_changelist"),
+                    },
+                    {
+                        "title": "Groups",
+                        "icon": "group",
+                        "link": reverse_lazy("admin:auth_group_changelist"),
+                    },
+                    {
+                        "title": "Access attempts",
+                        "icon": "shield_person",
+                        "link": reverse_lazy("admin:axes_accessattempt_changelist"),
+                    },
+                ],
+            },
+            {
+                "title": "Config",
+                "items": [
+                    {
+                        "title": "Categories",
+                        "icon": "category",
+                        "link": reverse_lazy("admin:learning_category_changelist"),
+                    },
+                    {
+                        "title": "Resource types",
+                        "icon": "style",
+                        "link": reverse_lazy("admin:learning_resourcetype_changelist"),
+                    },
+                    {
+                        "title": "Daily usage stats",
+                        "icon": "monitoring",
+                        "link": reverse_lazy(
+                            "admin:learning_dailyusagestat_changelist"
+                        ),
+                    },
+                ],
+            },
+            # Plumbing owned by allauth, axes and django.contrib.sites. It is
+            # registered, so it has to be reachable, but nobody opens it on a
+            # normal day — hence collapsed until something in it is active.
+            # Access attempts stays under People; only failures and logs live
+            # down here.
+            {
+                "title": "System",
+                "collapsible": True,
+                "items": [
+                    {
+                        "title": "Email addresses",
+                        "icon": "alternate_email",
+                        "link": reverse_lazy("admin:account_emailaddress_changelist"),
+                    },
+                    {
+                        "title": "Access failures",
+                        "icon": "gpp_bad",
+                        "link": reverse_lazy("admin:axes_accessfailurelog_changelist"),
+                    },
+                    {
+                        "title": "Access logs",
+                        "icon": "receipt_long",
+                        "link": reverse_lazy("admin:axes_accesslog_changelist"),
+                    },
+                    {
+                        "title": "Sites",
+                        "icon": "public",
+                        "link": reverse_lazy("admin:sites_site_changelist"),
+                    },
+                    {
+                        "title": "Social accounts",
+                        "icon": "account_circle",
+                        "link": reverse_lazy(
+                            "admin:socialaccount_socialaccount_changelist"
+                        ),
+                    },
+                    {
+                        "title": "Social application tokens",
+                        "icon": "key",
+                        "link": reverse_lazy(
+                            "admin:socialaccount_socialtoken_changelist"
+                        ),
+                    },
+                    {
+                        "title": "Social applications",
+                        "icon": "apps",
+                        "link": reverse_lazy(
+                            "admin:socialaccount_socialapp_changelist"
+                        ),
+                    },
+                ],
+            },
+        ],
+    },
+}
 
 # Content Security Policy
 # Nonces are generated per-request for inline scripts; admin is excluded as it
