@@ -58,6 +58,64 @@
   </tbody>
 </table>
 
+<h2 style="margin-bottom:0;">Usage</h2>
+
+<p style="width:600px; margin:6px 0 10px;">
+  {% if usage_period == "week" %}
+  <strong>Weekly</strong> ·
+  <a href="?period=month">Monthly</a>
+  {% else %}
+  <a href="?period=week">Weekly</a> ·
+  <strong>Monthly</strong>
+  {% endif %}
+</p>
+
+<table style="width:600px;">
+  <thead>
+    <tr>
+      <th style="text-align:left;">{% if usage_period == "week" %}Week{% else %}Month{% endif %}</th>
+      <th>Resources</th>
+      <th>Sessions</th>
+      <th>Time</th>
+      <th>Active users</th>
+      <th>Accounts</th>
+    </tr>
+  </thead>
+
+  <tbody>
+    {% for row in usage_rows %}
+    <tr>
+      <td>{{ row.label }}</td>
+      <td style="text-align:center;">{{ row.resources }}</td>
+      <td style="text-align:center;">{{ row.sessions }}</td>
+      <td style="text-align:center;">{{ row.minutes_display }}</td>
+      <td style="text-align:center;">
+        {{ row.active_users }}
+        {% if row.total_accounts %}
+        <span style="color:#666;">
+          ({% widthratio row.active_users row.total_accounts 100 %}%)
+        </span>
+        {% endif %}
+      </td>
+      <td style="text-align:center;">{{ row.total_accounts }}</td>
+    </tr>
+    {% empty %}
+    <tr>
+      <td colspan="6">
+        Nothing recorded yet — run <code>manage.py rollup_usage_stats</code>.
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<p style="width:600px; color:#666; font-size:12px;">
+  Totals are kept per day and survive account deletion. Active users counts
+  distinct people who studied in the
+  {% if usage_period == "week" %}7{% else %}28{% endif %} days ending on the
+  busiest day of the period, shown as a share of all accounts existing then.
+</p>
+
 {{ block.super }}
 
 {% endblock %}

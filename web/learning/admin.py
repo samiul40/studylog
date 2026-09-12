@@ -3,9 +3,11 @@ from django.contrib import admin
 from django.utils.text import Truncator
 
 from learning.services.dashboard import get_dashboard_stats
+from learning.services.usage import get_usage_breakdown
 
 from .models import (
     Category,
+    DailyUsageStat,
     FeatureRequest,
     LearningResource,
     LearningUnit,
@@ -224,6 +226,42 @@ class FeatureRequestAdmin(admin.ModelAdmin):
         return False
 
 
+@admin.register(DailyUsageStat)
+class DailyUsageStatAdmin(admin.ModelAdmin):
+    list_display = (
+        "date",
+        "resources_created",
+        "sessions_logged",
+        "minutes_logged",
+        "users_on_the_day",
+        "users_prior_7_days",
+        "users_prior_28_days",
+        "total_accounts",
+    )
+    ordering = ("-date",)
+    date_hierarchy = "date"
+
+    @admin.display(description="Users (on the day)", ordering="active_users")
+    def users_on_the_day(self, obj):
+        return obj.active_users
+
+    @admin.display(description="Users (prior 7 days)", ordering="active_users_7d")
+    def users_prior_7_days(self, obj):
+        return obj.active_users_7d
+
+    @admin.display(description="Users (prior 28 days)", ordering="active_users_28d")
+    def users_prior_28_days(self, obj):
+        return obj.active_users_28d
+
+    # Rows are written only by rollup_usage_stats, and rewriting one would
+    # defeat the point of keeping totals that outlive the accounts behind them.
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+
 original_index = admin.site.index
 
 
@@ -232,6 +270,9 @@ def custom_admin_index(request, extra_context=None):
     if extra_context is None:
         extra_context = {}
     extra_context.update(stats)
+    period = "week" if request.GET.get("period") == "week" else "month"
+    extra_context["usage_period"] = period
+    extra_context["usage_rows"] = get_usage_breakdown(period)
     return original_index(request, extra_context=extra_context)
 
 

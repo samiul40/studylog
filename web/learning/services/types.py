@@ -169,6 +169,19 @@ class ResourceTableRow(TypedDict):
     url: str
 
 
+class UsageRow(TypedDict):
+    """One week or month of the admin usage table, summed from DailyUsageStat."""
+
+    label: str  # month "Mar 2026", or the Monday a week starts "2 Mar 2026"
+    sessions: int
+    minutes: int
+    minutes_display: str  # e.g. "10h 55m"
+    active_users: int  # distinct users over the period's rolling window
+    window_days: int  # length of that window, 7 for weeks and 28 for months
+    total_accounts: int  # accounts in existence, for comparison
+    resources: int
+
+
 class DashboardStats(TypedDict):
     # --- legacy keys (used by admin dashboard) ---
     total_resources: int
