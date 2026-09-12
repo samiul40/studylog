@@ -11,8 +11,15 @@ class DailyUsageStat(models.Model):
 
     sessions_logged = models.PositiveIntegerField(default=0)
     minutes_logged = models.PositiveIntegerField(default=0)
-    active_users = models.PositiveIntegerField(default=0)
     resources_created = models.PositiveIntegerField(default=0)
+
+    # Distinct users who studied on the day, and in the trailing windows ending
+    # on it. The windows are stored rather than derived because counts cannot be
+    # de-duplicated across days once the underlying sessions are gone.
+    active_users = models.PositiveIntegerField(default=0)
+    active_users_7d = models.PositiveIntegerField(default=0)
+    active_users_28d = models.PositiveIntegerField(default=0)
+    total_accounts = models.PositiveIntegerField(default=0)
 
     created_at = models.DateTimeField(auto_now_add=True)
 

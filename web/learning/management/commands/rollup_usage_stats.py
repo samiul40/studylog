@@ -1,10 +1,13 @@
 from datetime import timedelta
 
+from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 from django.db.models import Count, Sum
 from django.utils import timezone
 
 from learning.models import DailyUsageStat, LearningResource, StudySession
+
+User = get_user_model()
 
 
 class Command(BaseCommand):
@@ -64,6 +67,24 @@ class Command(BaseCommand):
             date=date,
             sessions_logged=session_stats["sessions_logged"],
             minutes_logged=session_stats["minutes_logged"] or 0,
-            active_users=session_stats["active_users"],
             resources_created=resources_created,
+            active_users=session_stats["active_users"],
+            active_users_7d=self._active_users_within(date, days=7),
+            active_users_28d=self._active_users_within(date, days=28),
+            total_accounts=User.objects.filter(
+                is_active=True, date_joined__date__lte=date
+            ).count(),
+        )
+
+    def _active_users_within(self, date, days):
+        """Distinct users who logged a session in the `days` ending on date."""
+        return (
+            StudySession.objects.filter(
+                status=StudySession.Status.LOGGED,
+                date__gt=date - timedelta(days=days),
+                date__lte=date,
+            )
+            .values("user")
+            .distinct()
+            .count()
         )

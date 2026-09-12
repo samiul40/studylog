@@ -27,6 +27,12 @@ def _log_session(user, days_ago, minutes=30, **kwargs):
     )
 
 
+def _joined(user, days_ago):
+    user.date_joined = timezone.now() - timedelta(days=days_ago)
+    user.save(update_fields=["date_joined"])
+    return user
+
+
 def _rollup(*args):
     out = StringIO()
     call_command("rollup_usage_stats", *args, stdout=out)
@@ -89,6 +95,50 @@ def test_active_users_counts_each_user_once(user):
     stat = DailyUsageStat.objects.get(date=_days_ago(2))
     assert stat.sessions_logged == 3
     assert stat.active_users == 2
+
+
+def test_rolling_windows_count_each_user_once_across_days(user):
+    other = baker.make("auth.User", is_superuser=False)
+    _log_session(user, days_ago=2)
+    _log_session(user, days_ago=3)
+    _log_session(other, days_ago=4)
+
+    _rollup()
+
+    stat = DailyUsageStat.objects.get(date=_days_ago(2))
+    assert stat.active_users == 1
+    assert stat.active_users_7d == 2
+    assert stat.active_users_28d == 2
+
+
+def test_rolling_window_excludes_studying_before_it_starts(user):
+    _log_session(user, days_ago=20)
+
+    _rollup()
+
+    stat = DailyUsageStat.objects.get(date=_days_ago(2))
+    assert stat.active_users_7d == 0
+    assert stat.active_users_28d == 1
+
+
+def test_counts_accounts_that_existed_on_the_day(user):
+    _joined(user, days_ago=10)
+    _log_session(user, days_ago=2)
+
+    _rollup()
+
+    assert DailyUsageStat.objects.get(date=_days_ago(2)).total_accounts == 1
+
+
+def test_accounts_opened_later_are_not_counted_on_earlier_days(user):
+    _joined(user, days_ago=10)
+    _joined(baker.make("auth.User", is_superuser=False), days_ago=1)
+    _log_session(user, days_ago=2)
+
+    _rollup()
+
+    assert DailyUsageStat.objects.get(date=_days_ago(2)).total_accounts == 1
+    assert DailyUsageStat.objects.get(date=_days_ago(1)).total_accounts == 2
 
 
 def test_counts_resources_created_that_day(user):
