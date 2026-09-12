@@ -1,22 +1,29 @@
 from datetime import timedelta
+from urllib.parse import quote
 
 from allauth.account.models import EmailAddress
 from allauth.socialaccount.models import SocialAccount, SocialApp, SocialToken
 from axes.models import AccessAttempt, AccessFailureLog, AccessLog
+from django import forms
 from django.conf import settings
 from django.contrib import admin
 from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+from django.contrib.auth.forms import UserChangeForm
 from django.contrib.auth.models import Group
 from django.contrib.sites.models import Site
 from django.db.models import Count, IntegerField, Max, OuterRef, Q, Subquery, Sum
 from django.db.models.functions import Coalesce
+from django.template.loader import render_to_string
+from django.urls import reverse
 from django.utils import timezone
-from unfold.admin import ModelAdmin, StackedInline
+from django.utils.formats import date_format
+from unfold.admin import ModelAdmin
 from unfold.contrib.filters.admin import DropdownFilter
 from unfold.decorators import display
 
 from learning.models import LearningResource
+from learning.services.user_activity import get_user_activity
 
 from .models import UserProfile
 
@@ -146,17 +153,140 @@ class TermsStatusFilter(DropdownFilter):
         return queryset
 
 
-class UserProfileInline(StackedInline):
-    model = UserProfile
-    extra = 0
-    # Consent is a record of something the user did. Editing it here would be
-    # fabricating that record, so the whole block is read-only.
-    readonly_fields = ("deletion_requested_at",) + CONSENT_FIELDS
-    fields = ("timezone", "deletion_requested_at") + CONSENT_FIELDS
+class UserAdminForm(UserChangeForm):
+    """Carries the profile's one editable field on the user form itself.
+
+    With it here the page is a single stack of collapsible fieldsets instead
+    of a form plus an inline that cannot collapse with the rest.
+    """
+
+    timezone = forms.CharField(max_length=64, required=False)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        profile = profile_of(self.instance)
+        if profile:
+            self.fields["timezone"].initial = profile.timezone
+
+
+def profile_of(user):
+    """The user's profile, or None — signup creates it, but purges can't."""
+    try:
+        return user.profile
+    except (UserProfile.DoesNotExist, AttributeError):
+        return None
+
+
+def consent_field(name):
+    """A read-only accessor for one UserProfile consent field.
+
+    Consent records something the user did, so it is shown and never edited;
+    these exist only to reach the profile's values from the user's fieldsets.
+    """
+
+    def accessor(self, obj):
+        profile = profile_of(obj)
+        value = getattr(profile, name, None) if profile else None
+        if value is None or value == "":
+            return "—"
+        return value
+
+    accessor.__name__ = f"consent_{name}"
+    accessor.short_description = name.replace("_", " ").capitalize()
+    return accessor
+
+
+CONSENT_DISPLAYS = tuple(f"consent_{name}" for name in CONSENT_FIELDS)
+
+
+def identity_of(user):
+    """The header strip's contents: who this account belongs to."""
+    profile = profile_of(user)
+    name = user.get_full_name() or user.get_username()
+    return {
+        "initial": name[:1].upper() or "?",
+        "name": name,
+        "email": user.email,
+        "timezone": profile.timezone if profile else "no profile",
+        "joined": date_format(timezone.localtime(user.date_joined), "j M Y"),
+    }
+
+
+def compact_duration(minutes):
+    """A duration short enough for a card value: "45m", "3h", "0h"."""
+    if minutes and minutes < 60:
+        return f"{minutes}m"
+    return f"{round((minutes or 0) / 60)}h"
+
+
+def relative_day(day):
+    """How long ago a date was, in words short enough for a card value."""
+    delta = (timezone.localdate() - day).days
+    if delta <= 0:
+        return "Today"
+    if delta == 1:
+        return "Yesterday"
+    return f"{delta}d ago"
+
+
+def activity_cards(user, activity):
+    """The five equal cards under the identity strip."""
+    window = activity["window_days"]
+    sessions_28d = activity["sessions_28d"]
+    last = activity["last_session"]
+
+    if sessions_28d:
+        time_detail = (
+            f"{compact_duration(activity['minutes_total'])} lifetime · "
+            f"{activity['average_minutes']}m avg"
+        )
+    else:
+        # "0h" above a lifetime total reads as a bug rather than a quiet
+        # month, so the sub-line says which of the two the zero refers to.
+        time_detail = f"none in last {window} days"
+
+    if last:
+        context = [last.activity.name]
+        if last.resource:
+            context.append(last.resource.title)
+        last_value = relative_day(last.date)
+        last_detail = " · ".join(context)
+        last_title = f"{date_format(last.date, 'j M Y')} · {last_detail}"
+    else:
+        last_value, last_detail, last_title = "—", "never logged", None
+
+    return [
+        {
+            "label": f"Sessions ({window}d)",
+            "value": sessions_28d,
+            "detail": f"{activity['sessions_total']} lifetime",
+        },
+        {
+            "label": f"Time ({window}d)",
+            "value": compact_duration(activity["minutes_28d"]),
+            "detail": time_detail,
+        },
+        {
+            "label": "Current streak",
+            "value": f"{activity['current_streak']}d",
+            "detail": f"best {activity['best_streak']}d",
+        },
+        {
+            "label": "Resources",
+            "value": getattr(user, "resource_count", None) or 0,
+            "detail": "owned",
+        },
+        {
+            "label": "Last session",
+            "value": last_value,
+            "detail": last_detail,
+            "title": last_title,
+        },
+    ]
 
 
 class UserAdmin(BaseUserAdmin, ModelAdmin):
-    inlines = (UserProfileInline,)
+    form = UserAdminForm
     list_display = (
         "username",
         "email",
@@ -173,6 +303,117 @@ class UserAdmin(BaseUserAdmin, ModelAdmin):
     ) + BaseUserAdmin.list_filter
 
     ordering = ("-date_joined",)
+
+    readonly_fields = (
+        "activity_summary",
+        "last_login",
+        "date_joined",
+        "get_deletion_requested_at",
+    ) + CONSENT_DISPLAYS
+
+    # The page opens on who this is and what they have done; everything an
+    # admin only occasionally needs is one click away rather than in the way.
+    fieldsets = (
+        # "full-width" drops the label gutter — see templates/admin/includes.
+        ("Activity", {"classes": ("full-width",), "fields": ("activity_summary",)}),
+        (
+            "Account",
+            {"fields": ("username", "email", "first_name", "last_name", "password")},
+        ),
+        (
+            "Permissions",
+            {
+                "classes": ("collapse",),
+                "fields": (
+                    "is_active",
+                    "is_staff",
+                    "is_superuser",
+                    "groups",
+                    "user_permissions",
+                ),
+            },
+        ),
+        (
+            "Consent record",
+            {"classes": ("collapse",), "fields": CONSENT_DISPLAYS},
+        ),
+        (
+            "Dates & deletion",
+            {
+                "classes": ("collapse",),
+                "fields": (
+                    "last_login",
+                    "date_joined",
+                    "get_deletion_requested_at",
+                ),
+            },
+        ),
+    )
+
+    def get_fieldsets(self, request, obj=None):
+        # The add form has no user yet, so no activity and no profile.
+        if obj is None:
+            return self.add_fieldsets
+        fieldsets = super().get_fieldsets(request, obj)
+        # "timezone" is a form field rather than a model field, so it is added
+        # here instead of being listed above where the checks would reject it.
+        account = dict(fieldsets[1][1])
+        account["fields"] = (*account["fields"], "timezone")
+        return (fieldsets[0], (fieldsets[1][0], account), *fieldsets[2:])
+
+    def save_model(self, request, obj, form, change):
+        super().save_model(request, obj, form, change)
+        profile = profile_of(obj)
+        if profile and "timezone" in form.cleaned_data:
+            profile.timezone = form.cleaned_data["timezone"]
+            profile.save(update_fields=["timezone"])
+
+    @admin.display(description="")
+    def activity_summary(self, obj):
+        activity = get_user_activity(obj)
+        bucket = engagement_bucket(obj, engagement_cutoffs())
+        text, colour = ENGAGEMENT_BUCKETS[bucket]
+
+        return render_to_string(
+            "admin/accounts/user_activity.html",
+            {
+                "identity": identity_of(obj),
+                "engagement": {"text": text, "colour": colour},
+                "cards": activity_cards(obj, activity),
+                "links": self.drill_downs(obj),
+            },
+        )
+
+    @staticmethod
+    def drill_downs(obj):
+        """Pre-filtered changelists for everything this user owns."""
+        by_user = [
+            ("learning", "studysession", "Study sessions"),
+            ("learning", "learningresource", "Learning resources"),
+            ("learning", "featurerequest", "Feature requests"),
+        ]
+        links = [
+            {
+                "label": label,
+                "url": (
+                    f"{reverse(f'admin:{app}_{model}_changelist')}"
+                    f"?user__id__exact={obj.pk}"
+                ),
+            }
+            for app, model, label in by_user
+        ]
+        # axes records a username string, not a user FK, so its changelist has
+        # nothing to filter on — the search box is the only way in.
+        links.append(
+            {
+                "label": "Access attempts",
+                "url": (
+                    f"{reverse('admin:axes_accessattempt_changelist')}"
+                    f"?q={quote(obj.get_username())}"
+                ),
+            }
+        )
+        return links
 
     def get_queryset(self, request):
         cutoffs = engagement_cutoffs()
@@ -244,6 +485,17 @@ class UserAdmin(BaseUserAdmin, ModelAdmin):
         if version == settings.TERMS_VERSION:
             return "current", version
         return "outdated", f"Outdated ({version})"
+
+    @admin.display(description="Deletion requested")
+    def get_deletion_requested_at(self, obj):
+        profile = profile_of(obj)
+        return (profile.deletion_requested_at if profile else None) or "—"
+
+
+# Eight near-identical read-only accessors, one per consent field. Written as
+# a loop because spelling them out would be eight copies of the same body.
+for _name in CONSENT_FIELDS:
+    setattr(UserAdmin, f"consent_{_name}", consent_field(_name))
 
 
 admin.site.unregister(User)
