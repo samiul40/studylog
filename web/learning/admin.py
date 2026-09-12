@@ -1,5 +1,19 @@
+from datetime import timedelta
+
 from django.contrib import admin
-from django.db.models import Q
+from django.db.models import (
+    Count,
+    DateField,
+    F,
+    IntegerField,
+    Max,
+    OuterRef,
+    Q,
+    Subquery,
+    Sum,
+)
+from django.db.models.functions import Coalesce
+from django.utils import timezone
 from django.utils.text import Truncator
 from unfold.admin import ModelAdmin, TabularInline
 from unfold.contrib.filters.admin import (
@@ -11,6 +25,7 @@ from unfold.decorators import display
 
 from learning.services.dashboard import get_dashboard_stats
 from learning.services.usage import get_usage_breakdown
+from learning.services.utils import fmt_duration
 
 from .models import (
     Category,
@@ -78,6 +93,37 @@ class CategoryAdmin(ModelAdmin):
         return self.readonly_fields
 
 
+STALE_RESOURCE_DAYS = 30
+
+
+class TractionFilter(DropdownFilter):
+    """Which resources are actually being worked on."""
+
+    title = "traction"
+    parameter_name = "traction"
+
+    def lookups(self, request, model_admin):
+        return (
+            ("this_week", "Studied this week"),
+            ("stale", f"No session in {STALE_RESOURCE_DAYS} days"),
+            ("never", "Never studied"),
+            ("completed", "Completed"),
+        )
+
+    def queryset(self, request, queryset):
+        today = timezone.localdate()
+        lookups = {
+            "this_week": Q(last_activity__gte=today - timedelta(days=7)),
+            # Never-studied resources have no date to be stale, and get their
+            # own bucket rather than being lumped in with the abandoned ones.
+            "stale": Q(last_activity__lt=today - timedelta(days=STALE_RESOURCE_DAYS)),
+            "never": Q(last_activity__isnull=True),
+            "completed": Q(total_units__gt=0, completed_units=F("total_units")),
+        }
+        query = lookups.get(self.value())
+        return queryset.filter(query) if query else queryset
+
+
 @admin.register(LearningResource)
 class LearningResourceAdmin(ModelAdmin):
     list_display = (
@@ -86,9 +132,13 @@ class LearningResourceAdmin(ModelAdmin):
         "category",
         "user",
         "progress",
+        "get_session_count",
+        "get_session_minutes",
+        "get_last_activity",
         "created_at",
     )
     list_filter = (
+        TractionFilter,
         ("resource_type", RelatedDropdownFilter),
         ("category", RelatedDropdownFilter),
         "created_at",
@@ -126,13 +176,51 @@ class LearningResourceAdmin(ModelAdmin):
         ),
     )
 
-    @admin.display(description="Progress")
+    def get_queryset(self, request):
+        # with_progress() aggregates over units, so the session figures have to
+        # come from subqueries: a second multi-valued join would multiply the
+        # unit rows by the session rows and inflate both sides' sums.
+        sessions = StudySession.objects.filter(resource=OuterRef("pk")).order_by()
+
+        def over_sessions(aggregate, output_field):
+            return Subquery(
+                sessions.values("resource").annotate(value=aggregate).values("value"),
+                output_field=output_field,
+            )
+
+        return (
+            super()
+            .get_queryset(request)
+            # Three of the columns are foreign keys, so without this each row
+            # costs three extra queries.
+            .select_related("user", "resource_type", "category")
+            .with_progress()
+            .annotate(
+                session_count=Coalesce(over_sessions(Count("pk"), IntegerField()), 0),
+                session_minutes=Coalesce(
+                    over_sessions(Sum("duration_minutes"), IntegerField()), 0
+                ),
+                last_activity=over_sessions(Max("date"), DateField()),
+            )
+        )
+
+    @admin.display(description="Progress", ordering="percentage")
     def progress(self, obj):
-        total = obj.units.count()
-        if total == 0:
+        if not obj.total_units:
             return "0%"
-        completed = obj.units.filter(status="completed").count()
-        return f"{completed}/{total} ({int(completed / total * 100)}%)"
+        return f"{obj.completed_units}/{obj.total_units} ({obj.percentage}%)"
+
+    @admin.display(description="Sessions", ordering="session_count")
+    def get_session_count(self, obj):
+        return obj.session_count
+
+    @admin.display(description="Time logged", ordering="session_minutes")
+    def get_session_minutes(self, obj):
+        return fmt_duration(obj.session_minutes)
+
+    @admin.display(description="Last activity", ordering="last_activity")
+    def get_last_activity(self, obj):
+        return obj.last_activity or "—"
 
 
 @admin.register(LearningUnit)
