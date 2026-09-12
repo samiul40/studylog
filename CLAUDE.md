@@ -62,19 +62,30 @@ cd web && npm run build:css
 
 **Scheduled maintenance commands:**
 
-Both are idempotent and safe to re-run. Neither is installed anywhere — add
+All three are idempotent and safe to re-run. None is installed anywhere — add
 them to the server's crontab if you want them automated:
 
 ```cron
+0 1 * * * docker exec studylog_web python manage.py rollup_usage_stats >> /var/log/studyflow_rollup.log 2>&1
 0 2 * * * docker exec studylog_web python manage.py purge_deleted_accounts >> /var/log/studyflow_purge.log 2>&1
 0 3 * * * docker exec studylog_web python manage.py purge_unverified_accounts --delete >> /var/log/studyflow_purge.log 2>&1
 ```
 
-Both log the deleted account's **id, not its email**. That output is appended
-to a file by cron, and writing the address of someone whose data was just
-erased would quietly undo part of that erasure. Dry-run output still shows
-addresses, since you need them to decide — so don't redirect a dry run into a
-permanent log.
+`rollup_usage_stats` runs **first for a reason**: it banks yesterday's totals
+into `DailyUsageStat` before the purges erase any accounts. Reverse the order
+and a purged account's last day of activity is gone before it was ever counted.
+It records aggregates only — no user ids, no free text — so the numbers survive
+deletion without retaining anything personal. It only ever creates rows for days
+that have none, never rewriting a recorded one, and fills any day a missed run
+skipped. There is deliberately no flag to recompute a recorded day: rebuilding
+from the live rows would drop the activity of anyone since deleted, which is the
+thing the table exists to prevent.
+
+Both purge commands log the deleted account's **id, not its email**. That
+output is appended to a file by cron, and writing the address of someone whose
+data was just erased would quietly undo part of that erasure. Dry-run output
+still shows addresses, since you need them to decide — so don't redirect a dry
+run into a permanent log.
 
 `purge_unverified_accounts` is **dry-run by default** and needs `--delete` to
 remove anything — it selects accounts by inactivity rather than an explicit
