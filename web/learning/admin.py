@@ -230,13 +230,28 @@ class FeatureRequestAdmin(admin.ModelAdmin):
 class DailyUsageStatAdmin(admin.ModelAdmin):
     list_display = (
         "date",
+        "resources_created",
         "sessions_logged",
         "minutes_logged",
-        "active_users",
-        "resources_created",
+        "users_on_the_day",
+        "users_prior_7_days",
+        "users_prior_28_days",
+        "total_accounts",
     )
     ordering = ("-date",)
     date_hierarchy = "date"
+
+    @admin.display(description="Users (on the day)", ordering="active_users")
+    def users_on_the_day(self, obj):
+        return obj.active_users
+
+    @admin.display(description="Users (prior 7 days)", ordering="active_users_7d")
+    def users_prior_7_days(self, obj):
+        return obj.active_users_7d
+
+    @admin.display(description="Users (prior 28 days)", ordering="active_users_28d")
+    def users_prior_28_days(self, obj):
+        return obj.active_users_28d
 
     # Rows are written only by rollup_usage_stats, and rewriting one would
     # defeat the point of keeping totals that outlive the accounts behind them.

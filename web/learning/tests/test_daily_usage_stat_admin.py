@@ -12,9 +12,7 @@ pytestmark = pytest.mark.django_db
 def test_changelist_loads(client_logged_in):
     baker.make(DailyUsageStat, date=date(2026, 3, 1), sessions_logged=7)
 
-    response = client_logged_in.get(
-        reverse("admin:learning_dailyusagestat_changelist")
-    )
+    response = client_logged_in.get(reverse("admin:learning_dailyusagestat_changelist"))
 
     assert response.status_code == 200
     assert "1 Mar 2026" in response.content.decode()

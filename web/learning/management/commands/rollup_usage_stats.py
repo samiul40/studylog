@@ -20,9 +20,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         yesterday = timezone.localdate() - timedelta(days=1)
         date = (
-            StudySession.objects.order_by("date")
-            .values_list("date", flat=True)
-            .first()
+            StudySession.objects.order_by("date").values_list("date", flat=True).first()
         )
         if date is None:
             self.stdout.write("No sessions to roll up.")

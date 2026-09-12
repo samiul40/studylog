@@ -48,7 +48,11 @@ ruff check web/
 **Format/fix lint:**
 ```bash
 ruff check --fix web/
+ruff format .
 ```
+
+CI runs `ruff format --check .` as a separate step from `ruff check`, so code
+that lints clean can still fail the build. Run both before calling work done.
 
 **Watch SCSS (dev):**
 ```bash
