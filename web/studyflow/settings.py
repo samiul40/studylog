@@ -224,6 +224,58 @@ UNFOLD = {
                     },
                 ],
             },
+            # Plumbing owned by allauth, axes and django.contrib.sites. It is
+            # registered, so it has to be reachable, but nobody opens it on a
+            # normal day — hence collapsed until something in it is active.
+            # Access attempts stays under People; only failures and logs live
+            # down here.
+            {
+                "title": "System",
+                "collapsible": True,
+                "items": [
+                    {
+                        "title": "Email addresses",
+                        "icon": "alternate_email",
+                        "link": reverse_lazy("admin:account_emailaddress_changelist"),
+                    },
+                    {
+                        "title": "Access failures",
+                        "icon": "gpp_bad",
+                        "link": reverse_lazy("admin:axes_accessfailurelog_changelist"),
+                    },
+                    {
+                        "title": "Access logs",
+                        "icon": "receipt_long",
+                        "link": reverse_lazy("admin:axes_accesslog_changelist"),
+                    },
+                    {
+                        "title": "Sites",
+                        "icon": "public",
+                        "link": reverse_lazy("admin:sites_site_changelist"),
+                    },
+                    {
+                        "title": "Social accounts",
+                        "icon": "account_circle",
+                        "link": reverse_lazy(
+                            "admin:socialaccount_socialaccount_changelist"
+                        ),
+                    },
+                    {
+                        "title": "Social application tokens",
+                        "icon": "key",
+                        "link": reverse_lazy(
+                            "admin:socialaccount_socialtoken_changelist"
+                        ),
+                    },
+                    {
+                        "title": "Social applications",
+                        "icon": "apps",
+                        "link": reverse_lazy(
+                            "admin:socialaccount_socialapp_changelist"
+                        ),
+                    },
+                ],
+            },
         ],
     },
 }
