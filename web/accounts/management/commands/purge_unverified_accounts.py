@@ -62,10 +62,11 @@ class Command(BaseCommand):
 
         deleted = 0
         for user in expired:
-            label = f"{user.username} <{user.email or 'no email'}>"
+            # Log the id, not the email — see purge_deleted_accounts.
+            user_id = user.pk
             user.delete()  # cascades to profile, email addresses, learning data
             deleted += 1
-            self.stdout.write(f"Deleted account: {label}")
+            self.stdout.write(f"Deleted account id={user_id}")
 
         self.stdout.write(
             self.style.SUCCESS(f"Purged {deleted} unverified account(s).")

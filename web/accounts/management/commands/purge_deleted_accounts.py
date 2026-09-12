@@ -45,10 +45,13 @@ class Command(BaseCommand):
 
         deleted = 0
         for profile in expired:
-            email = profile.user.email
+            # Log the id, not the email. This output is appended to a log file
+            # by cron, and writing the address of someone whose data we just
+            # erased would quietly undo part of that erasure.
+            user_id = profile.user_id
             profile.user.delete()  # cascades to profile + all learning data
             deleted += 1
-            self.stdout.write(f"Deleted account: {email}")
+            self.stdout.write(f"Deleted account id={user_id}")
 
         self.stdout.write(
             self.style.SUCCESS(f"Purged {deleted} account(s) successfully.")

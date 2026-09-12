@@ -118,3 +118,12 @@ def test_nothing_to_do_is_reported_clearly():
     make_account("fine", days_ago=1, verified=False)
 
     assert "No unverified accounts to purge." in purge()
+
+
+def test_the_deletion_log_does_not_contain_the_email(account_past_cutoff):
+    """cron appends this output to a log file. Writing the address of someone
+    whose data we just erased would quietly undo part of that erasure."""
+    output = purge(delete=True)
+
+    assert account_past_cutoff.email not in output
+    assert f"id={account_past_cutoff.pk}" in output
