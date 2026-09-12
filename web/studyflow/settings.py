@@ -44,7 +44,6 @@ INSTALLED_APPS = [
     # External Packages
     "anymail",
     "axes",
-    "adminsortable2",
     "allauth",
     "allauth.account",
     "allauth.socialaccount",
