@@ -66,9 +66,15 @@ Both are idempotent and safe to re-run. Neither is installed anywhere — add
 them to the server's crontab if you want them automated:
 
 ```cron
-0 3 * * * docker exec studylog_web python manage.py purge_unverified_accounts --delete
-0 4 * * * docker exec studylog_web python manage.py purge_deleted_accounts
+0 2 * * * docker exec studylog_web python manage.py purge_deleted_accounts >> /var/log/studyflow_purge.log 2>&1
+0 3 * * * docker exec studylog_web python manage.py purge_unverified_accounts --delete >> /var/log/studyflow_purge.log 2>&1
 ```
+
+Both log the deleted account's **id, not its email**. That output is appended
+to a file by cron, and writing the address of someone whose data was just
+erased would quietly undo part of that erasure. Dry-run output still shows
+addresses, since you need them to decide — so don't redirect a dry run into a
+permanent log.
 
 `purge_unverified_accounts` is **dry-run by default** and needs `--delete` to
 remove anything — it selects accounts by inactivity rather than an explicit

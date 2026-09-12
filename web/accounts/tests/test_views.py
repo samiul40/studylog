@@ -186,3 +186,30 @@ def test_reactivate_expired_window(client, user):
 
     user.refresh_from_db()
     assert user.is_active is False
+
+
+def test_purge_deleted_accounts_logs_ids_not_emails(user):
+    """Same reasoning as the unverified purge: this output is cronned to a log
+    file, so it must not retain the address of a deleted account."""
+    from datetime import timedelta
+    from io import StringIO
+
+    from django.core.management import call_command
+    from django.utils import timezone
+
+    from accounts.models import UserProfile
+    from accounts.views import ACCOUNT_RETENTION_DAYS
+
+    user.email = "purge-me@example.com"
+    user.save(update_fields=["email"])
+    UserProfile.objects.filter(user=user).update(
+        deletion_requested_at=timezone.now()
+        - timedelta(days=ACCOUNT_RETENTION_DAYS + 1)
+    )
+
+    out = StringIO()
+    call_command("purge_deleted_accounts", stdout=out)
+    output = out.getvalue()
+
+    assert user.email not in output
+    assert f"id={user.pk}" in output
