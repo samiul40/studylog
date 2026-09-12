@@ -477,18 +477,64 @@ def unreviewed_feature_requests(request):
     ).count()
 
 
-original_index = admin.site.index
+def _usage_table(rows):
+    """The usage rows shaped for Unfold's table component."""
+    return {
+        "headers": [
+            "Period",
+            "Resources",
+            "Sessions",
+            "Time",
+            "Active users",
+            "Accounts",
+        ],
+        "rows": [
+            [
+                row["label"],
+                row["resources"],
+                row["sessions"],
+                row["minutes_display"],
+                _share(row["active_users"], row["total_accounts"]),
+                row["total_accounts"],
+            ]
+            for row in rows
+        ],
+    }
 
 
-def custom_admin_index(request, extra_context=None):
-    stats = get_dashboard_stats()
-    if extra_context is None:
-        extra_context = {}
-    extra_context.update(stats)
+def _share(active, total):
+    if not total:
+        return active
+    return f"{active} ({round(active / total * 100)}%)"
+
+
+def dashboard_callback(request, context):
+    """Inject the site-wide stats into Unfold's admin index.
+
+    Wired up through UNFOLD["DASHBOARD_CALLBACK"] rather than by replacing
+    admin.site.index, which is the hook Unfold provides for exactly this and
+    survives the theme owning its own index view.
+    """
     period = "week" if request.GET.get("period") == "week" else "month"
-    extra_context["usage_period"] = period
-    extra_context["usage_rows"] = get_usage_breakdown(period)
-    return original_index(request, extra_context=extra_context)
+    usage_rows = get_usage_breakdown(period)
 
-
-admin.site.index = custom_admin_index
+    context.update(get_dashboard_stats())
+    context.update(
+        {
+            "usage_period": period,
+            "periods": (("week", "Weekly"), ("month", "Monthly")),
+            "usage_rows": usage_rows,
+            "usage_table": _usage_table(usage_rows),
+            "usage_window": 7 if period == "week" else 28,
+            "stat_cards": [
+                {"label": "Resources", "value": context["total_resources"]},
+                {"label": "Units", "value": context["total_units"]},
+                {"label": "Completed units", "value": context["completed_units"]},
+                {
+                    "label": "Completion rate",
+                    "value": f"{context['completion_rate']}%",
+                },
+            ],
+        }
+    )
+    return context

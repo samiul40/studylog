@@ -124,6 +124,7 @@ UNFOLD = {
     "SITE_HEADER": "StudyLog administration",
     "SHOW_HISTORY": True,
     "SHOW_VIEW_ON_SITE": True,
+    "DASHBOARD_CALLBACK": "learning.admin.dashboard_callback",
     "COLORS": {
         "primary": {
             "50": "#ecfdf5",
