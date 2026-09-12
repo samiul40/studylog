@@ -262,6 +262,16 @@ class DailyUsageStatAdmin(admin.ModelAdmin):
         return False
 
 
+def unreviewed_feature_requests(request):
+    """Sidebar badge: suggestions nobody has triaged yet.
+
+    Runs on every admin page, so it stays a single count with no joins.
+    """
+    return FeatureRequest.objects.filter(
+        status=FeatureRequest.StatusChoices.NEW
+    ).count()
+
+
 original_index = admin.site.index
 
 
