@@ -301,6 +301,10 @@ class UserAdmin(BaseUserAdmin, ModelAdmin):
         EngagementFilter,
         TermsStatusFilter,
     ) + BaseUserAdmin.list_filter
+    # Dropdown filters are form inputs, and Unfold only wraps the filter
+    # panel in a <form> when this is on — without it the selects render
+    # but selecting one does nothing.
+    list_filter_submit = True
 
     ordering = ("-date_joined",)
 

@@ -137,6 +137,36 @@ def test_the_filter_agrees_with_the_column(client_logged_in):
         assert bucket_of(username, client_logged_in) == bucket
 
 
+def test_submitting_the_filter_form_narrows_the_list(client_logged_in):
+    """Apply posts every dropdown on the panel at once, most of them empty.
+
+    Only the <select> filters are submitted — Django's boolean and related
+    filters render as links, so they stay out of the query string.
+    """
+    active = make_user("active_user")
+    for offset in (1, 2, 3):
+        make_session(active, offset)
+    make_user("never_user")
+
+    response = client_logged_in.get(
+        CHANGELIST, {"engagement": "active", "terms_status": ""}
+    )
+    usernames = [u.username for u in response.context["cl"].queryset]
+
+    assert response.status_code == 200
+    assert usernames == ["active_user"]
+
+
+def test_an_all_selection_leaves_the_list_alone(client_logged_in):
+    """ "All" submits an empty value rather than dropping the parameter."""
+    make_user("somebody")
+
+    response = client_logged_in.get(CHANGELIST, {"engagement": "", "terms_status": ""})
+
+    assert response.status_code == 200
+    assert "somebody" in [u.username for u in response.context["cl"].queryset]
+
+
 def test_the_buckets_partition_the_table(client_logged_in):
     """Every user lands in exactly one bucket, or filter and column diverge."""
     busy = make_user("busy")

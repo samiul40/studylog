@@ -144,6 +144,26 @@ def test_the_activity_filter_is_a_dropdown_not_a_list(client_logged_in, user):
     assert content.count('name="activity__id__exact"') == 1
 
 
+def test_submitting_the_filter_form_narrows_the_list(client_logged_in, user):
+    """Apply posts all three dropdowns together, whether or not they are set."""
+    watching = make_session(
+        user,
+        activity=Activity.objects.get(slug="watch", is_system=True),
+        title="",
+    )
+    titled = make_session(user, title="Revision")
+
+    response = client_logged_in.get(
+        CHANGELIST,
+        {"quality": "no_title", "status__exact": "", "activity__id__exact": ""},
+    )
+    found = list(response.context["cl"].queryset)
+
+    assert response.status_code == 200
+    assert watching in found
+    assert titled not in found
+
+
 def test_filtering_by_a_single_activity_still_works(client_logged_in, user):
     watching = make_session(
         user, activity=Activity.objects.get(slug="watch", is_system=True)

@@ -43,6 +43,10 @@ class LearningUnitInline(TabularInline):
 class ResourceTypeAdmin(ModelAdmin):
     list_display = ("name", "slug", "content_kind", "is_system", "user")
     list_filter = (("content_kind", ChoicesDropdownFilter), "is_system")
+    # Dropdown filters are form inputs, and Unfold only wraps the filter
+    # panel in a <form> when this is on — without it the selects render
+    # but selecting one does nothing.
+    list_filter_submit = True
     search_fields = ("name", "slug", "user__username")
     readonly_fields = ("slug", "created_at")
     autocomplete_fields = ("user",)
@@ -89,6 +93,10 @@ class LearningResourceAdmin(ModelAdmin):
         ("category", RelatedDropdownFilter),
         "created_at",
     )
+    # Dropdown filters are form inputs, and Unfold only wraps the filter
+    # panel in a <form> when this is on — without it the selects render
+    # but selecting one does nothing.
+    list_filter_submit = True
     search_fields = ("title", "description", "user__username")
     readonly_fields = ("created_at", "updated_at")
     ordering = ("-created_at",)
@@ -141,6 +149,10 @@ class LearningUnitAdmin(ModelAdmin):
         ("status", ChoicesDropdownFilter),
         ("resource__resource_type", RelatedDropdownFilter),
     )
+    # Dropdown filters are form inputs, and Unfold only wraps the filter
+    # panel in a <form> when this is on — without it the selects render
+    # but selecting one does nothing.
+    list_filter_submit = True
     search_fields = ("title", "resource__title", "notes")
     readonly_fields = ("created_at", "updated_at")
     ordering = ("resource", "order")
@@ -232,6 +244,10 @@ class StudySessionAdmin(ModelAdmin):
         ("activity", RelatedDropdownFilter),
         "date",
     )
+    # Dropdown filters are form inputs, and Unfold only wraps the filter
+    # panel in a <form> when this is on — without it the selects render
+    # but selecting one does nothing.
+    list_filter_submit = True
     search_fields = ("title", "topic", "notes", "user__username")
     readonly_fields = ("created_at", "updated_at")
     ordering = ("-date", "-created_at")
@@ -292,6 +308,10 @@ class FeatureRequestAdmin(ModelAdmin):
     list_display = ("idea_preview", "user", "status", "created_at")
     list_editable = ("status",)
     list_filter = (("status", ChoicesDropdownFilter), "created_at")
+    # Dropdown filters are form inputs, and Unfold only wraps the filter
+    # panel in a <form> when this is on — without it the selects render
+    # but selecting one does nothing.
+    list_filter_submit = True
     search_fields = ("idea", "why", "user__username", "user__email")
     readonly_fields = ("user", "idea", "why", "created_at", "updated_at")
     ordering = ("-created_at",)
