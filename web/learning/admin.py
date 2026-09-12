@@ -1,6 +1,6 @@
-from adminsortable2.admin import SortableAdminBase, SortableInlineAdminMixin
 from django.contrib import admin
 from django.utils.text import Truncator
+from unfold.admin import ModelAdmin, TabularInline
 
 from learning.services.dashboard import get_dashboard_stats
 from learning.services.usage import get_usage_breakdown
@@ -16,7 +16,7 @@ from .models import (
 )
 
 
-class LearningUnitInline(SortableInlineAdminMixin, admin.TabularInline):
+class LearningUnitInline(TabularInline):
     model = LearningUnit
     extra = 0
     fields = (
@@ -27,10 +27,13 @@ class LearningUnitInline(SortableInlineAdminMixin, admin.TabularInline):
         "video_progress_minutes",
     )
     ordering = ("order",)
+    # Unfold draws its own drag handle for this field, so the resource page
+    # keeps drag-reorder without adminsortable2's mixins.
+    ordering_field = "order"
 
 
 @admin.register(ResourceType)
-class ResourceTypeAdmin(admin.ModelAdmin):
+class ResourceTypeAdmin(ModelAdmin):
     list_display = ("name", "slug", "content_kind", "is_system", "user")
     list_filter = ("content_kind", "is_system")
     search_fields = ("name", "slug", "user__username")
@@ -51,7 +54,7 @@ class ResourceTypeAdmin(admin.ModelAdmin):
 
 
 @admin.register(Category)
-class CategoryAdmin(admin.ModelAdmin):
+class CategoryAdmin(ModelAdmin):
     list_display = ("name", "slug", "is_system", "user")
     list_filter = ("is_system",)
     search_fields = ("name", "slug", "user__username")
@@ -65,7 +68,7 @@ class CategoryAdmin(admin.ModelAdmin):
 
 
 @admin.register(LearningResource)
-class LearningResourceAdmin(SortableAdminBase, admin.ModelAdmin):
+class LearningResourceAdmin(ModelAdmin):
     list_display = (
         "title",
         "resource_type",
@@ -114,7 +117,7 @@ class LearningResourceAdmin(SortableAdminBase, admin.ModelAdmin):
 
 
 @admin.register(LearningUnit)
-class LearningUnitAdmin(admin.ModelAdmin):
+class LearningUnitAdmin(ModelAdmin):
     list_display = (
         "title",
         "resource",
@@ -155,7 +158,7 @@ class LearningUnitAdmin(admin.ModelAdmin):
 
 
 @admin.register(StudySession)
-class StudySessionAdmin(admin.ModelAdmin):
+class StudySessionAdmin(ModelAdmin):
     list_display = (
         "user",
         "activity",
@@ -191,7 +194,7 @@ class StudySessionAdmin(admin.ModelAdmin):
 
 
 @admin.register(FeatureRequest)
-class FeatureRequestAdmin(admin.ModelAdmin):
+class FeatureRequestAdmin(ModelAdmin):
     list_display = ("idea_preview", "user", "status", "created_at")
     list_editable = ("status",)
     list_filter = ("status", "created_at")
@@ -227,7 +230,7 @@ class FeatureRequestAdmin(admin.ModelAdmin):
 
 
 @admin.register(DailyUsageStat)
-class DailyUsageStatAdmin(admin.ModelAdmin):
+class DailyUsageStatAdmin(ModelAdmin):
     list_display = (
         "date",
         "resources_created",

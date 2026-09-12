@@ -1,8 +1,15 @@
+from allauth.account.models import EmailAddress
+from allauth.socialaccount.models import SocialAccount, SocialApp, SocialToken
+from axes.models import AccessAttempt, AccessFailureLog, AccessLog
 from django.conf import settings
 from django.contrib import admin
 from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+from django.contrib.auth.models import Group
+from django.contrib.sites.models import Site
 from django.db.models import Q
+from unfold.admin import ModelAdmin, StackedInline
+from unfold.contrib.filters.admin import DropdownFilter
 
 from .models import UserProfile
 
@@ -20,7 +27,7 @@ CONSENT_FIELDS = (
 )
 
 
-class TermsStatusFilter(admin.SimpleListFilter):
+class TermsStatusFilter(DropdownFilter):
     title = "terms status"
     parameter_name = "terms_status"
 
@@ -44,7 +51,7 @@ class TermsStatusFilter(admin.SimpleListFilter):
         return queryset
 
 
-class UserProfileInline(admin.StackedInline):
+class UserProfileInline(StackedInline):
     model = UserProfile
     extra = 0
     # Consent is a record of something the user did. Editing it here would be
@@ -53,7 +60,7 @@ class UserProfileInline(admin.StackedInline):
     fields = ("timezone", "deletion_requested_at") + CONSENT_FIELDS
 
 
-class UserAdmin(BaseUserAdmin):
+class UserAdmin(BaseUserAdmin, ModelAdmin):
     inlines = (UserProfileInline,)
     list_display = (
         "username",
@@ -102,3 +109,27 @@ class UserAdmin(BaseUserAdmin):
 
 admin.site.unregister(User)
 admin.site.register(User, UserAdmin)
+
+
+# Models registered by third-party packages keep Django's stock admin classes,
+# which render unthemed inside Unfold. Re-registering each one against a
+# subclass that also inherits unfold.admin.ModelAdmin themes it while
+# inheriting the package's own list_display, filters and readonly fields
+# rather than restating them here, where they would drift on upgrade.
+for model in (
+    AccessAttempt,
+    AccessLog,
+    AccessFailureLog,
+    EmailAddress,
+    SocialAccount,
+    SocialApp,
+    SocialToken,
+    Site,
+    Group,
+):
+    stock_admin = type(admin.site._registry[model])
+    admin.site.unregister(model)
+    admin.site.register(
+        model,
+        type(f"Unfold{stock_admin.__name__}", (stock_admin, ModelAdmin), {}),
+    )
