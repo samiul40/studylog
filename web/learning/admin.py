@@ -1,6 +1,13 @@
 from django.contrib import admin
+from django.db.models import Q
 from django.utils.text import Truncator
 from unfold.admin import ModelAdmin, TabularInline
+from unfold.contrib.filters.admin import (
+    ChoicesDropdownFilter,
+    DropdownFilter,
+    RelatedDropdownFilter,
+)
+from unfold.decorators import display
 
 from learning.services.dashboard import get_dashboard_stats
 from learning.services.usage import get_usage_breakdown
@@ -35,7 +42,7 @@ class LearningUnitInline(TabularInline):
 @admin.register(ResourceType)
 class ResourceTypeAdmin(ModelAdmin):
     list_display = ("name", "slug", "content_kind", "is_system", "user")
-    list_filter = ("content_kind", "is_system")
+    list_filter = (("content_kind", ChoicesDropdownFilter), "is_system")
     search_fields = ("name", "slug", "user__username")
     readonly_fields = ("slug", "created_at")
     autocomplete_fields = ("user",)
@@ -77,7 +84,11 @@ class LearningResourceAdmin(ModelAdmin):
         "progress",
         "created_at",
     )
-    list_filter = ("resource_type", "category", "created_at")
+    list_filter = (
+        ("resource_type", RelatedDropdownFilter),
+        ("category", RelatedDropdownFilter),
+        "created_at",
+    )
     search_fields = ("title", "description", "user__username")
     readonly_fields = ("created_at", "updated_at")
     ordering = ("-created_at",)
@@ -126,7 +137,10 @@ class LearningUnitAdmin(ModelAdmin):
         "duration_minutes",
         "video_progress_minutes",
     )
-    list_filter = ("status", "resource__resource_type")
+    list_filter = (
+        ("status", ChoicesDropdownFilter),
+        ("resource__resource_type", RelatedDropdownFilter),
+    )
     search_fields = ("title", "resource__title", "notes")
     readonly_fields = ("created_at", "updated_at")
     ordering = ("resource", "order")
@@ -157,22 +171,102 @@ class LearningUnitAdmin(ModelAdmin):
     )
 
 
+# Colour groups the activity by study mode rather than giving each its own
+# shade — Unfold has six label colours and users can add activities of their
+# own, so anything unrecognised falls through to grey.
+ACTIVITY_COLOURS = {
+    "watch": "info",
+    "read": "info",
+    "flashcards": "warning",
+    "review": "warning",
+    "practice": "primary",
+    "pastpapers": "primary",
+    "writing": "success",
+}
+
+# Where a session stops being a long day and starts looking like a typo. The
+# form only rejects durations under a minute, so nothing else catches these.
+# Deliberately well above a normal long sitting — a past paper or a lecture
+# block runs two to three hours, and flagging those would bury the real
+# mistakes in legitimate rows.
+LONG_SESSION_MINUTES = 240
+
+
+class SessionQualityFilter(DropdownFilter):
+    """Rows that are probably wrong rather than merely unusual."""
+
+    title = "data quality"
+    parameter_name = "quality"
+
+    def lookups(self, request, model_admin):
+        return (
+            ("no_resource", "No resource linked"),
+            ("long", f"Longer than {LONG_SESSION_MINUTES // 60} hours"),
+            ("no_title", "No title"),
+        )
+
+    def queryset(self, request, queryset):
+        lookups = {
+            "no_resource": Q(resource__isnull=True),
+            "long": Q(duration_minutes__gt=LONG_SESSION_MINUTES),
+            "no_title": Q(title=""),
+        }
+        query = lookups.get(self.value())
+        return queryset.filter(query) if query else queryset
+
+
 @admin.register(StudySession)
 class StudySessionAdmin(ModelAdmin):
     list_display = (
-        "user",
-        "activity",
-        "display_label",
         "date",
-        "status",
+        "user",
+        "get_activity",
+        "display_label",
+        "get_context",
         "duration_minutes",
+        "get_status",
     )
-    list_filter = ("status", "activity", "date")
+    list_filter = (
+        SessionQualityFilter,
+        ("status", ChoicesDropdownFilter),
+        ("activity", RelatedDropdownFilter),
+        "date",
+    )
     search_fields = ("title", "topic", "notes", "user__username")
     readonly_fields = ("created_at", "updated_at")
     ordering = ("-date", "-created_at")
     date_hierarchy = "date"
     autocomplete_fields = ("user", "resource", "unit")
+
+    def get_queryset(self, request):
+        # Every row reads its user, activity, resource and unit — display_label
+        # alone touches two of them — so without this the page is four extra
+        # queries per row.
+        return (
+            super()
+            .get_queryset(request)
+            .select_related("user", "activity", "resource", "unit")
+        )
+
+    @display(description="Activity", ordering="activity__name", label=ACTIVITY_COLOURS)
+    def get_activity(self, obj):
+        return obj.activity.slug, obj.activity.name
+
+    @display(
+        description="Status",
+        ordering="status",
+        label={
+            StudySession.Status.LOGGED: "success",
+            StudySession.Status.PLANNED: "info",
+        },
+    )
+    def get_status(self, obj):
+        return obj.status, obj.get_status_display()
+
+    @admin.display(description="Resource / unit", ordering="resource__title")
+    def get_context(self, obj):
+        parts = [part.title for part in (obj.resource, obj.unit) if part]
+        return " · ".join(parts) or "—"
 
     fieldsets = (
         (
@@ -197,7 +291,7 @@ class StudySessionAdmin(ModelAdmin):
 class FeatureRequestAdmin(ModelAdmin):
     list_display = ("idea_preview", "user", "status", "created_at")
     list_editable = ("status",)
-    list_filter = ("status", "created_at")
+    list_filter = (("status", ChoicesDropdownFilter), "created_at")
     search_fields = ("idea", "why", "user__username", "user__email")
     readonly_fields = ("user", "idea", "why", "created_at", "updated_at")
     ordering = ("-created_at",)
