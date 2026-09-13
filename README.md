@@ -90,6 +90,33 @@ All commands run from `web/`.
 | Build CSS (production) | `npm run build:css`                          |
 | Make migrations        | `python manage.py makemigrations`            |
 | Apply migrations       | `python manage.py migrate`                   |
+| Seed demo data         | `python manage.py seed_retention --clear`    |
+
+### Seeding demo data
+
+`seed_retention` runs the whole pipeline — accounts, resources, sessions, then
+the rollup — so the analytics pages have something in them. Each step is also a
+command of its own, in this order:
+
+| Step | Command                                          |
+|------|--------------------------------------------------|
+| 1    | `python manage.py seed_users --weeks 12`         |
+| 2    | `python manage.py seed_learning --seeded-users`  |
+| 3    | `python manage.py seed_sessions`                 |
+| 4    | `python manage.py rollup_retention_cohorts`      |
+
+Every seeded account is named `seed_cohort_*`, which is what `--clear` looks
+for. The seeders refuse to run with `DEBUG` off: a recorded cohort is never
+rewritten, so invented signups let into a real database cannot be taken back
+out of the history afterwards.
+
+`seed_retention --clear` is the way to regenerate the demo. A re-run without it
+is additive rather than idempotent — it adds more accounts and sessions, but a
+cohort figure that has already been recorded never changes, so the new accounts
+only affect weeks that don't have a row yet.
+
+Without `--seeded-users`, `seed_learning` keeps its old behaviour and fills out
+the first account in the database instead.
 
 ---
 
