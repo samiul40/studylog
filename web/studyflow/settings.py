@@ -222,6 +222,13 @@ UNFOLD = {
                             "admin:learning_dailyusagestat_changelist"
                         ),
                     },
+                    {
+                        "title": "Retention cohorts",
+                        "icon": "group_add",
+                        "link": reverse_lazy(
+                            "admin:learning_userretentioncohort_changelist"
+                        ),
+                    },
                 ],
             },
             # Plumbing owned by allauth, axes and django.contrib.sites. It is

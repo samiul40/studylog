@@ -6,8 +6,10 @@ from .learning_resource import LearningResource
 from .learning_unit import LearningUnit
 from .resource_type import ResourceType
 from .study_session import StudySession
+from .user_retention_cohort import RETENTION_WEEKS, UserRetentionCohort
 
 __all__ = [
+    "RETENTION_WEEKS",
     "Activity",
     "Category",
     "DailyUsageStat",
@@ -16,4 +18,5 @@ __all__ = [
     "LearningUnit",
     "ResourceType",
     "StudySession",
+    "UserRetentionCohort",
 ]

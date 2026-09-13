@@ -71,6 +71,7 @@ them to the server's crontab if you want them automated:
 
 ```cron
 0 1 * * * docker exec studylog_web python manage.py rollup_usage_stats >> /var/log/studyflow_rollup.log 2>&1
+30 1 * * * docker exec studylog_web python manage.py rollup_retention_cohorts >> /var/log/studyflow_rollup.log 2>&1
 0 2 * * * docker exec studylog_web python manage.py purge_deleted_accounts >> /var/log/studyflow_purge.log 2>&1
 0 3 * * * docker exec studylog_web python manage.py purge_unverified_accounts --delete >> /var/log/studyflow_purge.log 2>&1
 ```
@@ -84,6 +85,23 @@ that have none, never rewriting a recorded one, and fills any day a missed run
 skipped. There is deliberately no flag to recompute a recorded day: rebuilding
 from the live rows would drop the activity of anyone since deleted, which is the
 thing the table exists to prevent.
+
+`rollup_retention_cohorts` records `UserRetentionCohort`: one row per signup
+week (Monday start), with how many of that week's accounts came back to log a
+`StudySession` at 1, 2, 4 and 8 weeks. Windows run from each **user's own**
+signup date — week *n* is days 7n to 7n+6 — not from the cohort's Monday, so a
+checkpoint is only written once it has closed for the Sunday joiner too
+(`cohort_start + 7n + 12`). Until then it stays **null**, and the admin shows
+`—`; a zero there would claim nobody returned. Percentages are derived from the
+counts by `UserRetentionCohort.retention_rate()` and never stored.
+
+Nothing already recorded is ever rewritten, so a cohort cannot shrink when an
+account is deleted. It can still be *under*-counted: a member purged before a
+checkpoint comes due is gone from `auth_user`, sessions and all, and the
+grouped query cannot see them. Fixing that would mean storing per-user cohort
+membership, which keeps personal data past erasure — the thing `DailyUsageStat`
+was shaped to avoid. Ordering the two cron jobs won't help either; the gap is
+weeks wide, not hours.
 
 Both purge commands log the deleted account's **id, not its email**. That
 output is appended to a file by cron, and writing the address of someone whose

@@ -35,6 +35,7 @@ from .models import (
     LearningUnit,
     ResourceType,
     StudySession,
+    UserRetentionCohort,
 )
 
 
@@ -460,6 +461,67 @@ class DailyUsageStatAdmin(ModelAdmin):
 
     # Rows are written only by rollup_usage_stats, and rewriting one would
     # defeat the point of keeping totals that outlive the accounts behind them.
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+
+@admin.register(UserRetentionCohort)
+class UserRetentionCohortAdmin(ModelAdmin):
+    """One row per signup week, with what became of the people in it.
+
+    Percentages are worked out on the way to the page rather than stored, so
+    they cannot drift from the counts they came from.
+    """
+
+    list_display = (
+        "cohort_start",
+        "cohort_size",
+        "week_1_retained",
+        "week_1_rate",
+        "week_2_retained",
+        "week_2_rate",
+        "week_4_retained",
+        "week_4_rate",
+        "week_8_retained",
+        "week_8_rate",
+    )
+    ordering = ("-cohort_start",)
+    date_hierarchy = "cohort_start"
+
+    # A checkpoint that hasn't elapsed is null, and 0% would read as nobody
+    # coming back. This covers the retained columns and the rates alike.
+    empty_value_display = "—"
+
+    # The rate columns are deliberately not sortable: ordering them by the
+    # count behind them would put a 9/10 cohort below a 20/200 one.
+    @admin.display(description="Week 1 %")
+    def week_1_rate(self, obj):
+        return self._rate(obj, 1)
+
+    @admin.display(description="Week 2 %")
+    def week_2_rate(self, obj):
+        return self._rate(obj, 2)
+
+    @admin.display(description="Week 4 %")
+    def week_4_rate(self, obj):
+        return self._rate(obj, 4)
+
+    @admin.display(description="Week 8 %")
+    def week_8_rate(self, obj):
+        return self._rate(obj, 8)
+
+    def _rate(self, obj, week):
+        rate = obj.retention_rate(week)
+        # None falls through to empty_value_display, which is the honest answer
+        # for an unelapsed checkpoint and for a cohort nobody joined.
+        return None if rate is None else f"{rate}%"
+
+    # Rows are written only by rollup_retention_cohorts, and editing one by
+    # hand would defeat the point of figures that outlive the accounts behind
+    # them.
     def has_add_permission(self, request):
         return False
 
