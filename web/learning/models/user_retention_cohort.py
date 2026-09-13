@@ -8,8 +8,10 @@ RETENTION_WEEKS = (1, 2, 4, 8)
 class UserRetentionCohort(models.Model):
     """How many of one week's signups came back and studied later.
 
-    Holds counts only, with no link to a user, so deleting an account cannot
-    change a cohort that has already been recorded.
+    Holds counts only, with no link to a user. Each figure is frozen the moment
+    it is written, so deleting an account cannot rewrite a recorded one — but a
+    user deleted before a checkpoint came due is gone from the live table and
+    was never counted in it.
 
     A retained count is null until its window has fully elapsed for every
     member of the cohort. Zero would claim nobody came back, which is a very
