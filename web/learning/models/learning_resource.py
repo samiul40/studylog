@@ -18,7 +18,7 @@ class LearningResource(models.Model):
     title = models.CharField(max_length=255)
     resource_type = models.ForeignKey(
         ResourceType,
-        on_delete=models.PROTECT,
+        on_delete=models.RESTRICT,
         related_name="resources",
     )
     category = models.ForeignKey(
