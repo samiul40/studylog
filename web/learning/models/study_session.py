@@ -32,7 +32,7 @@ class StudySession(models.Model):
     )
     activity = models.ForeignKey(
         "Activity",
-        on_delete=models.PROTECT,
+        on_delete=models.RESTRICT,
         related_name="sessions",
     )
     date = models.DateField()
