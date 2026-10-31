@@ -24,6 +24,7 @@ from unfold.contrib.filters.admin import (
 from unfold.decorators import display
 
 from learning.services.dashboard import get_dashboard_stats
+from learning.services.geography import get_user_countries
 from learning.services.usage import get_usage_breakdown
 from learning.services.utils import fmt_duration
 
@@ -564,6 +565,15 @@ def _usage_table(rows):
     }
 
 
+def _country_table(rows, unknown):
+    """The per-country counts shaped for Unfold's table component."""
+    total = sum(row["users"] for row in rows) + unknown
+    return {
+        "headers": ["Country", "Users"],
+        "rows": [[row["name"], _share(row["users"], total)] for row in rows],
+    }
+
+
 def _share(active, total):
     if not total:
         return active
@@ -579,6 +589,7 @@ def dashboard_callback(request, context):
     """
     period = "week" if request.GET.get("period") == "week" else "month"
     usage_rows = get_usage_breakdown(period)
+    country_rows, unknown_users = get_user_countries()
 
     context.update(get_dashboard_stats())
     context.update(
@@ -588,6 +599,9 @@ def dashboard_callback(request, context):
             "usage_rows": usage_rows,
             "usage_table": _usage_table(usage_rows),
             "usage_window": 7 if period == "week" else 28,
+            "country_table": _country_table(country_rows, unknown_users),
+            "country_counts": {row["code"]: row["users"] for row in country_rows},
+            "unknown_users": unknown_users,
             "stat_cards": [
                 {"label": "Resources", "value": context["total_resources"]},
                 {"label": "Units", "value": context["total_units"]},
