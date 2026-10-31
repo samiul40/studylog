@@ -59,6 +59,35 @@
     {% endif %}
   </div>
 
+  <div class="mb-8">
+    <h2 class="font-semibold mb-4 text-font-important-light dark:text-font-important-dark">
+      {% translate "Where users are" %}
+    </h2>
+
+    {% if country_table.rows %}
+      {% component "unfold/components/table.html" with table=country_table striped=1 %}{% endcomponent %}
+    {% else %}
+      {% component "unfold/components/card.html" %}
+        <p class="text-font-subtle-light dark:text-font-subtle-dark">
+          {% translate "No active users have a country timezone yet." %}
+        </p>
+      {% endcomponent %}
+    {% endif %}
+
+    <p class="max-w-2xl mt-2 text-xs text-font-subtle-light dark:text-font-subtle-dark">
+      {% translate "Worked out from each active user's timezone." %}
+      {% if unknown_users %}
+        {% blocktranslate count unknown=unknown_users %}
+          {{ unknown }} user is still on UTC or a zone with no country, so
+          isn't placed.
+        {% plural %}
+          {{ unknown }} users are still on UTC or a zone with no country, so
+          aren't placed.
+        {% endblocktranslate %}
+      {% endif %}
+    </p>
+  </div>
+
   <div class="flex flex-col lg:flex-row lg:gap-8">
     <div class="grow">
       {% include "unfold/helpers/app_list_default.html" %}

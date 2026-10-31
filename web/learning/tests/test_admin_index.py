@@ -2,10 +2,12 @@ import re
 from datetime import date
 
 import pytest
+from allauth.account.models import EmailAddress
 from django.contrib import admin
 from django.urls import reverse
 from model_bakery import baker
 
+from accounts.models import UserProfile
 from learning.models import DailyUsageStat, LearningResource, LearningUnit
 
 pytestmark = pytest.mark.django_db
@@ -89,3 +91,41 @@ def test_a_period_with_no_accounts_shows_a_bare_count(client_logged_in):
 
     assert response.status_code == 200
     assert 0 in response.context["usage_table"]["rows"][0]
+
+
+def _member(tz):
+    user = baker.make("auth.User")
+    EmailAddress.objects.create(
+        user=user, email=f"{user.username}@x.com", verified=True
+    )
+    UserProfile.objects.filter(user=user).update(timezone=tz)
+
+
+def test_the_country_table_shows_each_country_as_a_share(client_logged_in):
+    _member("Asia/Dhaka")
+    _member("Asia/Dhaka")
+    _member("Europe/London")
+    _member("UTC")
+
+    response = client_logged_in.get(INDEX)
+
+    assert response.context["country_table"]["rows"] == [
+        ["Bangladesh", "2 (50%)"],
+        ["Britain (UK)", "1 (25%)"],
+    ]
+    assert response.context["unknown_users"] == 1
+    assert "1 user is" in response.content.decode()
+
+
+def test_the_country_section_says_so_when_nobody_is_placed(client_logged_in):
+    content = client_logged_in.get(INDEX).content.decode()
+
+    assert "No active users have a country timezone yet." in content
+
+
+def test_the_unplaced_note_is_hidden_when_everyone_is_placed(client_logged_in):
+    _member("Asia/Dhaka")
+
+    content = client_logged_in.get(INDEX).content.decode()
+
+    assert "on UTC or a zone with no country" not in content
