@@ -23,6 +23,20 @@
     #user-map .jvm-region[data-level="2"] { fill: #34d399; }
     #user-map .jvm-region[data-level="3"] { fill: #059669; }
     #user-map .jvm-region[data-level="4"] { fill: #065f46; }
+
+    /* Map and table side by side on wide screens, the table scrolling inside
+       the map's height. Unfold's table has a height option, but it renders an
+       inline style. */
+    .user-geo { display: grid; gap: 1rem; }
+    .user-geo__table { display: flex; max-height: 420px; }
+    .user-geo__table > div { flex-grow: 1; min-height: 0; }
+    .user-geo__table > div > div { min-height: 0; overflow-y: auto; }
+    .user-geo__table thead { position: sticky; top: 0; z-index: 1; }
+    @media (min-width: 1024px) {
+      .user-geo { grid-template-columns: 2fr 1fr; }
+      .user-geo__table { max-height: none; position: relative; }
+      .user-geo__table > div { position: absolute; inset: 0; }
+    }
   </style>
 {% endblock %}
 
@@ -83,11 +97,13 @@
     </h2>
 
     {% if country_table.rows %}
-      {% component "unfold/components/card.html" %}
-        <div id="user-map"></div>
-      {% endcomponent %}
-      <div class="mt-4">
-        {% component "unfold/components/table.html" with table=country_table striped=1 %}{% endcomponent %}
+      <div class="user-geo">
+        {% component "unfold/components/card.html" %}
+          <div id="user-map"></div>
+        {% endcomponent %}
+        <div class="user-geo__table">
+          {% component "unfold/components/table.html" with table=country_table striped=1 %}{% endcomponent %}
+        </div>
       </div>
     {% else %}
       {% component "unfold/components/card.html" %}
