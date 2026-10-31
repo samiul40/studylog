@@ -37,4 +37,5 @@ pytokens==0.4.1
 ruff==0.15.5
 sentry-sdk==2.63.0
 sqlparse==0.5.5
+tzdata==2026.6
 whitenoise==6.12.0

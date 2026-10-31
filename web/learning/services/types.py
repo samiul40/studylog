@@ -169,6 +169,14 @@ class ResourceTableRow(TypedDict):
     url: str
 
 
+class CountryRow(TypedDict):
+    """One country on the admin's user map, derived from profile timezones."""
+
+    code: str  # ISO 3166 alpha-2, e.g. "BD"
+    name: str  # e.g. "Bangladesh"
+    users: int
+
+
 class UsageRow(TypedDict):
     """One week or month of the admin usage table, summed from DailyUsageStat."""
 
