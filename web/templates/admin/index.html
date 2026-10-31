@@ -8,6 +8,24 @@
     {% include "unfold/helpers/site_branding.html" %}
 {% endblock %}
 
+{% block extrahead %}
+  {{ block.super }}
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jsvectormap@1.7.0/dist/jsvectormap.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/jsvectormap@1.7.0/dist/jsvectormap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsvectormap@1.7.0/dist/maps/world.js"></script>
+  {# jsvectormap sets fills as SVG attributes, which any CSS rule outranks, so
+     the shading lives here and follows Unfold's .dark class on <html>. #}
+  <style>
+    #user-map { height: 420px; }
+    #user-map .jvm-region { fill: #e5e7eb; }
+    .dark #user-map .jvm-region { fill: #374151; }
+    #user-map .jvm-region[data-level="1"] { fill: #a7f3d0; }
+    #user-map .jvm-region[data-level="2"] { fill: #34d399; }
+    #user-map .jvm-region[data-level="3"] { fill: #059669; }
+    #user-map .jvm-region[data-level="4"] { fill: #065f46; }
+  </style>
+{% endblock %}
+
 {% block content %}
   <div class="grid grid-cols-2 gap-4 mb-8 lg:grid-cols-4">
     {% for stat in stat_cards %}
@@ -65,7 +83,12 @@
     </h2>
 
     {% if country_table.rows %}
-      {% component "unfold/components/table.html" with table=country_table striped=1 %}{% endcomponent %}
+      {% component "unfold/components/card.html" %}
+        <div id="user-map"></div>
+      {% endcomponent %}
+      <div class="mt-4">
+        {% component "unfold/components/table.html" with table=country_table striped=1 %}{% endcomponent %}
+      </div>
     {% else %}
       {% component "unfold/components/card.html" %}
         <p class="text-font-subtle-light dark:text-font-subtle-dark">
@@ -87,6 +110,37 @@
       {% endif %}
     </p>
   </div>
+
+  {% if country_counts %}
+    {{ country_counts|json_script:"country-counts" }}
+    <script>
+      (function () {
+        var counts = JSON.parse(document.getElementById("country-counts").textContent);
+        var most = Math.max.apply(null, Object.values(counts));
+
+        new jsVectorMap({
+          selector: "#user-map",
+          map: "world",
+          zoomOnScroll: false,
+          onRegionTooltipShow: function (event, tooltip, code) {
+            var users = counts[code] || 0;
+            tooltip.text(tooltip.text() + ": " + users + (users === 1 ? " user" : " users"));
+          },
+          // The map waits for DOMContentLoaded before drawing its regions, so
+          // they only exist once this fires. Four shades, scaled against the
+          // busiest country.
+          onLoaded: function (map) {
+            Object.keys(counts).forEach(function (code) {
+              var region = map.regions[code];
+              if (region) {
+                region.element.shape.node.dataset.level = Math.ceil((counts[code] / most) * 4);
+              }
+            });
+          },
+        });
+      })();
+    </script>
+  {% endif %}
 
   <div class="flex flex-col lg:flex-row lg:gap-8">
     <div class="grow">

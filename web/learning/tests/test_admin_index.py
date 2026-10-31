@@ -129,3 +129,22 @@ def test_the_unplaced_note_is_hidden_when_everyone_is_placed(client_logged_in):
     content = client_logged_in.get(INDEX).content.decode()
 
     assert "on UTC or a zone with no country" not in content
+
+
+def test_the_map_gets_the_counts_keyed_by_country_code(client_logged_in):
+    _member("Asia/Dhaka")
+    _member("Asia/Dhaka")
+
+    response = client_logged_in.get(INDEX)
+    content = response.content.decode()
+
+    assert response.context["country_counts"] == {"BD": 2}
+    assert 'id="user-map"' in content
+    assert '<script id="country-counts" type="application/json">' in content
+
+
+def test_the_map_is_left_out_when_nobody_is_placed(client_logged_in):
+    content = client_logged_in.get(INDEX).content.decode()
+
+    assert 'id="user-map"' not in content
+    assert 'id="country-counts"' not in content

@@ -600,6 +600,7 @@ def dashboard_callback(request, context):
             "usage_table": _usage_table(usage_rows),
             "usage_window": 7 if period == "week" else 28,
             "country_table": _country_table(country_rows, unknown_users),
+            "country_counts": {row["code"]: row["users"] for row in country_rows},
             "unknown_users": unknown_users,
             "stat_cards": [
                 {"label": "Resources", "value": context["total_resources"]},
