@@ -93,6 +93,7 @@ jobs:
           key: ${{ secrets.DO_SSH_KEY }}
           envs: GHCR_USER,GHCR_TOKEN
           script: |
+            set -e
             echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
             cd ${{ secrets.DO_APP_PATH }}
             git pull origin main
