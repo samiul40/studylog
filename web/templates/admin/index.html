@@ -13,9 +13,9 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jsvectormap@1.7.0/dist/jsvectormap.min.css">
   <script src="https://cdn.jsdelivr.net/npm/jsvectormap@1.7.0/dist/jsvectormap.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jsvectormap@1.7.0/dist/maps/world.js"></script>
-  {# jsvectormap sets fills as SVG attributes, which any CSS rule outranks, so
-     the shading lives here and follows Unfold's .dark class on <html>. #}
   <style>
+    /* jsvectormap sets fills as SVG attributes, which any CSS rule outranks,
+       so the shading lives here and follows Unfold's .dark class on <html>. */
     #user-map { height: 420px; }
     #user-map .jvm-region { fill: #e5e7eb; }
     .dark #user-map .jvm-region { fill: #374151; }
