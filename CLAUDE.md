@@ -66,15 +66,22 @@ cd web && npm run build:css
 
 **Scheduled maintenance commands:**
 
-All three are idempotent and safe to re-run. None is installed anywhere — add
-them to the server's crontab if you want them automated:
+All are idempotent and safe to re-run. They are installed in root's crontab on
+the server — keep this list in step with it:
 
 ```cron
 0 1 * * * docker exec studylog_web python manage.py rollup_usage_stats >> /var/log/studyflow_rollup.log 2>&1
 30 1 * * * docker exec studylog_web python manage.py rollup_retention_cohorts >> /var/log/studyflow_rollup.log 2>&1
 0 2 * * * docker exec studylog_web python manage.py purge_deleted_accounts >> /var/log/studyflow_purge.log 2>&1
 0 3 * * * docker exec studylog_web python manage.py purge_unverified_accounts --delete >> /var/log/studyflow_purge.log 2>&1
+0 4 * * * docker exec studylog_nginx nginx -s reload >> /var/log/studyflow_nginx_reload.log 2>&1
 ```
+
+The nginx reload is what makes certificate renewal stick. The `certbot`
+container renews the files on its own, but nginx keeps serving the copy it
+loaded at startup until it is reloaded — and Cloudflare's "Full" mode accepts
+an expired origin certificate without complaint, so a missed reload goes
+unnoticed for months.
 
 `rollup_usage_stats` runs **first for a reason**: it banks yesterday's totals
 into `DailyUsageStat` before the purges erase any accounts. Reverse the order
