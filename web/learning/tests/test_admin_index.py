@@ -148,3 +148,10 @@ def test_the_map_is_left_out_when_nobody_is_placed(client_logged_in):
 
     assert 'id="user-map"' not in content
     assert 'id="country-counts"' not in content
+
+
+def test_no_template_comment_leaks_onto_the_page(client_logged_in):
+    """{# #} only spans one line; a multi-line one is printed as text."""
+    content = client_logged_in.get(INDEX).content.decode()
+
+    assert "{#" not in content
