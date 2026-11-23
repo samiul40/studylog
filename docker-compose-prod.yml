@@ -33,7 +33,7 @@ services:
 
   nginx:
     container_name: studylog_nginx
-    image: nginx:alpine
+    image: nginx:1.30.7-alpine
     restart: unless-stopped
     ports:
       - "80:80"
